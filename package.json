@@ -1,0 +1,8 @@
+{
+  "name": "dfg",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "workers/*"
+  ]
+}

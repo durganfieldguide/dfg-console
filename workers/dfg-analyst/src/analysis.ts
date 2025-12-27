@@ -1,0 +1,533 @@
+import type {
+  ConditionAssessment,
+  InvestorLensOutput,
+  BuyerLensOutput,
+  RepairPlan,
+  PriceRange,
+  AcquisitionModel,
+  ListingData,
+  AssetSummary
+} from "./types";
+
+export const CONFIG = {
+  models: {
+    CONDITION_MODEL: "claude-sonnet-4-20250514",
+    REASONING_MODEL: "claude-sonnet-4-20250514"
+  },
+  phoenix_market: {
+    sales_tax: 0.086,
+    holding_days: 14
+  }
+};
+
+// ============================================
+// ASSET SUMMARY + NEXT STEPS
+// ============================================
+
+export function buildAssetSummary(listing: ListingData, condition: ConditionAssessment): AssetSummary {
+  const parts: string[] = [];
+  if (condition.year) parts.push(String(condition.year));
+  if (condition.make) parts.push(condition.make);
+  if (condition.model) parts.push(condition.model);
+
+  const specs: string[] = [];
+  if (condition.dimensions?.width_ft && condition.dimensions?.length_ft) {
+    specs.push(`${condition.dimensions.width_ft}x${condition.dimensions.length_ft}`);
+  }
+  specs.push(condition.trailer_type || "unknown");
+  specs.push(condition.axle_status === "tandem" ? "tandem axle" : "single axle");
+
+  return {
+    title: listing.title || "Unknown",
+    year_make_model: parts.length > 0 ? parts.join(" ") : "Unknown",
+    key_specs: specs.join(" | "),
+    source: listing.source,
+    listing_url: listing.listing_url,
+    current_bid: listing.current_bid,
+    auction_end: listing.ends_at
+  };
+}
+
+export function buildNextSteps(investorLens: InvestorLensOutput, _condition: ConditionAssessment) {
+  return {
+    if_bidding: [
+      `Set max bid at $${investorLens.max_bid || 0} - walk away above this`,
+      "Schedule inspection before auction ends if possible",
+      "AUCTION SNIPE: Do not bid until T-minus 2 minutes (avoid price-warming).",
+      "KILL ZONE: Enter your absolute max once. No incremental bidding. Walk away if outbid.",
+      ...(investorLens.inspection_priorities?.slice(0, 2) || [])
+    ],
+    if_won: [
+      "Arrange pickup within auction deadline (usually 5 business days)",
+      "Bring: truck, hitch/ball, ratchet straps, basic tools",
+      "Have cash/certified check for total amount",
+      "Get signed title and bill of sale before leaving"
+    ],
+    listing_prep: [
+      "Pressure wash and clean out thoroughly",
+      "Complete minimum repairs from plan",
+      "Take 15+ photos: all angles, interior, tires, hitch, lights working",
+      ...(investorLens.repair_plan?.items
+        ?.filter(r => r.marketing_note)
+        .map(r => `Highlight: "${r.marketing_note}"`) || [])
+    ]
+  };
+}
+
+// ============================================
+// REPAIR PLAN (MINIMUM VIABLE)
+// ============================================
+
+export function calculateMinimumViableRepair(condition: ConditionAssessment): RepairPlan {
+  const items: Array<{ item: string; cost: number; marketing_note?: string }> = [];
+
+  // Tires: Phoenix dry-rot reality (axle-aware)
+  const tireCount =
+    condition.axle_status === "tandem" ? 4 :
+    condition.axle_status === "single" ? 2 :
+    2; // unknown -> assume 2 conservatively
+
+  const costPerTire = 125; // tire + mount/balance in PHX
+
+  if (condition.tires_need_replacement) {
+    items.push({ item: `Replace tires (${tireCount}x)`, cost: tireCount * costPerTire });
+  }
+
+  if (condition.lights_inoperable) {
+    items.push({ item: "Fix lights/wiring", cost: 75 });
+  }
+  if (condition.deck_needs_repair) {
+    items.push({ item: "Deck boards", cost: 150 });
+  }
+  if (condition.rust_treatment_needed) {
+    items.push({ item: "Rust treatment/paint", cost: 100 });
+  }
+
+  const grandTotal = items.reduce((sum, i) => sum + i.cost, 0);
+
+  return {
+    items,
+    grand_total: grandTotal,
+    assumptions: ["DIY labor", "Phoenix metro pricing", "Parts from standard suppliers"]
+  };
+}
+
+// ============================================
+// NUMERIC SAFETY HELPERS
+// ============================================
+
+export function assertFiniteNumber(name: string, v: unknown): number {
+  if (typeof v !== "number" || !Number.isFinite(v)) {
+    throw new Error(`${name} must be a finite number. Got: ${String(v)}`);
+  }
+  return v;
+}
+
+function normalizeRate(x: number | undefined, fallback: number): number {
+  if (typeof x !== "number" || Number.isNaN(x)) return fallback;
+  // Allow config stored as 8.6 instead of 0.086
+  return x > 1 ? x / 100 : x;
+}
+
+function normalizeBid(bid: unknown): number {
+  const n = assertFiniteNumber("bid", typeof bid === "number" ? bid : Number(bid));
+  return Math.max(0, Math.round(n));
+}
+
+// ============================================
+// ACQUISITION COSTS (THE ONLY PATH THAT MATTERS)
+// ============================================
+
+type PremiumMethod = "tier" | "percent" | "flat" | "none";
+
+function computeBuyerPremium(
+  bid: number,
+  feeSchedule: ListingData["fee_schedule"]
+): { amount: number; method: PremiumMethod; matched_tier?: { max_bid: number; premium: number } } {
+  const buyerPremium = feeSchedule?.buyer_premium;
+
+  // Tiered premium (preferred)
+  if (buyerPremium && typeof buyerPremium === "object" && Array.isArray((buyerPremium as any).tiers)) {
+    const tiers = (buyerPremium as any).tiers as Array<{ max_bid: number; premium: number }>;
+    if (tiers.length > 0) {
+      const sorted = [...tiers].sort((a, b) => a.max_bid - b.max_bid);
+      const tier = sorted.find(t => bid <= t.max_bid);
+      if (tier) {
+        return { amount: tier.premium, method: "tier", matched_tier: { max_bid: tier.max_bid, premium: tier.premium } };
+      }
+    }
+
+    // Percent fallback above tiers (if configured)
+    const pct = normalizeRate((buyerPremium as any).above_threshold_percent, 0);
+    return { amount: Math.round(bid * pct), method: "percent" };
+  }
+
+  // Flat premium (rare)
+  if (typeof buyerPremium === "number") {
+    return { amount: buyerPremium, method: "flat" };
+  }
+
+  return { amount: 0, method: "none" };
+}
+
+/**
+ * @deprecated
+ * Uses listing.current_bid (often 0 early in auction) and may not include correct tax base rules.
+ * Do not use for scenarios / max-bid. Use calculateAcquisitionForBid(listing, assumedBid) instead.
+ */
+export function calculateAcquisitionFromCurrentBid_DEPRECATED(listing: ListingData): AcquisitionModel {
+  const bid = normalizeBid(listing.current_bid);
+  const acq = calculateAcquisitionForBid(listing, bid, { payment_method: "cash" });
+
+  return {
+    winning_bid: bid,
+    buyer_premium: (acq as any).buyer_premium,
+    sales_tax: (acq as any).sales_tax,
+    total_acquisition: (acq as any).total_acquisition
+  } as AcquisitionModel;
+}
+
+/** @deprecated Use calculateAcquisitionForBid instead. */
+export const calculateAcquisition = calculateAcquisitionFromCurrentBid_DEPRECATED;
+
+export function calculateAcquisitionForBid(
+  listing: ListingData,
+  assumedBid: number,
+  opts?: { payment_method?: "cash" | "card"; debug?: boolean }
+): AcquisitionModel & {
+  assumed_bid: number;
+  card_fee?: number;
+  premium_method?: PremiumMethod;
+  matched_tier?: { max_bid: number; premium: number };
+  fee_schedule_source?: string;
+} {
+  const bid = normalizeBid(assumedBid);
+  const feeSchedule = listing.fee_schedule;
+
+  const premium = computeBuyerPremium(bid, feeSchedule);
+  const debug = opts?.debug === true;
+
+  const salesTaxRate = normalizeRate(feeSchedule?.sales_tax_percent, CONFIG.phoenix_market.sales_tax);
+
+  // Tax base includes premium (common auction structure)
+  const salesTax = Math.round((bid + premium.amount) * salesTaxRate);
+
+  const basePlusTax = bid + premium.amount + salesTax;
+
+  let cardFee: number | undefined;
+  if (opts?.payment_method === "card") {
+    const cardRate = normalizeRate((feeSchedule as any)?.credit_card_fee_percent, 0);
+    cardFee = Math.round(basePlusTax * cardRate);
+  }
+
+  const totalAcquisition = basePlusTax + (cardFee ?? 0);
+
+  // This shape matches what your API has been returning (current_bid/estimated_winning_bid/etc).
+  // Keep stable even if AcquisitionModel type is narrower.
+  return {
+    current_bid: listing.current_bid,
+    estimated_winning_bid: bid,
+    buyer_premium: premium.amount,
+    sales_tax: salesTax,
+    transport_estimate: 0,
+    total_acquisition: totalAcquisition,
+    assumed_bid: bid,
+    ...(debug ? { premium_method: premium.method } : {}),
+    ...(debug && premium.matched_tier ? { matched_tier: premium.matched_tier } : {}),
+    ...(debug && (listing as any).fee_schedule_source ? { fee_schedule_source: (listing as any).fee_schedule_source } : {}),
+    ...(cardFee !== undefined ? { card_fee: cardFee } : {})
+  } as any;
+}
+
+// ============================================
+// PROFIT SCENARIOS
+// ============================================
+
+export function calculateProfitScenarios(
+  phoenixResaleRange: PriceRange,
+  totalInvestment: number,
+  holdingDays: number = 14
+) {
+  const qs = assertFiniteNumber("phoenixResaleRange.quick_sale", (phoenixResaleRange as any).quick_sale);
+  const mr = assertFiniteNumber("phoenixResaleRange.market_rate", (phoenixResaleRange as any).market_rate);
+  const pr = assertFiniteNumber("phoenixResaleRange.premium", (phoenixResaleRange as any).premium);
+  const ti = assertFiniteNumber("totalInvestment", totalInvestment);
+
+  return {
+    quick_sale: {
+      sale_price: qs,
+      gross_profit: qs > 0 ? qs - ti : -ti,
+      margin: qs > 0 ? (qs - ti) / qs : 0,
+      days_to_sell: 7
+    },
+    expected: {
+      sale_price: mr,
+      gross_profit: mr > 0 ? mr - ti : -ti,
+      margin: mr > 0 ? (mr - ti) / mr : 0,
+      days_to_sell: holdingDays
+    },
+    premium: {
+      sale_price: pr,
+      gross_profit: pr > 0 ? pr - ti : -ti,
+      margin: pr > 0 ? (pr - ti) / pr : 0,
+      days_to_sell: 30
+    }
+  };
+}
+
+// ============================================
+// MAX BID CALCULATIONS (ENGINE 1)
+// ============================================
+
+
+// ============================================
+// VERDICT + GATES (ENGINE 1: CASHFLOW-FIRST)
+// ============================================
+
+export type Verdict = "STRONG_BUY" | "BUY" | "MARGINAL" | "PASS";
+
+// 40% Rule mandate (after repairs, all-in).
+export function calculateVerdict(
+  maxBid: number,
+  currentBid: number,
+  expectedProfit: number,
+  expectedMargin: number
+): Verdict {
+  if (currentBid > maxBid) return "PASS";
+
+  // High standards for cashflow safety
+  if (expectedMargin >= 0.40 && expectedProfit >= 800) return "STRONG_BUY";
+  if (expectedMargin >= 0.35 && expectedProfit >= 600) return "BUY";
+
+  // "Marginal" is allowed only if it still pays meaningfully
+  if (expectedMargin >= 0.25 && expectedProfit >= 400) return "MARGINAL";
+
+  return "PASS";
+}
+
+export function applyVerdictGates(
+  verdict: Verdict,
+  condition: ConditionAssessment,
+  _assetSummary?: AssetSummary,
+  _meta?: Record<string, unknown> & { scenarios?: ReturnType<typeof calculateProfitScenarios> }
+): Verdict {
+  // Lower index = better verdict; higher index = worse verdict.
+  const order: Verdict[] = ["STRONG_BUY", "BUY", "MARGINAL", "PASS"];
+  const rank = (v: Verdict) => order.indexOf(v);
+
+  // Downgrade verdict to be at least as strict as `minVerdict` (never upgrades).
+  const downgradeToAtLeast = (minVerdict: Verdict) => {
+    const r = Math.max(rank(verdict), rank(minVerdict));
+    verdict = order[r] ?? verdict;
+  };
+
+  // Thin evidence: cap at MARGINAL
+  if (condition.photos_analyzed != null && condition.photos_analyzed < 4) {
+    downgradeToAtLeast("MARGINAL");
+  }
+
+  // Identity conflict: cap at MARGINAL
+  if (condition.identity_conflict) {
+    downgradeToAtLeast("MARGINAL");
+  }
+
+  // Storage constraint: single-car garage reality (unless explicitly overridden)
+  const storageOverride = _meta?.storage_override === true;
+  const lengthFt = condition.dimensions?.length_ft;
+  if (!storageOverride && typeof lengthFt === "number" && Number.isFinite(lengthFt) && lengthFt > 18) {
+    downgradeToAtLeast("MARGINAL");
+  }
+
+  // Unknown brakes (especially tandem): cap at MARGINAL
+  if (condition.axle_status === "tandem" && condition.brakes === "unknown") {
+    downgradeToAtLeast("MARGINAL");
+  }
+
+  // Title issues: salvage/missing => PASS; otherwise cap at MARGINAL
+  if (condition.title_status && condition.title_status !== "clean") {
+    if (condition.title_status === "salvage" || condition.title_status === "missing") {
+      downgradeToAtLeast("PASS");
+    } else {
+      downgradeToAtLeast("MARGINAL");
+    }
+  }
+
+  // Quick-sale safety: if marginal and downside is too thin, bump to PASS unless explicitly overridden.
+  if (verdict === "MARGINAL" && _meta?.scenarios && _meta.scenarios.quick_sale) {
+    const qs = _meta.scenarios.quick_sale;
+    const hasOverride = _meta?.quick_flip_override === true;
+    if (!hasOverride && qs.gross_profit < 300 && qs.margin < 0.15) {
+      downgradeToAtLeast("PASS");
+    }
+  }
+
+  return verdict;
+}
+
+// ============================================
+// MAX BID CALCULATIONS
+// ============================================
+
+function thresholdsFor(desired: Exclude<Verdict, "PASS">): { profit: number; margin: number } {
+  switch (desired) {
+    case "STRONG_BUY": return { profit: 800, margin: 0.40 };
+    case "BUY": return { profit: 600, margin: 0.35 };
+    case "MARGINAL": return { profit: 400, margin: 0.25 };
+  }
+}
+
+/**
+ * Legacy linear max-bid calculators (not fee-aware).
+ * Keep for reference; prefer calculateMaxBidBySearch for auctions with premiums/taxes.
+ */
+export function calculateMaxBid(
+  marketRate: number,
+  repairTotal: number,
+  targetProfit: number = 600,
+  targetMargin: number = 0.35
+): number {
+  const profitBasedMax = marketRate - repairTotal - targetProfit;
+  const marginBasedMax = Math.round(marketRate * (1 - targetMargin) - repairTotal);
+  return Math.floor(Math.min(profitBasedMax, marginBasedMax) / 50) * 50;
+}
+
+export function calculateMaxBidAllIn(
+  marketRate: number,
+  repairTotal: number,
+  allInMultiplier: number,
+  targetProfit: number = 600,
+  targetMargin: number = 0.35
+): number {
+  const profitBased = (marketRate - repairTotal - targetProfit) / allInMultiplier;
+  const marginBased = (marketRate * (1 - targetMargin) - repairTotal) / allInMultiplier;
+  return Math.floor(Math.min(profitBased, marginBased) / 50) * 50;
+}
+
+/**
+ * Fee-aware max bid search (handles tiered premiums).
+ *
+ * Engine 1 alignment:
+ * - Defaults to BUY thresholds (35% margin, $600 profit) rather than the old 25%/30% prototype logic.
+ * - Optional downside protection via quick-sale constraints (profit OR margin).
+ */
+export function calculateMaxBidBySearch(params: {
+  listing: ListingData;
+  marketRate: number;
+  repairTotal: number;
+  step?: number;
+
+  // Which threshold are we targeting for the computed max bid?
+  desiredVerdict?: Exclude<Verdict, "PASS">;
+
+  // Downside protection (optional):
+  // If quickSalePrice is provided, enforce:
+  // (quickProfit >= minQuickProfit) OR (quickMargin >= minQuickMargin)
+  quickSalePrice?: number;
+  minQuickProfit?: number; // default 300
+  minQuickMargin?: number; // default 0.15
+
+  // Optional explicit overrides (rare; prefer desiredVerdict)
+  targetProfit?: number;
+  targetMargin?: number;
+}): number {
+  const {
+    listing,
+    marketRate,
+    repairTotal,
+    step = 50,
+    desiredVerdict = "BUY",
+    quickSalePrice,
+    minQuickProfit = 300,
+    minQuickMargin = 0.15,
+    targetProfit,
+    targetMargin
+  } = params;
+
+  const mr = assertFiniteNumber("marketRate", marketRate);
+  const rt = assertFiniteNumber("repairTotal", repairTotal);
+
+  const th = thresholdsFor(desiredVerdict);
+  const reqProfit = typeof targetProfit === "number" ? targetProfit : th.profit;
+  const reqMargin = typeof targetMargin === "number" ? targetMargin : th.margin;
+
+  // Start from a sensible upper bound (not marketRate itself)
+  let startBid = Math.max(0, Math.round(mr - reqProfit));
+  startBid = Math.floor(startBid / step) * step;
+
+  const hasDownsideConstraint =
+    typeof quickSalePrice === "number" && Number.isFinite(quickSalePrice) && quickSalePrice > 0;
+
+  for (let bid = startBid; bid >= 0; bid -= step) {
+    const acq = calculateAcquisitionForBid(listing, bid, { payment_method: "cash" });
+    const totalInvestment = assertFiniteNumber("totalInvestment", (acq as any).total_acquisition + rt);
+
+    const profit = mr - totalInvestment;
+    const margin = mr > 0 ? profit / mr : 0;
+
+    if (profit < reqProfit || margin < reqMargin) continue;
+
+    if (hasDownsideConstraint) {
+      const qs = quickSalePrice as number;
+      const quickProfit = qs - totalInvestment;
+      const quickMargin = qs > 0 ? quickProfit / qs : 0;
+
+      const downsideOk = quickProfit >= minQuickProfit || quickMargin >= minQuickMargin;
+      if (!downsideOk) continue;
+    }
+
+    return bid;
+  }
+
+  return 0;
+}
+
+// ============================================
+// FORMATTING
+// ============================================
+
+export function formatPhoenixResaleRange(range: PriceRange): string {
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+  return `${fmt(range.quick_sale)}-${fmt(range.premium)}`;
+}
+
+// ============================================
+// INSPECTION PRIORITIES + DEAL KILLERS
+// ============================================
+
+export function generateInspectionPriorities(condition: ConditionAssessment): string[] {
+  const priorities: string[] = [];
+
+  if (condition.frame_rust_severity === "severe") {
+    priorities.push("CHECK: Frame integrity - rust appears severe");
+  }
+  if (condition.axle_condition === "questionable") {
+    priorities.push("CHECK: Axle alignment and bearing play");
+  }
+  if (condition.tires_need_replacement) {
+    priorities.push("VERIFY: Tire date codes (must be <7 years old)");
+  }
+  if (condition.lights_inoperable) {
+    priorities.push("TEST: All lights and brake controller functionality");
+  }
+  if (condition.title_status !== "clean") {
+    priorities.push("CRITICAL: Verify title status and transferability");
+  }
+
+  return priorities.slice(0, 5);
+}
+
+export function generateDealKillers(condition: ConditionAssessment): string[] {
+  const killers: string[] = [];
+
+  if (condition.title_status === "salvage" || condition.title_status === "missing") {
+    killers.push("Title issues - may be unsellable in Phoenix market");
+  }
+  if (condition.frame_rust_severity === "severe") {
+    killers.push("Severe frame rust - repair costs may exceed estimate");
+  }
+  if (condition.structural_damage) {
+    killers.push("Structural damage present - safety liability");
+  }
+
+  return killers;
+}
