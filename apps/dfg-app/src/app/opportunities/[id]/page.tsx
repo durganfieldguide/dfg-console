@@ -23,6 +23,11 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { StatusBadge, ScoreBadge } from '@/components/ui/Badge';
 import { TabbedAnalysis } from '@/components/features/tabbed-analysis';
+// Sprint 1.5 components
+import { TitleInputs, type OperatorInputs } from '@/components/features/title-inputs';
+import { GatesDisplay, type ComputedGates } from '@/components/features/gates-display';
+import { StalenessBanner, type StalenessReason } from '@/components/features/staleness-banner';
+import { RequiredExit } from '@/components/features/required-exit';
 import {
   cn,
   formatCurrency,
@@ -31,7 +36,17 @@ import {
   isEndingSoon,
   SEVERITY_COLORS,
 } from '@/lib/utils';
-import { getOpportunity, updateOpportunity, dismissAlert, analyzeOpportunity, type AnalysisResult } from '@/lib/api';
+import {
+  getOpportunity,
+  updateOpportunity,
+  dismissAlert,
+  analyzeOpportunity,
+  updateOperatorInputs,
+  triggerAnalysis,
+  checkStaleness,
+  type AnalysisResult,
+  type OpportunityWithAnalysis,
+} from '@/lib/api';
 import type { OpportunityDetail, OpportunityStatus, RejectionReason } from '@/types';
 
 export default function OpportunityDetailPage() {
@@ -49,12 +64,32 @@ export default function OpportunityDetailPage() {
   const [showWatchModal, setShowWatchModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
+  // Sprint 1.5 state
+  const [operatorInputs, setOperatorInputs] = useState<OperatorInputs | null>(null);
+  const [gates, setGates] = useState<ComputedGates | null>(null);
+  const [isStale, setIsStale] = useState(false);
+  const [stalenessReasons, setStalenessReasons] = useState<StalenessReason[]>([]);
+  const [reAnalyzing, setReAnalyzing] = useState(false);
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const data = await getOpportunity(id);
+        const data = await getOpportunity(id) as OpportunityWithAnalysis;
         setOpportunity(data);
+
+        // Sprint 1.5: Set operator inputs and gates from response
+        if (data.operatorInputs) {
+          setOperatorInputs(data.operatorInputs);
+        }
+        if (data.gates) {
+          setGates(data.gates);
+        }
+
+        // Check staleness
+        const staleness = checkStaleness(data);
+        setIsStale(staleness.isStale);
+        setStalenessReasons(staleness.reasons);
       } catch (error) {
         console.error('Failed to fetch opportunity:', error);
       } finally {
@@ -107,6 +142,57 @@ export default function OpportunityDetailPage() {
       setAnalysisError(error instanceof Error ? error.message : 'Analysis failed');
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  // Sprint 1.5: Handle saving operator inputs
+  const handleSaveInputs = async () => {
+    if (!opportunity) return;
+
+    try {
+      // Refresh opportunity data to get updated gates and staleness
+      const updated = await getOpportunity(opportunity.id) as OpportunityWithAnalysis;
+      setOpportunity(updated);
+
+      if (updated.operatorInputs) {
+        setOperatorInputs(updated.operatorInputs);
+      }
+      if (updated.gates) {
+        setGates(updated.gates);
+      }
+
+      // Check staleness after input change
+      const staleness = checkStaleness(updated);
+      setIsStale(staleness.isStale);
+      setStalenessReasons(staleness.reasons);
+    } catch (error) {
+      console.error('Failed to refresh after save:', error);
+    }
+  };
+
+  // Sprint 1.5: Handle re-analyze
+  const handleReAnalyze = async () => {
+    if (!opportunity) return;
+
+    setReAnalyzing(true);
+    try {
+      const result = await triggerAnalysis(opportunity.id);
+      setOpportunity(result.opportunity);
+
+      if (result.opportunity.operatorInputs) {
+        setOperatorInputs(result.opportunity.operatorInputs);
+      }
+      if (result.opportunity.gates) {
+        setGates(result.opportunity.gates);
+      }
+
+      // Clear staleness after re-analyze
+      setIsStale(false);
+      setStalenessReasons([]);
+    } catch (error) {
+      console.error('Re-analyze failed:', error);
+    } finally {
+      setReAnalyzing(false);
     }
   };
 
@@ -228,6 +314,15 @@ export default function OpportunityDetailPage() {
         )}
 
         <div className="p-4 space-y-4">
+          {/* Sprint 1.5: Staleness Banner */}
+          <StalenessBanner
+            isStale={isStale}
+            reasons={stalenessReasons}
+            analysisTimestamp={(opportunity as OpportunityWithAnalysis).currentAnalysisRun?.createdAt}
+            onReAnalyze={handleReAnalyze}
+            isReAnalyzing={reAnalyzing}
+          />
+
           {/* Analysis Error */}
           {analysisError && (
             <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
@@ -284,6 +379,22 @@ export default function OpportunityDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Sprint 1.5: Gates Display */}
+          <GatesDisplay gates={gates} />
+
+          {/* Sprint 1.5: Title Inputs */}
+          <TitleInputs
+            opportunityId={opportunity.id}
+            initialInputs={operatorInputs}
+            onSaveSuccess={handleSaveInputs}
+          />
+
+          {/* Sprint 1.5: Required Exit Calculator */}
+          <RequiredExit
+            totalAllIn={opportunity.current_bid ? opportunity.current_bid * 1.15 : 0}
+            maxBidOverride={operatorInputs?.overrides?.maxBidOverride?.value}
+          />
 
           {/* Pricing */}
           <Card>
