@@ -18,6 +18,9 @@ import type {
   WatchThreshold,
   ObservedFacts,
 } from '@/types';
+import type { OperatorInputs } from '@/components/features/title-inputs';
+import type { ComputedGates } from '@/components/features/gates-display';
+import type { StalenessReason } from '@/components/features/staleness-banner';
 
 /**
  * Fetch from the local Next.js API proxy.
@@ -449,7 +452,10 @@ export interface AnalysisResult {
   };
 }
 
-export async function analyzeOpportunity(opportunity: OpportunityDetail): Promise<AnalysisResult> {
+export async function analyzeOpportunity(
+  opportunity: OpportunityDetail,
+  operatorInputs?: OperatorInputs | null
+): Promise<AnalysisResult> {
   // Build the ListingData payload for the analyst
   const listingData = {
     source: opportunity.source,
@@ -470,6 +476,17 @@ export async function analyzeOpportunity(opportunity: OpportunityDetail): Promis
     fee_schedule: opportunity.source_defaults ? {
       buyer_premium: opportunity.source_defaults.buyer_premium_pct / 100,
       sales_tax_percent: 0.0825, // Default AZ sales tax
+    } : undefined,
+    // Sprint 1.5: Include operator inputs for the analyst
+    operator_inputs: operatorInputs ? {
+      title_status: operatorInputs.title?.titleStatus?.value,
+      title_in_hand: operatorInputs.title?.titleInHand?.value,
+      lien_status: operatorInputs.title?.lienStatus?.value,
+      vin: operatorInputs.title?.vin?.value,
+      odometer_miles: operatorInputs.title?.odometerMiles?.value,
+      // Include verification levels so analyst knows confidence
+      title_status_verified: operatorInputs.title?.titleStatus?.verificationLevel !== 'unverified',
+      odometer_verified: operatorInputs.title?.odometerMiles?.verificationLevel !== 'unverified',
     } : undefined,
   };
 
@@ -492,12 +509,6 @@ export async function analyzeOpportunity(opportunity: OpportunityDetail): Promis
 // =============================================================================
 // SPRINT 1.5 - OPERATOR INPUTS & ANALYSIS RETENTION
 // =============================================================================
-
-import type {
-  OperatorInputs,
-} from '@/components/features/title-inputs';
-import type { ComputedGates } from '@/components/features/gates-display';
-import type { StalenessReason } from '@/components/features/staleness-banner';
 
 export interface AnalysisRunSummary {
   id: string;

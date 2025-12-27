@@ -53,6 +53,17 @@ export interface ListingData {
   };
   ends_at?: string;
   seller_type?: "private" | "dealer" | "municipal_fleet" | "commercial_fleet" | "repo";
+
+  // Sprint 1.5: Operator inputs from frontend
+  operator_inputs?: {
+    title_status?: "clean" | "salvage" | "rebuilt" | "bonded" | "parts_only" | "unknown" | string;
+    title_in_hand?: "yes" | "no" | "unknown";
+    lien_status?: "none" | "lien_present" | "unknown";
+    vin?: string;
+    odometer_miles?: number;
+    title_status_verified?: boolean;
+    odometer_verified?: boolean;
+  };
 }
 
 // ============================================

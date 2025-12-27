@@ -42,7 +42,6 @@ import {
   dismissAlert,
   analyzeOpportunity,
   updateOperatorInputs,
-  triggerAnalysis,
   checkStaleness,
   type AnalysisResult,
   type OpportunityWithAnalysis,
@@ -70,6 +69,7 @@ export default function OpportunityDetailPage() {
   const [isStale, setIsStale] = useState(false);
   const [stalenessReasons, setStalenessReasons] = useState<StalenessReason[]>([]);
   const [reAnalyzing, setReAnalyzing] = useState(false);
+  const [analysisTimestamp, setAnalysisTimestamp] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -135,8 +135,13 @@ export default function OpportunityDetailPage() {
     setAnalyzing(true);
     setAnalysisError(null);
     try {
-      const result = await analyzeOpportunity(opportunity);
+      // Sprint 1.5: Pass operator inputs to analysis
+      const result = await analyzeOpportunity(opportunity, operatorInputs);
       setAnalysisResult(result);
+      setAnalysisTimestamp(new Date().toISOString());
+      // Clear staleness after new analysis
+      setIsStale(false);
+      setStalenessReasons([]);
     } catch (error) {
       console.error('Analysis failed:', error);
       setAnalysisError(error instanceof Error ? error.message : 'Analysis failed');
@@ -146,7 +151,7 @@ export default function OpportunityDetailPage() {
   };
 
   // Sprint 1.5: Handle saving operator inputs
-  const handleSaveInputs = async () => {
+  const handleSaveInputs = async (changedField?: string) => {
     if (!opportunity) return;
 
     try {
@@ -161,36 +166,46 @@ export default function OpportunityDetailPage() {
         setGates(updated.gates);
       }
 
-      // Check staleness after input change
-      const staleness = checkStaleness(updated);
-      setIsStale(staleness.isStale);
-      setStalenessReasons(staleness.reasons);
+      // Sprint 1.5: Client-side staleness detection
+      // If we have run an analysis (either result exists or timestamp is set), mark as stale
+      if (analysisResult || analysisTimestamp) {
+        setIsStale(true);
+        setStalenessReasons([{
+          type: 'operator_input_changed',
+          field: changedField || 'inputs',
+          from: null,
+          to: 'updated',
+        }]);
+      } else {
+        // Check server-side staleness if no client analysis
+        const staleness = checkStaleness(updated);
+        setIsStale(staleness.isStale);
+        setStalenessReasons(staleness.reasons);
+      }
     } catch (error) {
       console.error('Failed to refresh after save:', error);
     }
   };
 
   // Sprint 1.5: Handle re-analyze
+  // Uses the same client-side analysis as handleAnalyze to include operator inputs
   const handleReAnalyze = async () => {
     if (!opportunity) return;
 
     setReAnalyzing(true);
+    setAnalysisError(null);
     try {
-      const result = await triggerAnalysis(opportunity.id);
-      setOpportunity(result.opportunity);
-
-      if (result.opportunity.operatorInputs) {
-        setOperatorInputs(result.opportunity.operatorInputs);
-      }
-      if (result.opportunity.gates) {
-        setGates(result.opportunity.gates);
-      }
+      // Re-run analysis with current operator inputs
+      const result = await analyzeOpportunity(opportunity, operatorInputs);
+      setAnalysisResult(result);
+      setAnalysisTimestamp(new Date().toISOString());
 
       // Clear staleness after re-analyze
       setIsStale(false);
       setStalenessReasons([]);
     } catch (error) {
       console.error('Re-analyze failed:', error);
+      setAnalysisError(error instanceof Error ? error.message : 'Re-analysis failed');
     } finally {
       setReAnalyzing(false);
     }
@@ -318,7 +333,7 @@ export default function OpportunityDetailPage() {
           <StalenessBanner
             isStale={isStale}
             reasons={stalenessReasons}
-            analysisTimestamp={(opportunity as OpportunityWithAnalysis).currentAnalysisRun?.createdAt}
+            analysisTimestamp={analysisTimestamp || (opportunity as OpportunityWithAnalysis).currentAnalysisRun?.createdAt}
             onReAnalyze={handleReAnalyze}
             isReAnalyzing={reAnalyzing}
           />

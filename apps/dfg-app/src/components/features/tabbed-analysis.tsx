@@ -106,10 +106,10 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
                 <p className="text-xs text-muted-foreground">Margin</p>
                 <p className={cn(
                   'text-xl font-bold font-mono',
-                  fields.expected_margin >= 25 ? 'text-green-600' :
-                  fields.expected_margin >= 15 ? 'text-yellow-600' : 'text-red-600'
+                  (fields.expected_margin * 100) >= 25 ? 'text-green-600' :
+                  (fields.expected_margin * 100) >= 15 ? 'text-yellow-600' : 'text-red-600'
                 )}>
-                  {fields.expected_margin > 0 ? `${fields.expected_margin.toFixed(0)}%` : 'N/A'}
+                  {fields.expected_margin > 0 ? `${(fields.expected_margin * 100).toFixed(0)}%` : 'N/A'}
                 </p>
               </div>
             </div>

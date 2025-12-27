@@ -1850,6 +1850,31 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
     condition.identity_conflict = condition.identity_conflict || false;
   }
 
+  // Sprint 1.5: Merge operator inputs into condition assessment
+  // Operator inputs override AI-inferred values when provided
+  if (listingData.operator_inputs) {
+    const opInputs = listingData.operator_inputs;
+
+    // Title status - operator input takes precedence
+    if (opInputs.title_status && opInputs.title_status !== 'unknown') {
+      condition.title_status = opInputs.title_status;
+      console.log(`[OPERATOR] Title status override: ${opInputs.title_status} (verified: ${opInputs.title_status_verified})`);
+    }
+
+    // Odometer/mileage - operator input takes precedence
+    if (opInputs.odometer_miles != null && opInputs.odometer_miles > 0) {
+      condition.mileage = opInputs.odometer_miles;
+      condition.mileage_confidence = opInputs.odometer_verified ? 'odometer_visible' : 'estimated';
+      console.log(`[OPERATOR] Mileage override: ${opInputs.odometer_miles} (verified: ${opInputs.odometer_verified})`);
+    }
+
+    // VIN - operator input takes precedence
+    if (opInputs.vin && opInputs.vin.length >= 11) {
+      condition.vin_visible = opInputs.vin;
+      console.log(`[OPERATOR] VIN override: ${opInputs.vin}`);
+    }
+  }
+
   // Build photo metrics from ACTUAL FETCH RESULTS (not Claude's claimed count)
   const photosReceived = listingData.photos.length;
   const availabilityKnown = listingData.photo_count != null; // Did source provide a count?
