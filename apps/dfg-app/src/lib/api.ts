@@ -488,3 +488,96 @@ export async function analyzeOpportunity(opportunity: OpportunityDetail): Promis
 
   return response.json();
 }
+
+// =============================================================================
+// SPRINT 1.5 - OPERATOR INPUTS & ANALYSIS RETENTION
+// =============================================================================
+
+import type {
+  OperatorInputs,
+} from '@/components/features/title-inputs';
+import type { ComputedGates } from '@/components/features/gates-display';
+import type { StalenessReason } from '@/components/features/staleness-banner';
+
+export interface AnalysisRunSummary {
+  id: string;
+  createdAt: string;
+  recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO';
+  gatesSummary: string;
+  allCriticalPassed: boolean;
+}
+
+export interface OpportunityWithAnalysis extends OpportunityDetail {
+  operatorInputs?: OperatorInputs | null;
+  gates?: ComputedGates | null;
+  currentAnalysisRun?: AnalysisRunSummary | null;
+  inputsChangedSinceAnalysis?: boolean;
+}
+
+/**
+ * Update operator inputs for an opportunity
+ */
+export async function updateOperatorInputs(
+  opportunityId: string,
+  inputs: OperatorInputs
+): Promise<OpportunityWithAnalysis> {
+  const response = await fetchApi<ApiResponse<OpportunityWithAnalysis>>(
+    `/api/opportunities/${encodeURIComponent(opportunityId)}/inputs`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(inputs),
+    }
+  );
+  return parseOpportunityData(response.data) as OpportunityWithAnalysis;
+}
+
+/**
+ * Trigger a new analysis run for an opportunity
+ */
+export async function triggerAnalysis(
+  opportunityId: string
+): Promise<{ analysisRun: AnalysisRunSummary; opportunity: OpportunityWithAnalysis }> {
+  const response = await fetchApi<ApiResponse<{
+    analysisRun: AnalysisRunSummary;
+    opportunity: OpportunityWithAnalysis;
+  }>>(
+    `/api/opportunities/${encodeURIComponent(opportunityId)}/analyze`,
+    {
+      method: 'POST',
+    }
+  );
+  return {
+    analysisRun: response.data.analysisRun,
+    opportunity: parseOpportunityData(response.data.opportunity) as OpportunityWithAnalysis,
+  };
+}
+
+/**
+ * Check if an opportunity's analysis is stale
+ */
+export function checkStaleness(opportunity: OpportunityWithAnalysis): {
+  isStale: boolean;
+  reasons: StalenessReason[];
+} {
+  const reasons: StalenessReason[] = [];
+
+  // If no analysis run exists, not stale (just needs initial analysis)
+  if (!opportunity.currentAnalysisRun) {
+    return { isStale: false, reasons: [] };
+  }
+
+  // If inputs changed since analysis, it's stale
+  if (opportunity.inputsChangedSinceAnalysis) {
+    reasons.push({
+      type: 'operator_input_changed',
+      field: 'inputs',
+      from: null,
+      to: 'updated',
+    });
+  }
+
+  return {
+    isStale: reasons.length > 0,
+    reasons,
+  };
+}
