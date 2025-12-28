@@ -1,0 +1,45 @@
+name = "dfg-api"
+main = "src/index.ts"
+compatibility_date = "2025-12-15"
+
+# =============================================================================
+# LOCAL DEVELOPMENT (wrangler dev)
+#
+# Uses preview D1 database for data isolation.
+# Shares the same D1 as dfg-scout (dfg-scout-db).
+#
+# Usage:
+#   wrangler dev                       # Uses these defaults
+#   wrangler deploy --env production   # REQUIRED for production deployment
+# =============================================================================
+
+[vars]
+ENVIRONMENT = "development"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dfg-scout-db-preview"
+database_id = "e6af9d25-b031-4958-a3b2-455bafdff5f1"
+
+# =============================================================================
+# PRODUCTION
+# =============================================================================
+[env.production]
+name = "dfg-api"
+
+[env.production.triggers]
+crons = ["*/5 * * * *"]  # Check watch triggers every 5 minutes
+
+[env.production.vars]
+ENVIRONMENT = "production"
+# MAKE_WEBHOOK_URL is set via wrangler secret
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "dfg-scout-db"
+database_id = "08c267b8-b252-422a-8381-891d12917b33"
+
+# Service binding to dfg-scout for direct worker-to-worker calls
+[[env.production.services]]
+binding = "SCOUT"
+service = "dfg-scout"

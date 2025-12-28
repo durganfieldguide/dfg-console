@@ -1,0 +1,68 @@
+name = "dfg-scout"
+main = "src/index.ts"
+compatibility_date = "2025-11-25"
+
+# =============================================================================
+# LOCAL DEVELOPMENT (wrangler dev)
+#
+# These default bindings allow `wrangler dev` to work without --env flag.
+# Uses the preview D1 database for data isolation, but production R2 bucket
+# (since preview R2 was removed).
+#
+# Usage:
+#   wrangler dev                       # Uses these defaults
+#   wrangler deploy --env production   # REQUIRED for production deployment
+# =============================================================================
+
+[vars]
+ENVIRONMENT = "development"
+MAX_BID_LIMIT = "6000"
+STEAL_THRESHOLD = "2000"
+ANALYST_URL = "http://localhost:8788"
+R2_PUBLIC_URL = "https://pub-dfg-evidence.r2.dev"
+
+[[kv_namespaces]]
+binding = "SCOUT_KV"
+id = "654357f4ea634d8db682f54bae0170a2"
+
+[[d1_databases]]
+binding = "DFG_DB"
+database_name = "dfg-scout-db-preview"
+database_id = "e6af9d25-b031-4958-a3b2-455bafdff5f1"
+
+[[r2_buckets]]
+binding = "DFG_EVIDENCE"
+bucket_name = "dfg-evidence"
+
+# =============================================================================
+# PRODUCTION
+# =============================================================================
+[env.production]
+name = "dfg-scout"
+
+[env.production.triggers]
+crons = ["*/15 * * * *"]
+
+[env.production.vars]
+ENVIRONMENT = "production"
+MAX_BID_LIMIT = "6000"
+STEAL_THRESHOLD = "2000"
+ANALYST_URL = "https://dfg-analyst.automation-ab6.workers.dev"
+R2_PUBLIC_URL = "https://pub-dfg-evidence.r2.dev"
+
+[[env.production.kv_namespaces]]
+binding = "SCOUT_KV"
+id = "fdd4f609a8d34b32817d6f156396898a"
+
+[[env.production.d1_databases]]
+binding = "DFG_DB"
+database_name = "dfg-scout-db"
+database_id = "08c267b8-b252-422a-8381-891d12917b33"
+
+[[env.production.r2_buckets]]
+binding = "DFG_EVIDENCE"
+bucket_name = "dfg-evidence"
+
+[[env.production.services]]
+binding = "ANALYST"
+service = "dfg-analyst"
