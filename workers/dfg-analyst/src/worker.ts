@@ -1852,13 +1852,16 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
 
   // Sprint 1.5: Merge operator inputs into condition assessment
   // Operator inputs override AI-inferred values when provided
+  console.log(`[OPERATOR] Checking operator_inputs: ${JSON.stringify(listingData.operator_inputs)}`);
   if (listingData.operator_inputs) {
     const opInputs = listingData.operator_inputs;
+    console.log(`[OPERATOR] Found operator inputs - title_status: ${opInputs.title_status}, verified: ${opInputs.title_status_verified}`);
 
     // Title status - operator input takes precedence
     if (opInputs.title_status && opInputs.title_status !== 'unknown') {
+      const previousStatus = condition.title_status;
       condition.title_status = opInputs.title_status;
-      console.log(`[OPERATOR] Title status override: ${opInputs.title_status} (verified: ${opInputs.title_status_verified})`);
+      console.log(`[OPERATOR] Title status override: ${previousStatus} -> ${opInputs.title_status} (verified: ${opInputs.title_status_verified})`);
     }
 
     // Odometer/mileage - operator input takes precedence
