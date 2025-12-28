@@ -403,19 +403,25 @@ export default {
       }
     }
 
-    // 8. Photo Hydration Backfill - Process candidates missing photos
+    // 8. Photo Hydration Backfill - Process candidates missing photos or with only thumbnail
     if (cleanPath === '/ops/hydrate-backfill' && request.method === 'POST') {
       if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
 
       try {
         const limit = parseInt(searchParams.get('limit') || '50');
 
-        // Find candidates missing photos
+        // Find candidates with <= 1 photo (missing or thumbnail-only)
+        // Full hydration should return 5-15+ photos; 1 photo means only thumbnail was captured
         const candidates = await env.DFG_DB.prepare(`
-          SELECT id, source, source_id, title
+          SELECT id, source, source_id, title, photos
           FROM listings
           WHERE status = 'candidate'
-            AND (photos IS NULL OR photos = '[]' OR photos = '')
+            AND (
+              photos IS NULL
+              OR photos = '[]'
+              OR photos = ''
+              OR json_array_length(photos) <= 1
+            )
           LIMIT ?
         `).bind(limit).all();
 
@@ -447,11 +453,16 @@ export default {
           }
         }
 
-        // Get remaining count
+        // Get remaining count (matching the query above)
         const remaining = await env.DFG_DB.prepare(`
           SELECT COUNT(*) as count FROM listings
           WHERE status = 'candidate'
-            AND (photos IS NULL OR photos = '[]' OR photos = '')
+            AND (
+              photos IS NULL
+              OR photos = '[]'
+              OR photos = ''
+              OR json_array_length(photos) <= 1
+            )
         `).first();
 
         const remainingCount = (remaining as any)?.count ?? 0;
@@ -471,36 +482,47 @@ export default {
       }
     }
 
-    // 9. Photo Stats - Check photo coverage
+    // 9. Photo Stats - Check photo coverage (distinguishes thumbnail-only from fully hydrated)
     if (cleanPath === '/ops/photo-stats' && request.method === 'GET') {
       if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
 
       try {
+        // Count candidates by photo status: none, thumbnail-only (1), or fully hydrated (2+)
         const stats = await env.DFG_DB.prepare(`
           SELECT
             COUNT(*) as total_candidates,
-            COUNT(CASE WHEN photos IS NOT NULL AND photos != '[]' AND photos != '' THEN 1 END) as with_photos,
-            COUNT(CASE WHEN photos IS NULL OR photos = '[]' OR photos = '' THEN 1 END) as without_photos
+            COUNT(CASE WHEN photos IS NULL OR photos = '[]' OR photos = '' THEN 1 END) as no_photos,
+            COUNT(CASE WHEN json_array_length(photos) = 1 THEN 1 END) as thumbnail_only,
+            COUNT(CASE WHEN json_array_length(photos) >= 2 THEN 1 END) as fully_hydrated,
+            AVG(CASE WHEN json_array_length(photos) >= 1 THEN json_array_length(photos) END) as avg_photo_count
           FROM listings
           WHERE status = 'candidate'
         `).first();
 
-        // Sample some with photos to show URLs
+        // Sample some fully hydrated to show URLs
         const sample = await env.DFG_DB.prepare(`
-          SELECT id, title, photos
+          SELECT id, title, photos, json_array_length(photos) as photo_count
           FROM listings
           WHERE status = 'candidate'
-            AND photos IS NOT NULL
-            AND photos != '[]'
+            AND json_array_length(photos) >= 2
           LIMIT 3
         `).all();
 
+        // Count needing hydration (0 or 1 photo)
+        const needsHydration = await env.DFG_DB.prepare(`
+          SELECT COUNT(*) as count FROM listings
+          WHERE status = 'candidate'
+            AND (photos IS NULL OR photos = '[]' OR photos = '' OR json_array_length(photos) <= 1)
+        `).first();
+
         return json({
           stats,
+          needs_hydration: (needsHydration as any)?.count ?? 0,
           sample: (sample.results || []).map((r: any) => ({
             id: r.id,
             title: r.title,
-            photos: JSON.parse(r.photos || '[]')
+            photo_count: (r as any).photo_count,
+            photos: JSON.parse(r.photos || '[]').slice(0, 3) // Show first 3 URLs only
           }))
         });
       } catch (err: any) {

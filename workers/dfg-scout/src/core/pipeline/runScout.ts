@@ -365,9 +365,17 @@ export async function runScout(
             // Queue candidates that need snapshots or photo hydration
             const needsSnapshot = verdict.requiresSnapshot && !previousState?.r2_snapshot_key;
 
-            // Self-healing: Also queue existing candidates missing photos
+            // Self-healing: Queue candidates missing photos OR with only thumbnail (1 photo)
+            // Full hydration should return 5-15+ photos; 1 photo means only thumbnail was captured
             const existingPhotos = previousState?.photos;
-            const needsPhotoHydration = !existingPhotos || existingPhotos === '[]' || existingPhotos === '';
+            let photoCount = 0;
+            if (existingPhotos && existingPhotos !== '[]' && existingPhotos !== '') {
+              try {
+                const parsed = JSON.parse(existingPhotos);
+                photoCount = Array.isArray(parsed) ? parsed.length : 0;
+              } catch { photoCount = 0; }
+            }
+            const needsPhotoHydration = photoCount <= 1; // 0 = missing, 1 = thumbnail only
 
             // Only add to sync queue if needs snapshot OR needs photo hydration
             if (needsSnapshot || needsPhotoHydration) {
