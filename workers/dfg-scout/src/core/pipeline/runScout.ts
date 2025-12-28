@@ -332,7 +332,13 @@ export async function runScout(
                 location_text = excluded.location_text,
                 auction_end_at = excluded.auction_end_at,
                 image_url = excluded.image_url,
-                photos = excluded.photos,
+                -- IMPORTANT: Don't overwrite hydrated photos with thumbnail!
+                -- Only update photos if new data has more items OR existing is empty
+                photos = CASE
+                  WHEN listings.photos IS NULL OR listings.photos = '' OR listings.photos = '[]' THEN excluded.photos
+                  WHEN json_array_length(excluded.photos) > json_array_length(listings.photos) THEN excluded.photos
+                  ELSE listings.photos
+                END,
                 price_kind = excluded.price_kind,
                 price_verified = excluded.price_verified,
                 lot_status = excluded.lot_status,
