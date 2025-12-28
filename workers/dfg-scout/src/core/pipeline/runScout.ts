@@ -191,9 +191,9 @@ export async function runScout(
     verdict: Verdict;
   }> = [];
 
-  // Load existing state from D1
+  // Load existing state from D1 (include photos for self-healing hydration check)
   const existingListings = await trackSubrequest(
-    () => env.DFG_DB.prepare(`SELECT id, current_bid, r2_snapshot_key FROM listings`).all(),
+    () => env.DFG_DB.prepare(`SELECT id, current_bid, r2_snapshot_key, photos, status FROM listings`).all(),
     subreq,
     SUBREQUEST_LIMIT,
     'Load existing listings'
@@ -362,9 +362,17 @@ export async function runScout(
           if (verdict.status === 'candidate') {
             stats.candidates++;
 
-            // Queue candidates that need snapshots
+            // Queue candidates that need snapshots or photo hydration
             const needsSnapshot = verdict.requiresSnapshot && !previousState?.r2_snapshot_key;
-            candidatesToSync.push({ lot, d1Id, verdict, needsSnapshot });
+
+            // Self-healing: Also queue existing candidates missing photos
+            const existingPhotos = previousState?.photos;
+            const needsPhotoHydration = !existingPhotos || existingPhotos === '[]' || existingPhotos === '';
+
+            // Only add to sync queue if needs snapshot OR needs photo hydration
+            if (needsSnapshot || needsPhotoHydration) {
+              candidatesToSync.push({ lot, d1Id, verdict, needsSnapshot });
+            }
           } else {
             stats.rejected++;
             const rr = verdict.rejectionReason || 'unknown';
@@ -482,8 +490,11 @@ export async function runScout(
   if (options.ctx && !options.dryRun) {
     const backgroundWork = async () => {
       let snapshotsCompleted = 0;
-      let photosProxied = 0;
-      let photosHydrated = 0;
+      let photosHydratedCount = 0;
+      let photosHydratedListings = 0;
+      let photosFailed = 0;
+
+      console.log(`[Scout] Starting background work for ${candidatesToSync.length} candidates`);
 
       // Process candidate for photo hydration (skip R2 proxy - too slow, use source CDN directly)
       const processCandidate = async (item: typeof candidatesToSync[0]) => {
@@ -494,15 +505,21 @@ export async function runScout(
             try {
               const hydratedUrls = await adapter.hydratePhotosForLot(item.lot.sourceLotId);
               if (hydratedUrls.length > 0) {
-                photosHydrated += hydratedUrls.length;
+                photosHydratedCount += hydratedUrls.length;
+                photosHydratedListings++;
                 // Store source CDN URLs directly (no R2 proxy - Analyst can fetch from CDN)
                 const photosJson = JSON.stringify(hydratedUrls);
                 await env.DFG_DB.prepare(`UPDATE listings SET photos = ? WHERE id = ?`)
                   .bind(photosJson, item.d1Id)
                   .run();
+                console.log(`✅ [Scout] Hydrated ${hydratedUrls.length} photos for ${item.d1Id}`);
+              } else {
+                photosFailed++;
+                console.log(`⚠️ [Scout] No photos returned for ${item.d1Id}`);
               }
             } catch (err: any) {
-              console.warn(`[Scout] Photo hydration failed for ${item.d1Id}: ${err.message}`);
+              photosFailed++;
+              console.error(`❌ [Scout] Photo hydration failed for ${item.d1Id}: ${err.message}`);
             }
           }
 
@@ -530,7 +547,7 @@ export async function runScout(
         console.log(`[Scout] Processed batch ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(candidatesToSync.length / PARALLEL_BATCH_SIZE)}`);
       }
 
-      console.log(`[Scout] Background complete: ${snapshotsCompleted} snapshots, ${photosHydrated} hydrated, ${photosProxied} proxied`);
+      console.log(`[Scout] Background complete: ${snapshotsCompleted} snapshots, ${photosHydratedListings} listings hydrated (${photosHydratedCount} total photos), ${photosFailed} failed`);
     };
 
     options.ctx.waitUntil(backgroundWork());

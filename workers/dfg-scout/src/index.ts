@@ -2,6 +2,7 @@ import { Env } from './core/env';
 import { json, authorize } from './core/http';
 import { runScout } from './core/pipeline/runScout';
 import { getStats } from './core/pipeline/getStats';
+import { registry } from './core/registry';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -402,15 +403,120 @@ export default {
       }
     }
 
+    // 8. Photo Hydration Backfill - Process candidates missing photos
+    if (cleanPath === '/ops/hydrate-backfill' && request.method === 'POST') {
+      if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
+
+      try {
+        const limit = parseInt(searchParams.get('limit') || '50');
+
+        // Find candidates missing photos
+        const candidates = await env.DFG_DB.prepare(`
+          SELECT id, source, source_id, title
+          FROM listings
+          WHERE status = 'candidate'
+            AND (photos IS NULL OR photos = '[]' OR photos = '')
+          LIMIT ?
+        `).bind(limit).all();
+
+        const results: { id: string; title: string; photoCount: number; error?: string }[] = [];
+
+        for (const row of candidates.results || []) {
+          const r = row as { id: string; source: string; source_id: string; title: string };
+          try {
+            const adapter = registry.get(r.source);
+            if (adapter?.hydratePhotosForLot) {
+              const photos = await adapter.hydratePhotosForLot(r.source_id);
+              if (photos.length > 0) {
+                await env.DFG_DB.prepare(`UPDATE listings SET photos = ? WHERE id = ?`)
+                  .bind(JSON.stringify(photos), r.id)
+                  .run();
+                results.push({ id: r.id, title: r.title, photoCount: photos.length });
+                console.log(`✅ Hydrated ${photos.length} photos for ${r.id}`);
+              } else {
+                results.push({ id: r.id, title: r.title, photoCount: 0, error: 'No photos returned from API' });
+                console.log(`⚠️ No photos found for ${r.id}`);
+              }
+            } else {
+              results.push({ id: r.id, title: r.title, photoCount: 0, error: `Adapter ${r.source} does not support photo hydration` });
+            }
+          } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+            results.push({ id: r.id, title: r.title, photoCount: 0, error: errorMsg });
+            console.error(`❌ Photo hydration failed for ${r.id}:`, errorMsg);
+          }
+        }
+
+        // Get remaining count
+        const remaining = await env.DFG_DB.prepare(`
+          SELECT COUNT(*) as count FROM listings
+          WHERE status = 'candidate'
+            AND (photos IS NULL OR photos = '[]' OR photos = '')
+        `).first();
+
+        const remainingCount = (remaining as any)?.count ?? 0;
+
+        return json({
+          processed: results.length,
+          successful: results.filter(r => r.photoCount > 0).length,
+          failed: results.filter(r => r.photoCount === 0).length,
+          remaining: remainingCount,
+          results,
+          message: remainingCount > 0
+            ? `Run again to process next batch (${remainingCount} remaining)`
+            : 'All candidates have been hydrated'
+        });
+      } catch (err: any) {
+        return json({ error: 'Hydration backfill failed', details: err.message }, 500);
+      }
+    }
+
+    // 9. Photo Stats - Check photo coverage
+    if (cleanPath === '/ops/photo-stats' && request.method === 'GET') {
+      if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
+
+      try {
+        const stats = await env.DFG_DB.prepare(`
+          SELECT
+            COUNT(*) as total_candidates,
+            COUNT(CASE WHEN photos IS NOT NULL AND photos != '[]' AND photos != '' THEN 1 END) as with_photos,
+            COUNT(CASE WHEN photos IS NULL OR photos = '[]' OR photos = '' THEN 1 END) as without_photos
+          FROM listings
+          WHERE status = 'candidate'
+        `).first();
+
+        // Sample some with photos to show URLs
+        const sample = await env.DFG_DB.prepare(`
+          SELECT id, title, photos
+          FROM listings
+          WHERE status = 'candidate'
+            AND photos IS NOT NULL
+            AND photos != '[]'
+          LIMIT 3
+        `).all();
+
+        return json({
+          stats,
+          sample: (sample.results || []).map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            photos: JSON.parse(r.photos || '[]')
+          }))
+        });
+      } catch (err: any) {
+        return json({ error: 'Photo stats failed', details: err.message }, 500);
+      }
+    }
+
     // Fallback 404 with Debug Info
-    return json({ 
-      error: 'Not Found', 
-      debug: { 
-        path: pathname, 
-        isOps, 
+    return json({
+      error: 'Not Found',
+      debug: {
+        path: pathname,
+        isOps,
         isAdmin,
         hasAuthHeader: request.headers.has('Authorization')
-      } 
+      }
     }, 404);
   },
 
