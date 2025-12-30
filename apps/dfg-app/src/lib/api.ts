@@ -221,6 +221,52 @@ export async function getStats(): Promise<DashboardStats> {
 }
 
 // =============================================================================
+// ATTENTION REQUIRED
+// =============================================================================
+
+export type ReasonChip = 'DECISION_STALE' | 'ENDING_SOON' | 'STALE' | 'ANALYSIS_STALE';
+
+export interface AttentionItem {
+  id: string;
+  title: string;
+  source: string;
+  status: OpportunityStatus;
+  max_bid_locked: number | null;
+  auction_ends_at: string | null;
+  status_changed_at: string;
+  last_operator_review_at: string | null;
+  is_stale: boolean;
+  is_decision_stale: boolean;
+  is_ending_soon: boolean;
+  is_analysis_stale: boolean;
+  reason_tags: ReasonChip[];
+}
+
+export interface AttentionRequiredResponse {
+  items: AttentionItem[];
+  total_count: number;
+}
+
+/**
+ * Fetch items that need operator attention, sorted by priority.
+ */
+export async function getAttentionRequired(limit = 10): Promise<AttentionRequiredResponse> {
+  const response = await fetchApi<AttentionRequiredResponse>(
+    `/api/dashboard/attention?limit=${limit}`
+  );
+  return response;
+}
+
+/**
+ * Touch an opportunity to record operator review (updates last_operator_review_at).
+ */
+export async function touchOpportunity(opportunityId: string): Promise<void> {
+  await fetchApi(`/api/opportunities/${encodeURIComponent(opportunityId)}/touch`, {
+    method: 'POST',
+  });
+}
+
+// =============================================================================
 // SOURCES
 // =============================================================================
 

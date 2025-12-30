@@ -7,7 +7,6 @@ import {
   Eye,
   Search,
   Clock,
-  AlertCircle,
   TrendingUp,
   CheckCircle,
   XCircle,
@@ -16,7 +15,8 @@ import {
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { cn, formatRelativeTime, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
+import { AttentionRequiredList } from '@/components/features/attention-required-list';
+import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
 import { getStats, syncFromScout, triggerScoutRun } from '@/lib/api';
 import type { DashboardStats, OpportunityStatus } from '@/types';
 
@@ -117,29 +117,8 @@ export default function DashboardPage() {
         )}
 
         <div className="p-4 space-y-4">
-          {/* Alerts Card */}
-          {stats && stats.needs_attention > 0 && (
-            <Link href="/opportunities?needs_attention=true">
-              <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-red-100 dark:bg-red-900/50 rounded-full">
-                      <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-red-900 dark:text-red-100">
-                        {stats.needs_attention} items need attention
-                      </p>
-                      <p className="text-sm text-red-600 dark:text-red-300">
-                        {stats.watch_alerts_fired} watch alerts, {stats.stale_qualifying.over_24h} stale
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-red-600 dark:text-red-400">&rarr;</span>
-                </CardContent>
-              </Card>
-            </Link>
-          )}
+          {/* Attention Required List - Priority-sorted staleness indicators */}
+          <AttentionRequiredList limit={5} />
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
@@ -255,46 +234,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Results Summary */}
-          <Card>
-            <CardHeader>
-              <h2 className="font-medium text-gray-900 dark:text-white">Results</h2>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-around text-center">
-                <div className="flex-1">
-                  <div className="flex justify-center mb-1">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  </div>
-                  <p className="text-xl font-bold text-green-600">
-                    {stats?.by_status.won || 0}
-                  </p>
-                  <p className="text-xs text-gray-500">Won</p>
-                </div>
-                <div className="w-px bg-gray-200 dark:bg-gray-700" />
-                <div className="flex-1">
-                  <div className="flex justify-center mb-1">
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  </div>
-                  <p className="text-xl font-bold text-red-600">
-                    {stats?.by_status.lost || 0}
-                  </p>
-                  <p className="text-xs text-gray-500">Lost</p>
-                </div>
-                <div className="w-px bg-gray-200 dark:bg-gray-700" />
-                <div className="flex-1">
-                  <div className="flex justify-center mb-1">
-                    <XCircle className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <p className="text-xl font-bold text-gray-600">
-                    {stats?.by_status.rejected || 0}
-                  </p>
-                  <p className="text-xs text-gray-500">Rejected</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* New Today */}
           {stats?.new_today !== undefined && stats.new_today > 0 && (
             <Card>
@@ -305,6 +244,41 @@ export default function DashboardPage() {
             </Card>
           )}
         </div>
+
+        {/* Results Summary Footer - Relocated for visibility */}
+        <footer className="sticky bottom-0 md:bottom-auto md:relative mt-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3">
+          <div className="flex justify-around text-center max-w-md mx-auto">
+            <Link href="/opportunities?status=won" className="flex-1 group">
+              <div className="flex items-center justify-center gap-1">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-lg font-bold text-green-600 group-hover:underline">
+                  {stats?.by_status.won || 0}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">Won</p>
+            </Link>
+            <div className="w-px bg-gray-200 dark:bg-gray-700" />
+            <Link href="/opportunities?status=lost" className="flex-1 group">
+              <div className="flex items-center justify-center gap-1">
+                <XCircle className="h-4 w-4 text-red-500" />
+                <span className="text-lg font-bold text-red-600 group-hover:underline">
+                  {stats?.by_status.lost || 0}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">Lost</p>
+            </Link>
+            <div className="w-px bg-gray-200 dark:bg-gray-700" />
+            <Link href="/opportunities?status=rejected" className="flex-1 group">
+              <div className="flex items-center justify-center gap-1">
+                <XCircle className="h-4 w-4 text-gray-400" />
+                <span className="text-lg font-bold text-gray-600 group-hover:underline">
+                  {stats?.by_status.rejected || 0}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">Rejected</p>
+            </Link>
+          </div>
+        </footer>
       </main>
     </div>
   );

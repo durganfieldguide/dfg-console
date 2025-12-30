@@ -5,7 +5,9 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev --test-scheduled",
-    "start": "wrangler dev --test-scheduled"
+    "start": "wrangler dev --test-scheduled",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "dfg-data-gateway": "file:../../packages/dfg-data-gateway"

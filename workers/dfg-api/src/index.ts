@@ -4,9 +4,10 @@
  * Operator console API for processing auction opportunities.
  * Reads from dfg-scout's listings table, manages opportunities lifecycle.
  *
- * @version 1.0.0
+ * @version 1.1.0
  */
 
+import * as Sentry from '@sentry/cloudflare';
 import type { Env } from './core/env';
 import { json, jsonError, authorize, ErrorCodes } from './core/http';
 
@@ -16,7 +17,11 @@ import { handleDismissAlert, handleAlerts } from './routes/alerts';
 import { handleSources } from './routes/sources';
 import { handleIngestRoute } from './routes/ingest';
 
-export default {
+// =============================================================================
+// MAIN HANDLER
+// =============================================================================
+
+const handler: ExportedHandler<Env> = {
   async fetch(
     request: Request,
     env: Env,
@@ -52,6 +57,13 @@ export default {
     try {
       // Route: /api/opportunities/*
       if (path.startsWith('/api/opportunities')) {
+        // Special case: touch endpoint for operator review tracking
+        const touchMatch = path.match(/^\/api\/opportunities\/([^/]+)\/touch$/);
+        if (touchMatch && method === 'POST') {
+          const opportunityId = decodeURIComponent(touchMatch[1]);
+          return handleTouch(env, opportunityId);
+        }
+
         // Special case: dismiss alert
         const dismissMatch = path.match(/^\/api\/opportunities\/([^/]+)\/alerts\/dismiss$/);
         if (dismissMatch && method === 'POST') {
@@ -60,6 +72,11 @@ export default {
         }
 
         return handleOpportunities(request, env, url, path, method);
+      }
+
+      // Route: /api/dashboard/attention
+      if (path === '/api/dashboard/attention' && method === 'GET') {
+        return handleAttentionRequired(env, url);
       }
 
       // Route: /api/alerts/* (spec-compliant alert endpoints)
@@ -92,6 +109,7 @@ export default {
 
     } catch (error) {
       console.error('[dfg-api] Unhandled error:', error);
+      Sentry.captureException(error);
       const message = error instanceof Error ? error.message : 'Unknown error';
       return jsonError(ErrorCodes.INTERNAL_ERROR, message, 500);
     }
@@ -102,13 +120,195 @@ export default {
    * Currently runs watch trigger checks every 5 minutes.
    */
   async scheduled(
-    _event: ScheduledEvent,
+    _controller: ScheduledController,
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
     ctx.waitUntil(checkWatchTriggersScheduled(env));
   },
 };
+
+// =============================================================================
+// EXPORT WITH SENTRY WRAPPER
+// =============================================================================
+
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: env.SENTRY_DSN || '',
+    environment: env.ENVIRONMENT || 'development',
+    tracesSampleRate: 0.1,
+    // Only enable if DSN is configured
+    enabled: !!env.SENTRY_DSN,
+  }),
+  handler
+);
+
+// =============================================================================
+// TOUCH ENDPOINT (Operator Review Tracking)
+// =============================================================================
+
+/**
+ * Record that an operator has viewed an opportunity.
+ * Uses atomic UPDATE with 60-second dedupe window to prevent spam.
+ */
+async function handleTouch(env: Env, id: string): Promise<Response> {
+  const now = new Date().toISOString();
+
+  // Atomic UPDATE with dedupe - only updates if not touched in last 60 seconds
+  const result = await env.DB.prepare(`
+    UPDATE opportunities
+    SET last_operator_review_at = ?
+    WHERE id = ?
+      AND (last_operator_review_at IS NULL
+           OR julianday('now') - julianday(last_operator_review_at) > 60.0/86400.0)
+  `).bind(now, id).run();
+
+  if (result.meta?.changes === 0) {
+    // Either not found or within dedupe window
+    return new Response(null, { status: 204 });
+  }
+  return new Response(null, { status: 200 });
+}
+
+// =============================================================================
+// ATTENTION REQUIRED ENDPOINT
+// =============================================================================
+
+/**
+ * Get items that need operator attention, sorted by priority.
+ */
+async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
+  const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+  const staleThresholdDays = parseInt(env.STALE_THRESHOLD_DAYS || '7', 10);
+
+  const result = await env.DB.prepare(`
+    WITH attention_items AS (
+      SELECT
+        id, title, source, status, max_bid_locked,
+        auction_ends_at, status_changed_at, last_operator_review_at,
+        last_analyzed_at,
+        -- Compute staleness flags
+        CASE WHEN
+          julianday('now') - julianday(status_changed_at) > ?
+          AND status NOT IN ('rejected', 'archived', 'won', 'lost')
+        THEN 1 ELSE 0 END as is_stale,
+
+        CASE WHEN
+          auction_ends_at IS NOT NULL
+          AND julianday(auction_ends_at) - julianday('now') <= 2
+          AND julianday(auction_ends_at) - julianday('now') > 0
+          AND (last_operator_review_at IS NULL
+               OR julianday('now') - julianday(last_operator_review_at) > 1)
+          AND status NOT IN ('rejected', 'archived', 'won', 'lost')
+        THEN 1 ELSE 0 END as is_decision_stale,
+
+        CASE WHEN
+          auction_ends_at IS NOT NULL
+          AND julianday(auction_ends_at) - julianday('now') <= 2
+          AND julianday(auction_ends_at) - julianday('now') > 0
+        THEN 1 ELSE 0 END as is_ending_soon,
+
+        CASE WHEN
+          last_analyzed_at IS NULL
+          OR julianday('now') - julianday(last_analyzed_at) > 7
+        THEN 1 ELSE 0 END as is_analysis_stale,
+
+        -- Priority for sorting (lower = higher priority)
+        CASE
+          WHEN auction_ends_at IS NOT NULL
+               AND julianday(auction_ends_at) - julianday('now') <= 2
+               AND julianday(auction_ends_at) - julianday('now') > 0
+               AND (last_operator_review_at IS NULL
+                    OR julianday('now') - julianday(last_operator_review_at) > 1)
+               AND status NOT IN ('rejected', 'archived', 'won', 'lost')
+          THEN 1  -- DECISION_STALE
+          WHEN auction_ends_at IS NOT NULL
+               AND julianday(auction_ends_at) - julianday('now') <= 2
+               AND julianday(auction_ends_at) - julianday('now') > 0
+          THEN 2  -- ENDING_SOON
+          WHEN julianday('now') - julianday(status_changed_at) > ?
+               AND status NOT IN ('rejected', 'archived', 'won', 'lost')
+          THEN 3  -- STALE
+          WHEN last_analyzed_at IS NULL
+               OR julianday('now') - julianday(last_analyzed_at) > 7
+          THEN 4  -- ANALYSIS_STALE
+          ELSE 99
+        END as priority_rank
+
+      FROM opportunities
+      WHERE status NOT IN ('rejected', 'archived', 'won', 'lost')
+    )
+    SELECT *
+    FROM attention_items
+    WHERE is_stale = 1
+       OR is_decision_stale = 1
+       OR is_ending_soon = 1
+       OR is_analysis_stale = 1
+    ORDER BY
+      priority_rank ASC,
+      auction_ends_at ASC,
+      updated_at DESC
+    LIMIT ?
+  `).bind(staleThresholdDays, staleThresholdDays, limit).all();
+
+  // Get total count for "View all" link
+  const countResult = await env.DB.prepare(`
+    SELECT COUNT(*) as count
+    FROM opportunities
+    WHERE status NOT IN ('rejected', 'archived', 'won', 'lost')
+      AND (
+        julianday('now') - julianday(status_changed_at) > ?
+        OR (auction_ends_at IS NOT NULL
+            AND julianday(auction_ends_at) - julianday('now') <= 2
+            AND julianday(auction_ends_at) - julianday('now') > 0)
+        OR last_analyzed_at IS NULL
+        OR julianday('now') - julianday(last_analyzed_at) > 7
+      )
+  `).bind(staleThresholdDays).first<{ count: number }>();
+
+  const items = (result.results || []).map((row: Record<string, unknown>) => ({
+    id: row.id as string,
+    title: row.title as string,
+    source: row.source as string,
+    status: row.status as string,
+    max_bid_locked: row.max_bid_locked as number | null,
+    auction_ends_at: row.auction_ends_at as string | null,
+    status_changed_at: row.status_changed_at as string,
+    last_operator_review_at: row.last_operator_review_at as string | null,
+    is_stale: row.is_stale === 1,
+    is_decision_stale: row.is_decision_stale === 1,
+    is_ending_soon: row.is_ending_soon === 1,
+    is_analysis_stale: row.is_analysis_stale === 1,
+    reason_tags: computeReasonTags({
+      is_stale: row.is_stale === 1,
+      is_decision_stale: row.is_decision_stale === 1,
+      is_ending_soon: row.is_ending_soon === 1,
+      is_analysis_stale: row.is_analysis_stale === 1,
+    }),
+  }));
+
+  return json({
+    items,
+    total_count: countResult?.count || 0,
+  });
+}
+
+/**
+ * Compute reason tags from staleness flags (inline for now, will move to utils).
+ */
+function computeReasonTags(flags: {
+  is_stale: boolean;
+  is_decision_stale: boolean;
+  is_ending_soon: boolean;
+  is_analysis_stale: boolean;
+}): string[] {
+  const tags: string[] = [];
+  if (flags.is_decision_stale) tags.push('DECISION_STALE');
+  if (flags.is_ending_soon && !flags.is_decision_stale) tags.push('ENDING_SOON');
+  if (flags.is_stale) tags.push('STALE');
+  if (flags.is_analysis_stale) tags.push('ANALYSIS_STALE');
+  return tags;
+}
 
 // =============================================================================
 // WATCH TRIGGER EVALUATION
