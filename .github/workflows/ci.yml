@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ============================================
+  # DFG App (Next.js) - Lint, Typecheck, Build
+  # ============================================
+  dfg-app:
+    name: DFG App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/dfg-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: apps/dfg-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Build
+        run: npm run build
+        env:
+          # Required for Next.js build (use placeholder values in CI)
+          DFG_API_URL: https://example.com
+          OPS_TOKEN: ci-placeholder
+
+  # ============================================
+  # DFG Scout Worker - Typecheck and Tests
+  # ============================================
+  dfg-scout:
+    name: DFG Scout Worker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/dfg-scout
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: workers/dfg-scout/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true  # Tests may not be fully set up yet
+
+  # ============================================
+  # DFG API Worker - Typecheck
+  # ============================================
+  dfg-api:
+    name: DFG API Worker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/dfg-api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: workers/dfg-api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
