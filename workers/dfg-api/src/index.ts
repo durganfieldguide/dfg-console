@@ -186,7 +186,7 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
       SELECT
         id, title, source, status, max_bid_locked,
         auction_ends_at, status_changed_at, last_operator_review_at,
-        last_analyzed_at,
+        last_analyzed_at, updated_at,
         -- Compute staleness flags
         CASE WHEN
           julianday('now') - julianday(status_changed_at) > ?
