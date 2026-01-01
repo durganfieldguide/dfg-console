@@ -110,21 +110,57 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
   // Note: has_active_alert filter is TODO for v2
   const needsAttention = getQueryParamBool(url, 'needs_attention');
   const staleQualifying = getQueryParamBool(url, 'stale_qualifying');
+  // Sprint N+1: New staleness filters
+  const stale = getQueryParamBool(url, 'stale');
+  const analysisStale = getQueryParamBool(url, 'analysis_stale');
+  const decisionStale = getQueryParamBool(url, 'decision_stale');
+  const endingSoon = getQueryParamBool(url, 'ending_soon');
   const limit = Math.min(getQueryParamInt(url, 'limit', 50), 100);
   const offset = getQueryParamInt(url, 'offset', 0);
   const sort = getQueryParam(url, 'sort') || 'auction_ends_at';
   const order = getQueryParam(url, 'order') || 'asc';
+
+  // Staleness thresholds (matching dashboard/attention endpoint)
+  const STALE_THRESHOLD_DAYS = 3;
+  const ANALYSIS_STALE_DAYS = 7;
 
   let query = `
     SELECT
       id, source, source_lot_id, status, category_id, title,
       current_bid, auction_ends_at, buy_box_score, distance_miles,
       primary_image_url, unknown_count, status_changed_at, watch_fired_at,
-      watch_cycle
+      watch_cycle, last_operator_review_at, last_analyzed_at,
+
+      -- Compute staleness flags
+      CASE WHEN status NOT IN ('rejected', 'archived', 'won', 'lost')
+           AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?
+        THEN 1 ELSE 0 END as is_stale,
+
+      CASE WHEN status IN ('bid', 'watch')
+           AND auction_ends_at IS NOT NULL
+           AND julianday(auction_ends_at) - julianday('now') <= 1
+           AND julianday(auction_ends_at) - julianday('now') > 0
+        THEN 1 ELSE 0 END as is_decision_stale,
+
+      CASE WHEN auction_ends_at IS NOT NULL
+           AND julianday(auction_ends_at) - julianday('now') <= 2
+           AND julianday(auction_ends_at) - julianday('now') > 0
+        THEN 1 ELSE 0 END as is_ending_soon,
+
+      CASE WHEN status NOT IN ('rejected', 'archived', 'won', 'lost')
+           AND last_analyzed_at IS NOT NULL
+           AND julianday('now') - julianday(last_analyzed_at) > ?
+        THEN 1 ELSE 0 END as is_analysis_stale,
+
+      -- Compute stale_days for display
+      CASE WHEN status NOT IN ('rejected', 'archived', 'won', 'lost')
+        THEN CAST(julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) AS INTEGER)
+        ELSE 0 END as stale_days
+
     FROM opportunities
     WHERE 1=1
   `;
-  const params: (string | number)[] = [];
+  const params: (string | number)[] = [STALE_THRESHOLD_DAYS, ANALYSIS_STALE_DAYS];
 
   // Status filter (comma-separated)
   if (status) {
@@ -178,6 +214,31 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
 
   // TODO: has_active_alert filter requires checking dismissals - implement in v2
 
+  // Sprint N+1: Staleness filters
+  if (stale === true) {
+    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    query += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ${STALE_THRESHOLD_DAYS}`;
+  }
+
+  if (analysisStale === true) {
+    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    query += ` AND last_analyzed_at IS NOT NULL`;
+    query += ` AND julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS}`;
+  }
+
+  if (decisionStale === true) {
+    query += ` AND status IN ('bid', 'watch')`;
+    query += ` AND auction_ends_at IS NOT NULL`;
+    query += ` AND julianday(auction_ends_at) - julianday('now') <= 1`;
+    query += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+  }
+
+  if (endingSoon === true) {
+    query += ` AND auction_ends_at IS NOT NULL`;
+    query += ` AND julianday(auction_ends_at) - julianday('now') <= 2`;
+    query += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+  }
+
   // Sorting
   const allowedSorts = ['auction_ends_at', 'buy_box_score', 'created_at', 'updated_at', 'status_changed_at'];
   const sortField = allowedSorts.includes(sort) ? sort : 'auction_ends_at';
@@ -221,12 +282,42 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
     )`;
   }
 
+  // Sprint N+1: Staleness filters for count query
+  if (stale === true) {
+    countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    countQuery += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ${STALE_THRESHOLD_DAYS}`;
+  }
+  if (analysisStale === true) {
+    countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    countQuery += ` AND last_analyzed_at IS NOT NULL`;
+    countQuery += ` AND julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS}`;
+  }
+  if (decisionStale === true) {
+    countQuery += ` AND status IN ('bid', 'watch')`;
+    countQuery += ` AND auction_ends_at IS NOT NULL`;
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') <= 1`;
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+  }
+  if (endingSoon === true) {
+    countQuery += ` AND auction_ends_at IS NOT NULL`;
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') <= 2`;
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+  }
+
   const countResult = await env.DB.prepare(countQuery).bind(...countParams).first();
   const total = (countResult as { count: number } | null)?.count || 0;
 
-  // Transform rows
+  // Transform rows - include computed staleness fields
+  interface OpportunityRowWithStaleness extends OpportunityRow {
+    is_stale: number;
+    is_decision_stale: number;
+    is_ending_soon: number;
+    is_analysis_stale: number;
+    stale_days: number;
+  }
+
   const opportunities = (result.results || []).map((row) => {
-    const r = row as unknown as OpportunityRow;
+    const r = row as unknown as OpportunityRowWithStaleness;
     return {
       id: r.id,
       source: r.source,
@@ -244,6 +335,12 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
       watch_fired_at: r.watch_fired_at,
       // TODO: Compute has_active_alert based on dismissals
       has_active_alert: r.watch_fired_at !== null,
+      // Sprint N+1: Staleness fields
+      is_stale: r.is_stale === 1,
+      is_decision_stale: r.is_decision_stale === 1,
+      is_ending_soon: r.is_ending_soon === 1,
+      is_analysis_stale: r.is_analysis_stale === 1,
+      stale_days: r.stale_days || 0,
     };
   });
 

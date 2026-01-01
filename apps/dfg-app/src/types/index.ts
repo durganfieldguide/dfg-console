@@ -61,6 +61,12 @@ export interface OpportunitySummary {
   watch_fired_at: string | null;
   has_active_alert: boolean;
   source_url?: string; // Optional - may be included in list responses
+  // Sprint N+1: Staleness fields
+  is_stale?: boolean;
+  is_decision_stale?: boolean;
+  is_ending_soon?: boolean;
+  is_analysis_stale?: boolean;
+  stale_days?: number;
 }
 
 export interface OpportunityDetail extends OpportunitySummary {

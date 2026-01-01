@@ -62,6 +62,11 @@ export interface ListOpportunitiesParams {
   category_id?: string;
   needs_attention?: boolean;
   stale_qualifying?: boolean;
+  // Sprint N+1: Staleness filters
+  stale?: boolean;
+  analysis_stale?: boolean;
+  decision_stale?: boolean;
+  ending_soon?: boolean;
   limit?: number;
   offset?: number;
   sort?: string;
@@ -82,6 +87,11 @@ export async function listOpportunities(
   if (params.category_id) searchParams.set('category_id', params.category_id);
   if (params.needs_attention) searchParams.set('needs_attention', 'true');
   if (params.stale_qualifying) searchParams.set('stale_qualifying', 'true');
+  // Sprint N+1: Staleness filters
+  if (params.stale) searchParams.set('stale', 'true');
+  if (params.analysis_stale) searchParams.set('analysis_stale', 'true');
+  if (params.decision_stale) searchParams.set('decision_stale', 'true');
+  if (params.ending_soon) searchParams.set('ending_soon', 'true');
   if (params.limit) searchParams.set('limit', params.limit.toString());
   if (params.offset) searchParams.set('offset', params.offset.toString());
   if (params.sort) searchParams.set('sort', params.sort);

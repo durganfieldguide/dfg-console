@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Clock, MapPin, AlertCircle, ExternalLink } from 'lucide-react';
+import { Clock, MapPin, AlertCircle, ExternalLink, AlertTriangle, FlaskConical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { StatusBadge, ScoreBadge } from '@/components/ui/Badge';
 import { cn, formatCurrency, formatRelativeTime, isEndingSoon } from '@/lib/utils';
@@ -89,12 +89,31 @@ export function OpportunityCard({ opportunity, selected, onSelect }: Opportunity
               </div>
             </div>
 
-            {/* Status and source */}
-            <div className="flex items-center gap-2 mb-2">
+            {/* Status, source, and staleness badges */}
+            <div className="flex items-center flex-wrap gap-2 mb-2">
               <StatusBadge status={opportunity.status} />
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {opportunity.source === 'sierra_auction' ? 'Sierra' : opportunity.source}
               </span>
+              {/* Staleness badges */}
+              {opportunity.is_stale && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  <AlertTriangle className="h-3 w-3" />
+                  Stale {opportunity.stale_days ? `${opportunity.stale_days}d` : ''}
+                </span>
+              )}
+              {opportunity.is_decision_stale && !opportunity.is_stale && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                  <AlertTriangle className="h-3 w-3" />
+                  Decision Needed
+                </span>
+              )}
+              {opportunity.is_analysis_stale && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  <FlaskConical className="h-3 w-3" />
+                  Re-analysis
+                </span>
+              )}
             </div>
 
             {/* Price and timing */}

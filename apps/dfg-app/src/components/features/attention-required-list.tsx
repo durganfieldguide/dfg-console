@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   AlertTriangle,
   Clock,
@@ -24,61 +25,76 @@ import type { OpportunityStatus } from '@/types';
 /**
  * Reason chip configuration for display.
  */
-const CHIP_CONFIG: Record<ReasonChip, { label: string; icon: typeof AlertTriangle; color: string }> = {
+const CHIP_CONFIG: Record<ReasonChip, { label: string; icon: typeof AlertTriangle; color: string; filterUrl: string }> = {
   DECISION_STALE: {
     label: 'Decision Needed',
     icon: AlertTriangle,
     color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    filterUrl: '/opportunities?decision_stale=true',
   },
   ENDING_SOON: {
     label: 'Ending Soon',
     icon: Clock,
     color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+    filterUrl: '/opportunities?ending_soon=true',
   },
   STALE: {
     label: 'Stale',
     icon: AlertCircle,
     color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    filterUrl: '/opportunities?stale=true',
   },
   ANALYSIS_STALE: {
     label: 'Needs Re-analysis',
     icon: FlaskConical,
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    filterUrl: '/opportunities?analysis_stale=true',
   },
 };
 
 interface ReasonChipProps {
   chip: ReasonChip;
   size?: 'sm' | 'md';
+  onClick?: (e: React.MouseEvent) => void;
 }
 
-function ReasonChipBadge({ chip, size = 'sm' }: ReasonChipProps) {
+function ReasonChipBadge({ chip, size = 'sm', onClick }: ReasonChipProps) {
   const config = CHIP_CONFIG[chip];
   const Icon = config.icon;
 
   return (
-    <span
+    <button
+      type="button"
+      onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full font-medium',
+        'inline-flex items-center gap-1 rounded-full font-medium cursor-pointer hover:opacity-80 transition-opacity',
         config.color,
         size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm'
       )}
     >
       <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} />
       {config.label}
-    </span>
+    </button>
   );
 }
 
 interface AttentionItemRowProps {
   item: AttentionItem;
   onTouch: (id: string) => void;
+  onChipClick: (chip: ReasonChip) => void;
 }
 
-function AttentionItemRow({ item, onTouch }: AttentionItemRowProps) {
+function AttentionItemRow({ item, onTouch, onChipClick }: AttentionItemRowProps) {
   const handleClick = () => {
     // Fire touch on click (fire-and-forget)
     onTouch(item.id);
+  };
+
+  const handleChipClick = (e: React.MouseEvent, chip: ReasonChip) => {
+    // Prevent the row click from firing
+    e.preventDefault();
+    e.stopPropagation();
+    onChipClick(chip);
   };
 
   // Format time remaining
@@ -119,10 +135,14 @@ function AttentionItemRow({ item, onTouch }: AttentionItemRowProps) {
             )}
           </div>
 
-          {/* Reason Chips */}
+          {/* Reason Chips - clickable to filter */}
           <div className="flex flex-wrap gap-1 mt-2">
             {item.reason_tags.map((chip) => (
-              <ReasonChipBadge key={chip} chip={chip} />
+              <ReasonChipBadge
+                key={chip}
+                chip={chip}
+                onClick={(e) => handleChipClick(e, chip)}
+              />
             ))}
           </div>
         </div>
@@ -152,6 +172,7 @@ export function AttentionRequiredList({
   showHeader = true,
   className,
 }: AttentionRequiredListProps) {
+  const router = useRouter();
   const [items, setItems] = useState<AttentionItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -182,6 +203,12 @@ export function AttentionRequiredList({
       console.warn('Touch failed:', err);
     });
   }, []);
+
+  const handleChipClick = useCallback((chip: ReasonChip) => {
+    // Navigate to the filtered opportunities page
+    const config = CHIP_CONFIG[chip];
+    router.push(config.filterUrl);
+  }, [router]);
 
   if (loading) {
     return (
@@ -270,7 +297,7 @@ export function AttentionRequiredList({
         <div className="divide-y divide-gray-100 dark:divide-gray-700">
           {items.map((item) => (
             <div key={item.id} className="px-4">
-              <AttentionItemRow item={item} onTouch={handleTouch} />
+              <AttentionItemRow item={item} onTouch={handleTouch} onChipClick={handleChipClick} />
             </div>
           ))}
         </div>

@@ -23,6 +23,11 @@ function OpportunitiesContent() {
   const status = searchParams.get('status') as OpportunityStatus | null;
   const endingWithin = searchParams.get('ending_within') as '24h' | '48h' | '7d' | null;
   const scoreBand = searchParams.get('score_band') as 'high' | 'medium' | 'low' | null;
+  // Sprint N+1: Staleness filters
+  const stale = searchParams.get('stale') === 'true';
+  const analysisStale = searchParams.get('analysis_stale') === 'true';
+  const decisionStale = searchParams.get('decision_stale') === 'true';
+  const endingSoon = searchParams.get('ending_soon') === 'true';
 
   const fetchOpportunities = useCallback(async () => {
     setLoading(true);
@@ -34,6 +39,11 @@ function OpportunitiesContent() {
       if (status) params.status = status;
       if (endingWithin) params.ending_within = endingWithin;
       if (scoreBand) params.score_band = scoreBand;
+      // Sprint N+1: Apply staleness filters
+      if (stale) params.stale = true;
+      if (analysisStale) params.analysis_stale = true;
+      if (decisionStale) params.decision_stale = true;
+      if (endingSoon) params.ending_soon = true;
 
       const result = await listOpportunities(params);
       setOpportunities(result.opportunities);
@@ -43,7 +53,7 @@ function OpportunitiesContent() {
     } finally {
       setLoading(false);
     }
-  }, [status, endingWithin, scoreBand]);
+  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -63,7 +73,7 @@ function OpportunitiesContent() {
     router.push('/opportunities');
   };
 
-  const hasActiveFilters = status || endingWithin || scoreBand;
+  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon;
 
   return (
     <div className="flex min-h-screen">
@@ -98,7 +108,7 @@ function OpportunitiesContent() {
                 Filters
                 {hasActiveFilters && (
                   <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
-                    {[status, endingWithin, scoreBand].filter(Boolean).length}
+                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon].filter(Boolean).length}
                   </span>
                 )}
               </Button>
