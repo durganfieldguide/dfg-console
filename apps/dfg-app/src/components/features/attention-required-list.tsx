@@ -275,18 +275,6 @@ export function AttentionRequiredList({
           ))}
         </div>
 
-        {/* View All Link - if more items than shown */}
-        {totalCount > items.length && (
-          <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-            <Link
-              href="/opportunities?needs_attention=true"
-              className="text-sm text-amber-600 dark:text-amber-400 hover:underline flex items-center justify-center gap-1"
-            >
-              View all {totalCount} items
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
