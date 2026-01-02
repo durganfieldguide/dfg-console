@@ -601,23 +601,35 @@ export async function updateOperatorInputs(
 }
 
 /**
- * Trigger a new analysis run for an opportunity
+ * Trigger a new analysis run for an opportunity.
+ * Returns the analysis run info (opportunity is updated server-side).
  */
 export async function triggerAnalysis(
   opportunityId: string
-): Promise<{ analysisRun: AnalysisRunSummary; opportunity: OpportunityWithAnalysis }> {
-  const response = await fetchApi<ApiResponse<{
-    analysisRun: AnalysisRunSummary;
-    opportunity: OpportunityWithAnalysis;
-  }>>(
+): Promise<{ analysisRun: AnalysisRunSummary }> {
+  // The API returns { analysisRun: {...}, delta: {...} } directly (not wrapped in data)
+  const response = await fetchApi<{
+    analysisRun: {
+      id: string;
+      opportunityId: string;
+      createdAt: string;
+      recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO';
+    };
+    delta: unknown;
+  }>(
     `/api/opportunities/${encodeURIComponent(opportunityId)}/analyze`,
     {
       method: 'POST',
     }
   );
   return {
-    analysisRun: response.data.analysisRun,
-    opportunity: parseOpportunityData(response.data.opportunity) as OpportunityWithAnalysis,
+    analysisRun: {
+      id: response.analysisRun.id,
+      createdAt: response.analysisRun.createdAt,
+      recommendation: response.analysisRun.recommendation,
+      gatesSummary: '', // Not returned by API, but not needed for inline action
+      allCriticalPassed: response.analysisRun.recommendation === 'BID',
+    },
   };
 }
 

@@ -393,7 +393,12 @@ export function AttentionRequiredList({
           break;
 
         case 'pass':
-          await updateOpportunity(id, { status: 'rejected' });
+          // Pass requires a rejection reason - use 'other' with a default note
+          await updateOpportunity(id, {
+            status: 'rejected',
+            rejection_reason: 'other',
+            rejection_note: 'Passed from dashboard',
+          });
           // Remove item from list optimistically
           setItems((prev) => prev.filter((item) => item.id !== id));
           setTotalCount((prev) => Math.max(0, prev - 1));
@@ -401,14 +406,10 @@ export function AttentionRequiredList({
 
         case 'watch':
           await updateOpportunity(id, { status: 'watch' });
-          // Update status optimistically, may still need attention if ending soon
-          setItems((prev) =>
-            prev.map((item) =>
-              item.id === id
-                ? { ...item, status: 'watch' as OpportunityStatus }
-                : item
-            )
-          );
+          // Remove item from attention list since status changed
+          // (item no longer needs immediate attention after explicit watch action)
+          setItems((prev) => prev.filter((item) => item.id !== id));
+          setTotalCount((prev) => Math.max(0, prev - 1));
           break;
       }
 
