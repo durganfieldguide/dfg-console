@@ -1421,20 +1421,7 @@ interface ClaudeResponse {
 async function callClaude(
   env: Env, model: string, messages: Array<{ role: string; content: any }>, maxTokens = 4000
 ): Promise<{ text: string; tokens: number }> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01"
-    },
-    body: JSON.stringify({ model, max_tokens: maxTokens, messages })
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Claude API error: ${response.status} - ${error}`);
-  }
+  const response = await fetchClaudeWithRetry(env, { model, max_tokens: maxTokens, messages });
 
   const data = await response.json() as ClaudeResponse;
   const text = data.content.filter(c => c.type === "text").map(c => c.text).join("");
@@ -1466,6 +1453,88 @@ async function sleep(ms: number): Promise<void> {
 function jitter(baseMs: number): number {
   // Add 0-50% random jitter
   return baseMs + Math.random() * baseMs * 0.5;
+}
+
+// Retryable status codes for Claude API
+function isRetryableStatus(status: number): boolean {
+  // 429 = rate limit, 5xx = server errors
+  return status === 429 || (status >= 500 && status < 600);
+}
+
+// Claude API fetch with retry logic
+async function fetchClaudeWithRetry(
+  env: Env,
+  body: object,
+  maxRetries = 3
+): Promise<Response> {
+  const baseDelays = [1000, 2000, 4000]; // 1s, 2s, 4s
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify(body)
+      });
+
+      // Success - return immediately
+      if (response.ok) {
+        if (attempt > 0) {
+          console.log(`[CLAUDE] Request succeeded on attempt ${attempt + 1}`);
+        }
+        return response;
+      }
+
+      // Non-retryable error (4xx except 429) - fail immediately
+      if (!isRetryableStatus(response.status)) {
+        const errorText = await response.text();
+        throw new Error(`Claude API error: ${response.status} - ${errorText}`);
+      }
+
+      // Retryable error - log and continue
+      const errorText = await response.text();
+      lastError = new Error(`Claude API error: ${response.status} - ${errorText}`);
+      console.warn(`[CLAUDE] Attempt ${attempt + 1}/${maxRetries + 1} failed with ${response.status}: ${errorText.substring(0, 200)}`);
+
+      // Check for Retry-After header on 429
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('retry-after');
+        if (retryAfter) {
+          const retryMs = parseInt(retryAfter, 10) * 1000;
+          if (retryMs > 0 && retryMs < 60000) {
+            console.log(`[CLAUDE] Respecting Retry-After header: ${retryAfter}s`);
+            await sleep(retryMs);
+            continue;
+          }
+        }
+      }
+
+      // Exponential backoff with jitter
+      if (attempt < maxRetries) {
+        const delayMs = jitter(baseDelays[Math.min(attempt, baseDelays.length - 1)]);
+        console.log(`[CLAUDE] Retrying in ${Math.round(delayMs)}ms...`);
+        await sleep(delayMs);
+      }
+    } catch (error) {
+      // Network error - treat as retryable
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`[CLAUDE] Attempt ${attempt + 1}/${maxRetries + 1} failed with network error: ${lastError.message}`);
+
+      if (attempt < maxRetries) {
+        const delayMs = jitter(baseDelays[Math.min(attempt, baseDelays.length - 1)]);
+        console.log(`[CLAUDE] Retrying in ${Math.round(delayMs)}ms...`);
+        await sleep(delayMs);
+      }
+    }
+  }
+
+  // All retries exhausted
+  throw lastError || new Error('Claude API request failed after all retries');
 }
 
 // Fetch a single image with proper headers, retry logic, and timeout
@@ -1696,24 +1765,11 @@ async function callClaudeWithVision(
     return { ...textResult, image_fetch_results: fetchResults };
   }
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01"
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      messages: [{ role: "user", content }]
-    })
+  const response = await fetchClaudeWithRetry(env, {
+    model,
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content }]
   });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Claude Vision API error: ${response.status} - ${errorText}`);
-  }
 
   const data = await response.json() as ClaudeResponse;
   const text = data.content.filter(c => c.type === "text").map(c => c.text).join("");
