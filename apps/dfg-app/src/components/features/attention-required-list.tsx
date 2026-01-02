@@ -406,11 +406,13 @@ export function AttentionRequiredList({
 
         case 'watch':
           // Watch requires watch_trigger and watch_threshold
-          // Default to 'ending_soon' with 4 hours before auction ends
+          // Use 'manual' trigger with remind_at set to 24 hours from now
+          // (ending_soon requires auction_ends_at which not all items have)
+          const remindAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
           await updateOpportunity(id, {
             status: 'watch',
-            watch_trigger: 'ending_soon',
-            watch_threshold: { hours_before: 4 },
+            watch_trigger: 'manual',
+            watch_threshold: { remind_at: remindAt },
           });
           // Remove item from attention list since status changed
           // (item no longer needs immediate attention after explicit watch action)
