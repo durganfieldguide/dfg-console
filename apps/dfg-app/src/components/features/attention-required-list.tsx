@@ -405,7 +405,13 @@ export function AttentionRequiredList({
           break;
 
         case 'watch':
-          await updateOpportunity(id, { status: 'watch' });
+          // Watch requires watch_trigger and watch_threshold
+          // Default to 'ending_soon' with 4 hours before auction ends
+          await updateOpportunity(id, {
+            status: 'watch',
+            watch_trigger: 'ending_soon',
+            watch_threshold: { hours_before: 4 },
+          });
           // Remove item from attention list since status changed
           // (item no longer needs immediate attention after explicit watch action)
           setItems((prev) => prev.filter((item) => item.id !== id));
