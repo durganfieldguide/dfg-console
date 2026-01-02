@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -10,6 +10,10 @@ import {
   FlaskConical,
   RefreshCw,
   ChevronRight,
+  Hand,
+  ThumbsDown,
+  Eye,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +21,8 @@ import { cn, formatRelativeTime, STATUS_LABELS, STATUS_COLORS } from '@/lib/util
 import {
   getAttentionRequired,
   touchOpportunity,
+  updateOpportunity,
+  triggerAnalysis,
   type AttentionItem,
   type ReasonChip,
 } from '@/lib/api';
@@ -78,13 +84,21 @@ function ReasonChipBadge({ chip, size = 'sm', onClick }: ReasonChipProps) {
   );
 }
 
+/**
+ * CTA action types for inline quick actions
+ */
+type CTAAction = 'reanalyze' | 'touch' | 'pass' | 'watch';
+
 interface AttentionItemRowProps {
   item: AttentionItem;
   onTouch: (id: string) => void;
   onChipClick: (chip: ReasonChip) => void;
+  onAction: (id: string, action: CTAAction) => Promise<boolean>;
+  pendingAction: CTAAction | null;
+  error: string | null;
 }
 
-function AttentionItemRow({ item, onTouch, onChipClick }: AttentionItemRowProps) {
+function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction, error }: AttentionItemRowProps) {
   const handleClick = () => {
     // Fire touch on click (fire-and-forget)
     onTouch(item.id);
@@ -97,67 +111,168 @@ function AttentionItemRow({ item, onTouch, onChipClick }: AttentionItemRowProps)
     onChipClick(chip);
   };
 
+  const handleCTAClick = async (e: React.MouseEvent, action: CTAAction) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await onAction(item.id, action);
+  };
+
   // Format time remaining
   const timeRemaining = item.auction_ends_at
     ? formatRelativeTime(item.auction_ends_at)
     : null;
 
-  return (
-    <Link
-      href={`/opportunities/${encodeURIComponent(item.id)}`}
-      onClick={handleClick}
-      className="block hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors -mx-4 px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          {/* Title */}
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-            {item.title}
-          </h4>
+  // Determine which CTAs to show
+  const showReanalyze = item.is_analysis_stale;
+  const showTouch = item.is_decision_stale;
 
-          {/* Status and Source */}
-          <div className="flex items-center gap-2 mt-1">
-            <span
-              className={cn(
-                'px-2 py-0.5 rounded text-xs font-medium',
-                STATUS_COLORS[item.status as OpportunityStatus]
-              )}
-            >
-              {STATUS_LABELS[item.status as OpportunityStatus]}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {item.source}
-            </span>
-            {timeRemaining && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {timeRemaining}
+  return (
+    <div className="group relative">
+      <Link
+        href={`/opportunities/${encodeURIComponent(item.id)}`}
+        onClick={handleClick}
+        className="block hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors -mx-4 px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            {/* Title */}
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate pr-24">
+              {item.title}
+            </h4>
+
+            {/* Status and Source */}
+            <div className="flex items-center gap-2 mt-1">
+              <span
+                className={cn(
+                  'px-2 py-0.5 rounded text-xs font-medium',
+                  STATUS_COLORS[item.status as OpportunityStatus]
+                )}
+              >
+                {STATUS_LABELS[item.status as OpportunityStatus]}
               </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {item.source}
+              </span>
+              {timeRemaining && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {timeRemaining}
+                </span>
+              )}
+            </div>
+
+            {/* Reason Chips - clickable to filter */}
+            <div className="flex flex-wrap gap-1 mt-2">
+              {item.reason_tags.map((chip) => (
+                <ReasonChipBadge
+                  key={chip}
+                  chip={chip}
+                  onClick={(e) => handleChipClick(e, chip)}
+                />
+              ))}
+            </div>
+
+            {/* Error message */}
+            {error && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>
             )}
           </div>
 
-          {/* Reason Chips - clickable to filter */}
-          <div className="flex flex-wrap gap-1 mt-2">
-            {item.reason_tags.map((chip) => (
-              <ReasonChipBadge
-                key={chip}
-                chip={chip}
-                onClick={(e) => handleChipClick(e, chip)}
-              />
-            ))}
+          {/* Max Bid if set */}
+          <div className="flex flex-col items-end gap-1">
+            {item.max_bid_locked && (
+              <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                ${item.max_bid_locked.toLocaleString()}
+              </span>
+            )}
+            <ChevronRight className="h-4 w-4 text-gray-400 group-hover:hidden" />
           </div>
         </div>
+      </Link>
 
-        {/* Max Bid if set */}
-        <div className="flex flex-col items-end gap-1">
-          {item.max_bid_locked && (
-            <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-              ${item.max_bid_locked.toLocaleString()}
-            </span>
+      {/* Inline CTAs - shown on hover */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+        {/* Re-analyze - only for analysis stale items */}
+        {showReanalyze && (
+          <button
+            type="button"
+            onClick={(e) => handleCTAClick(e, 'reanalyze')}
+            disabled={pendingAction !== null}
+            className={cn(
+              'p-1.5 rounded text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+            title="Re-analyze"
+          >
+            {pendingAction === 'reanalyze' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FlaskConical className="h-4 w-4" />
+            )}
+          </button>
+        )}
+
+        {/* Touch - only for decision stale items */}
+        {showTouch && (
+          <button
+            type="button"
+            onClick={(e) => handleCTAClick(e, 'touch')}
+            disabled={pendingAction !== null}
+            className={cn(
+              'p-1.5 rounded text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/30 transition-colors',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+            title="Mark as reviewed"
+          >
+            {pendingAction === 'touch' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Hand className="h-4 w-4" />
+            )}
+          </button>
+        )}
+
+        {/* Separator if there are conditional CTAs */}
+        {(showReanalyze || showTouch) && (
+          <div className="w-px h-4 bg-gray-200 dark:bg-gray-600 mx-0.5" />
+        )}
+
+        {/* Pass - always available */}
+        <button
+          type="button"
+          onClick={(e) => handleCTAClick(e, 'pass')}
+          disabled={pendingAction !== null}
+          className={cn(
+            'p-1.5 rounded text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors',
+            'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
-          <ChevronRight className="h-4 w-4 text-gray-400" />
-        </div>
+          title="Pass"
+        >
+          {pendingAction === 'pass' ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ThumbsDown className="h-4 w-4" />
+          )}
+        </button>
+
+        {/* Watch - always available */}
+        <button
+          type="button"
+          onClick={(e) => handleCTAClick(e, 'watch')}
+          disabled={pendingAction !== null}
+          className={cn(
+            'p-1.5 rounded text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-colors',
+            'disabled:opacity-50 disabled:cursor-not-allowed'
+          )}
+          title="Watch"
+        >
+          {pendingAction === 'watch' ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+        </button>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -166,6 +281,9 @@ interface AttentionRequiredListProps {
   showHeader?: boolean;
   className?: string;
 }
+
+// Rate limiting: track last reanalyze time per opportunity
+const REANALYZE_COOLDOWN_MS = 30000; // 30 seconds
 
 export function AttentionRequiredList({
   limit = 5,
@@ -177,6 +295,13 @@ export function AttentionRequiredList({
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Per-item action state
+  const [pendingActions, setPendingActions] = useState<Record<string, CTAAction | null>>({});
+  const [actionErrors, setActionErrors] = useState<Record<string, string | null>>({});
+
+  // Rate limiting for reanalyze
+  const reanalyzeTimestamps = useRef<Record<string, number>>({});
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -209,6 +334,99 @@ export function AttentionRequiredList({
     const config = CHIP_CONFIG[chip];
     router.push(config.filterUrl);
   }, [router]);
+
+  /**
+   * Handle CTA actions with optimistic UI updates
+   */
+  const handleAction = useCallback(async (id: string, action: CTAAction): Promise<boolean> => {
+    // Clear previous error for this item
+    setActionErrors((prev) => ({ ...prev, [id]: null }));
+
+    // Rate limit reanalyze
+    if (action === 'reanalyze') {
+      const lastReanalyze = reanalyzeTimestamps.current[id] || 0;
+      const now = Date.now();
+      if (now - lastReanalyze < REANALYZE_COOLDOWN_MS) {
+        const remainingSec = Math.ceil((REANALYZE_COOLDOWN_MS - (now - lastReanalyze)) / 1000);
+        setActionErrors((prev) => ({ ...prev, [id]: `Please wait ${remainingSec}s before re-analyzing` }));
+        return false;
+      }
+      reanalyzeTimestamps.current[id] = now;
+    }
+
+    // Set pending state
+    setPendingActions((prev) => ({ ...prev, [id]: action }));
+
+    try {
+      switch (action) {
+        case 'reanalyze':
+          await triggerAnalysis(id);
+          // After successful reanalyze, remove the ANALYSIS_STALE tag optimistically
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    is_analysis_stale: false,
+                    reason_tags: item.reason_tags.filter((t) => t !== 'ANALYSIS_STALE'),
+                  }
+                : item
+            ).filter((item) => item.reason_tags.length > 0) // Remove if no more reasons
+          );
+          break;
+
+        case 'touch':
+          await touchOpportunity(id);
+          // After successful touch, remove DECISION_STALE and STALE tags optimistically
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    is_decision_stale: false,
+                    is_stale: false,
+                    reason_tags: item.reason_tags.filter((t) => t !== 'DECISION_STALE' && t !== 'STALE'),
+                  }
+                : item
+            ).filter((item) => item.reason_tags.length > 0)
+          );
+          break;
+
+        case 'pass':
+          await updateOpportunity(id, { status: 'rejected' });
+          // Remove item from list optimistically
+          setItems((prev) => prev.filter((item) => item.id !== id));
+          setTotalCount((prev) => Math.max(0, prev - 1));
+          break;
+
+        case 'watch':
+          await updateOpportunity(id, { status: 'watch' });
+          // Update status optimistically, may still need attention if ending soon
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === id
+                ? { ...item, status: 'watch' as OpportunityStatus }
+                : item
+            )
+          );
+          break;
+      }
+
+      return true;
+    } catch (err) {
+      console.error(`Action ${action} failed for ${id}:`, err);
+      setActionErrors((prev) => ({
+        ...prev,
+        [id]: err instanceof Error ? err.message : 'Action failed',
+      }));
+
+      // Revert optimistic update on error - refetch data
+      fetchData();
+      return false;
+    } finally {
+      setPendingActions((prev) => ({ ...prev, [id]: null }));
+    }
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -297,7 +515,14 @@ export function AttentionRequiredList({
         <div className="divide-y divide-gray-100 dark:divide-gray-700">
           {items.map((item) => (
             <div key={item.id} className="px-4">
-              <AttentionItemRow item={item} onTouch={handleTouch} onChipClick={handleChipClick} />
+              <AttentionItemRow
+                item={item}
+                onTouch={handleTouch}
+                onChipClick={handleChipClick}
+                onAction={handleAction}
+                pendingAction={pendingActions[item.id] || null}
+                error={actionErrors[item.id] || null}
+              />
             </div>
           ))}
         </div>
