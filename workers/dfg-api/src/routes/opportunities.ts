@@ -110,6 +110,8 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
   // Note: has_active_alert filter is TODO for v2
   const needsAttention = getQueryParamBool(url, 'needs_attention');
   const staleQualifying = getQueryParamBool(url, 'stale_qualifying');
+  // Sprint N+1: Combined attention filter (matches dashboard Attention Required)
+  const attention = getQueryParamBool(url, 'attention');
   // Sprint N+1: New staleness filters
   const stale = getQueryParamBool(url, 'stale');
   const analysisStale = getQueryParamBool(url, 'analysis_stale');
@@ -237,6 +239,28 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
     query += ` AND auction_ends_at IS NOT NULL`;
     query += ` AND julianday(auction_ends_at) - julianday('now') <= 2`;
     query += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+  }
+
+  // Combined attention filter (matches dashboard /api/dashboard/attention logic)
+  // Returns all items needing operator attention: stale, decision stale, ending soon, or analysis stale
+  if (attention === true) {
+    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    query += ` AND (
+      -- Stale: no activity for STALE_THRESHOLD_DAYS
+      julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ${STALE_THRESHOLD_DAYS}
+      -- Decision stale: bid/watch ending within 24h without recent review
+      OR (status IN ('bid', 'watch')
+          AND auction_ends_at IS NOT NULL
+          AND julianday(auction_ends_at) - julianday('now') <= 1
+          AND julianday(auction_ends_at) - julianday('now') > 0)
+      -- Ending soon: any auction ending within 48h
+      OR (auction_ends_at IS NOT NULL
+          AND julianday(auction_ends_at) - julianday('now') <= 2
+          AND julianday(auction_ends_at) - julianday('now') > 0)
+      -- Analysis stale: needs re-analysis
+      OR (last_analyzed_at IS NOT NULL
+          AND julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS})
+    )`;
   }
 
   // Sorting

@@ -28,6 +28,7 @@ function OpportunitiesContent() {
   const analysisStale = searchParams.get('analysis_stale') === 'true';
   const decisionStale = searchParams.get('decision_stale') === 'true';
   const endingSoon = searchParams.get('ending_soon') === 'true';
+  const attention = searchParams.get('attention') === 'true';
 
   const fetchOpportunities = useCallback(async () => {
     setLoading(true);
@@ -44,6 +45,7 @@ function OpportunitiesContent() {
       if (analysisStale) params.analysis_stale = true;
       if (decisionStale) params.decision_stale = true;
       if (endingSoon) params.ending_soon = true;
+      if (attention) params.attention = true;
 
       const result = await listOpportunities(params);
       setOpportunities(result.opportunities);
@@ -53,7 +55,7 @@ function OpportunitiesContent() {
     } finally {
       setLoading(false);
     }
-  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon]);
+  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -73,7 +75,7 @@ function OpportunitiesContent() {
     router.push('/opportunities');
   };
 
-  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon;
+  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention;
 
   return (
     <div className="flex min-h-screen">
@@ -108,7 +110,7 @@ function OpportunitiesContent() {
                 Filters
                 {hasActiveFilters && (
                   <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
-                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon].filter(Boolean).length}
+                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention].filter(Boolean).length}
                   </span>
                 )}
               </Button>
