@@ -6,7 +6,6 @@ import {
   Inbox,
   Eye,
   Search,
-  Clock,
   TrendingUp,
   CheckCircle,
   XCircle,
@@ -16,6 +15,7 @@ import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { AttentionRequiredList } from '@/components/features/attention-required-list';
+import { EndingSoonList } from '@/components/features/ending-soon-list';
 import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
 import { getStats, syncFromScout, triggerScoutRun } from '@/lib/api';
 import type { DashboardStats, OpportunityStatus } from '@/types';
@@ -179,32 +179,8 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {/* Ending Soon */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-orange-500" />
-                <h2 className="font-medium text-gray-900 dark:text-white">Ending Soon</h2>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-around text-center">
-                <Link href="/opportunities?ending_within=24h" className="flex-1">
-                  <p className="text-2xl font-bold text-orange-600">
-                    {stats?.ending_soon.within_24h || 0}
-                  </p>
-                  <p className="text-xs text-gray-500">Next 24h</p>
-                </Link>
-                <div className="w-px bg-gray-200 dark:bg-gray-700" />
-                <Link href="/opportunities?ending_within=48h" className="flex-1">
-                  <p className="text-2xl font-bold text-amber-500">
-                    {stats?.ending_soon.within_48h || 0}
-                  </p>
-                  <p className="text-xs text-gray-500">Next 48h</p>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Ending Soon List - Full items with countdown timers */}
+          <EndingSoonList limit={5} />
 
           {/* Pipeline Summary */}
           <Card>
