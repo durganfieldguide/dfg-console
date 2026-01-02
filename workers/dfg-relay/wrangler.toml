@@ -1,0 +1,12 @@
+name = "dfg-relay"
+main = "src/index.ts"
+compatibility_date = "2025-12-15"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+GITHUB_OWNER = "durganfieldguide"
+GITHUB_REPO = "dfg-console"
+
+# Secrets (set via `wrangler secret put`):
+# - GITHUB_TOKEN: GitHub PAT with repo scope
+# - RELAY_TOKEN: Shared secret for auth
