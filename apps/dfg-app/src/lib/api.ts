@@ -333,7 +333,6 @@ export async function triggerScoutRun(): Promise<{ triggered: boolean; message: 
 // =============================================================================
 
 // Full analysis result from dfg-analyst worker
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface AnalysisResult {
   // The full formatted report in markdown
   report_markdown: string;

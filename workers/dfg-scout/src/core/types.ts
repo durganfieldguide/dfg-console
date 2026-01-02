@@ -228,6 +228,8 @@ export interface NormalizedSourceAdapter {
   source: string;
   fetchActiveAuctions(ctx?: AdapterContext): Promise<Array<{ auctionId: string; [key: string]: any }>>;
   fetchLotsNormalized(auctionId: string, ctx?: AdapterContext): Promise<NormalizedLot[]>;
+  /** Optional: Fetch raw lots before normalization (internal implementation detail) */
+  fetchLots?(auctionId: string, ctx?: AdapterContext): Promise<unknown[]>;
   /** Optional: Hydrate full photo gallery for a single lot (called for candidates only) */
   hydratePhotosForLot?(lotId: string, ctx?: AdapterContext): Promise<string[]>;
 }

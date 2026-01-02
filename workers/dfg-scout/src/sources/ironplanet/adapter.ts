@@ -177,7 +177,7 @@ export const IronPlanetAdapter: NormalizedSourceAdapter = {
    *
    * Returns configured search categories as auction entries.
    */
-  async fetchActiveAuctions(ctx?: AdapterContext): Promise<Array<{ auctionId: string; [key: string]: any }>> {
+  async fetchActiveAuctions(_ctx?: AdapterContext): Promise<Array<{ auctionId: string; [key: string]: any }>> {
     // For now, we return a single "auction" representing the AZ Trucks & Trailers search
     // In the future, this could be expanded to multiple categories or locations
     return [
@@ -248,12 +248,12 @@ export const IronPlanetAdapter: NormalizedSourceAdapter = {
    * Fetch and normalize lots into NormalizedLot format
    */
   async fetchLotsNormalized(auctionId: string, ctx?: AdapterContext): Promise<NormalizedLot[]> {
-    const rawLots = await this.fetchLots(auctionId, ctx);
+    const rawLots = await this.fetchLots!(auctionId, ctx);
     const n = nowMs(ctx);
 
-    const results = rawLots.map((raw) => safeNormalizeIronPlanetLot(raw, n));
-    const successes = results.filter((r) => r.success) as Array<{ success: true; lot: NormalizedLot }>;
-    const failures = results.filter((r) => !r.success) as Array<{ success: false; error: string; raw: unknown }>;
+    const results = rawLots.map((raw: unknown) => safeNormalizeIronPlanetLot(raw as IronPlanetQuickview, n));
+    const successes = results.filter((r): r is { success: true; lot: NormalizedLot } => r.success);
+    const failures = results.filter((r): r is { success: false; error: string; raw: unknown } => !r.success);
 
     if (failures.length > 0) {
       console.warn(

@@ -543,7 +543,7 @@ export default {
   },
 
   // Fixed: Standard ScheduledEvent handling for Cloudflare
-  async scheduled(event: any, env: Env, ctx: ExecutionContext) {
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(runScout(env, { ctx }));
   }
 };

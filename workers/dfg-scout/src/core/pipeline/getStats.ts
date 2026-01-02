@@ -7,7 +7,7 @@ import { SierraAdapter } from '../../sources/sierra/adapter';
 import { IronPlanetAdapter } from '../../sources/ironplanet/adapter';
 
 // Force side-effects (adapter registration) to not be tree-shaken
-const _adapters = [SierraAdapter, IronPlanetAdapter];
+void [SierraAdapter, IronPlanetAdapter];
 
 export async function getStats(env: Env) {
   try {
@@ -41,7 +41,6 @@ export async function getStats(env: Env) {
 
     // Transform runs to frontend format
     const recent_runs = (recentRunsResult.results || []).map((run: any) => {
-      const now = Math.floor(Date.now() / 1000);
       const startedAt = run.started_at;
       const completedAt = run.completed_at;
 

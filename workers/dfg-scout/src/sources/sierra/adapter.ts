@@ -160,12 +160,12 @@ export const SierraAdapter: NormalizedSourceAdapter = {
    * Fetch and normalize lots into the canonical NormalizedLot contract.
    */
   async fetchLotsNormalized(auctionId: string, ctx?: AdapterContext): Promise<NormalizedLot[]> {
-    const rawLots = await this.fetchLots(auctionId, ctx);
+    const rawLots = await this.fetchLots!(auctionId, ctx);
     const n = nowMs(ctx);
 
-    const results = rawLots.map((raw) => safeNormalizeSierraLot(raw, n));
-    const successes = results.filter((r) => r.success) as Array<{ success: true; lot: NormalizedLot }>;
-    const failures = results.filter((r) => !r.success) as Array<{ success: false; error: string; raw: unknown }>;
+    const results = rawLots.map((raw: unknown) => safeNormalizeSierraLot(raw, n));
+    const successes = results.filter((r): r is { success: true; lot: NormalizedLot } => r.success);
+    const failures = results.filter((r): r is { success: false; error: string; raw: unknown } => !r.success);
 
     if (failures.length > 0) {
       console.warn(

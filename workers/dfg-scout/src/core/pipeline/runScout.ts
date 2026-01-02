@@ -5,122 +5,20 @@ import '../../sources/sierra/adapter';
 import '../../sources/ironplanet/adapter';
 import { CategoryRouter, Verdict } from '../../categories/router';
 
-/**
- * Get the public URL base for R2 bucket.
- *
- * Configured via R2_PUBLIC_URL environment variable in wrangler.toml.
- * Falls back to default with warning if not configured.
- */
-function getR2PublicBase(env: Env): string {
-  if (!env.R2_PUBLIC_URL) {
-    console.warn('[Scout] R2_PUBLIC_URL not configured - images may not display correctly');
-    return 'https://pub-dfg-evidence.r2.dev';
-  }
-  return env.R2_PUBLIC_URL;
-}
+// NOTE: R2 image proxying functions below are currently unused.
+// The pipeline now stores source CDN URLs directly for speed.
+// Kept for potential future use if R2 archival is re-enabled.
 
-/**
- * Fetch an image with retries and proper headers.
- * Returns ArrayBuffer on success, null on failure.
- */
-async function fetchImageWithRetry(
-  url: string,
-  maxRetries = 2
-): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      if (attempt > 0) {
-        // Exponential backoff with jitter
-        const delayMs = 300 * Math.pow(2, attempt - 1) + Math.random() * 200;
-        await new Promise(r => setTimeout(r, delayMs));
-      }
+// function _getR2PublicBase(env: Env): string {
+//   if (!env.R2_PUBLIC_URL) {
+//     console.warn('[Scout] R2_PUBLIC_URL not configured');
+//     return 'https://pub-dfg-evidence.r2.dev';
+//   }
+//   return env.R2_PUBLIC_URL;
+// }
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
-          'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': new URL(url).origin + '/',
-        },
-      });
-
-      // Retryable errors
-      if (response.status === 429 || response.status === 503) {
-        continue;
-      }
-
-      if (!response.ok) {
-        console.warn(`[R2] Image fetch failed ${response.status}: ${url.slice(0, 80)}`);
-        return null;
-      }
-
-      const contentType = response.headers.get('content-type') || 'image/jpeg';
-      if (!contentType.startsWith('image/')) {
-        console.warn(`[R2] Not an image (${contentType}): ${url.slice(0, 80)}`);
-        return null;
-      }
-
-      const buffer = await response.arrayBuffer();
-      if (buffer.byteLength < 1000) {
-        console.warn(`[R2] Image too small (${buffer.byteLength}b): ${url.slice(0, 80)}`);
-        return null;
-      }
-
-      return { buffer, contentType };
-    } catch (err: any) {
-      if (attempt === maxRetries) {
-        console.warn(`[R2] Image fetch error: ${err.message} - ${url.slice(0, 80)}`);
-        return null;
-      }
-    }
-  }
-  return null;
-}
-
-/**
- * Upload photos to R2 and return array of R2 URLs.
- * Falls back to source URL if upload fails.
- */
-async function proxyPhotosToR2(
-  env: Env,
-  listingId: string,
-  photoUrls: string[],
-  concurrency = 3
-): Promise<{ urls: string[]; r2Base: string }> {
-  const r2Urls: string[] = [];
-  const r2Base = getR2PublicBase(env);
-
-  // Process in batches of `concurrency`
-  for (let i = 0; i < photoUrls.length; i += concurrency) {
-    const batch = photoUrls.slice(i, i + concurrency);
-    const results = await Promise.all(
-      batch.map(async (url, batchIdx) => {
-        const idx = i + batchIdx;
-        const ext = url.match(/\.(jpe?g|png|webp|gif)/i)?.[1]?.toLowerCase() || 'jpg';
-        const r2Key = `images/${listingId}/photo-${String(idx).padStart(2, '0')}.${ext}`;
-
-        const fetched = await fetchImageWithRetry(url);
-        if (!fetched) {
-          // Return original URL as fallback
-          return url;
-        }
-
-        try {
-          await env.DFG_EVIDENCE.put(r2Key, fetched.buffer, {
-            httpMetadata: { contentType: fetched.contentType },
-          });
-          return `${r2Base}/${r2Key}`;
-        } catch (err: any) {
-          console.warn(`[R2] Upload failed for ${r2Key}: ${err.message}`);
-          return url;
-        }
-      })
-    );
-    r2Urls.push(...results);
-  }
-
-  return { urls: r2Urls, r2Base };
-}
+// async function _fetchImageWithRetry(...) { ... }
+// async function _proxyPhotosToR2(...) { ... }
 
 /**
  * Helper to safely track subrequests and prevent Worker crashes.
@@ -149,7 +47,8 @@ export async function runScout(
   env: Env,
   options: { dryRun?: boolean; ctx?: ExecutionContext; source?: string } = {}
 ) {
-  const config = getConfig(env);
+  // Config currently unused but kept for future use (e.g., maxBid thresholds)
+  void getConfig(env);
   const startTime = Date.now();
   const startTimeEpoch = Math.floor(startTime / 1000);
 
@@ -189,6 +88,7 @@ export async function runScout(
     lot: NormalizedLot;
     d1Id: string;
     verdict: Verdict;
+    needsSnapshot: boolean;
   }> = [];
 
   // Load existing state from D1 (include photos for self-healing hydration check)
@@ -538,7 +438,7 @@ export async function runScout(
           }
 
           // Snapshots for new candidates
-          if ((item as any).needsSnapshot) {
+          if (item.needsSnapshot) {
             const snapshotKey = `snapshots/${item.d1Id}.json`;
             await env.DFG_EVIDENCE.put(snapshotKey, JSON.stringify(item.lot.raw));
 
