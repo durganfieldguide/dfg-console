@@ -44,3 +44,8 @@ database_id = "08c267b8-b252-422a-8381-891d12917b33"
 [[env.production.services]]
 binding = "SCOUT"
 service = "dfg-scout"
+
+# Service binding to dfg-analyst for AI analysis
+[[env.production.services]]
+binding = "ANALYST"
+service = "dfg-analyst"

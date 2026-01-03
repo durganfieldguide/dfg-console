@@ -21,6 +21,12 @@ export interface Env {
   // Optional: dfg-scout service binding (for direct calls in production)
   SCOUT?: Fetcher;
 
+  // Optional: dfg-analyst service binding (for AI analysis in production)
+  ANALYST?: Fetcher;
+
+  // Fallback URL for dfg-analyst (used in development when service binding not available)
+  ANALYST_URL?: string;
+
   // Staleness configuration (optional, defaults defined in utils/staleness.ts)
   STALE_THRESHOLD_DAYS?: string;
 }

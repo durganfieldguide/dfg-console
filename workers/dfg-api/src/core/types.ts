@@ -398,6 +398,8 @@ export interface AnalysisRunRow {
   trace_json: string;
   calc_version: string | null;
   gates_version: string | null;
+  // Sprint N+3 (#54): AI analysis result from dfg-analyst
+  ai_analysis_json: string | null;
 }
 
 // =============================================================================

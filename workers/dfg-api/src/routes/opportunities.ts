@@ -481,6 +481,8 @@ async function getOpportunity(env: Env, id: string): Promise<Response> {
           calcVersion: analysisRow.calc_version,
           gatesVersion: analysisRow.gates_version,
         } : null,
+        // Sprint N+3 (#54): Include persisted AI analysis
+        aiAnalysis: parseJsonSafe(analysisRow.ai_analysis_json),
       };
     }
   }
@@ -1289,11 +1291,98 @@ async function updateOperatorInputs(
 
 // =============================================================================
 // SPRINT 1.5: ANALYZE OPPORTUNITY
+// Sprint N+3 (#54): Unified analysis flow - calls dfg-analyst and persists result
 // =============================================================================
 
 interface AnalyzeRequest {
   // Optional: pass assumptions to use
   assumptions?: Record<string, unknown>;
+  // Optional: skip AI analysis (for quick gate-only refresh)
+  skipAiAnalysis?: boolean;
+}
+
+// AI Analysis result type (subset of DualLensReport from dfg-analyst)
+interface AiAnalysisResult {
+  investor_lens?: {
+    verdict: string;
+    max_bid: number;
+    verdict_reasoning: string;
+    phoenix_resale_range?: { quick_sale: number; market_rate: number; premium: number };
+    repair_plan?: { items: Array<{ item: string; cost: number }>; grand_total: number };
+    deal_killers?: string[];
+    inspection_priorities?: string[];
+  };
+  buyer_lens?: {
+    perceived_value_range?: { low: number; high: number };
+    buyer_confidence?: string;
+  };
+  condition?: {
+    overall_grade?: string;
+    assessment_confidence?: string;
+    red_flags?: Array<{ category: string; severity: string; description: string }>;
+    tires?: { condition: string; estimated_remaining_life: string };
+  };
+  asset_summary?: {
+    title: string;
+    source: string;
+    current_bid: number;
+  };
+  next_steps?: {
+    if_bidding?: string[];
+    if_won?: string[];
+    listing_prep?: string[];
+  };
+  analysis_timestamp?: string;
+  total_tokens_used?: number;
+}
+
+/**
+ * Call dfg-analyst worker for AI analysis
+ */
+async function callAnalystWorker(
+  env: Env,
+  listingData: Record<string, unknown>
+): Promise<AiAnalysisResult | null> {
+  console.log('[callAnalystWorker] Starting AI analysis, ANALYST binding:', !!env.ANALYST, 'ANALYST_URL:', env.ANALYST_URL);
+  try {
+    // Use service binding if available (production), otherwise use URL
+    let response: Response;
+
+    if (env.ANALYST) {
+      // Service binding - direct worker-to-worker call
+      console.log('[callAnalystWorker] Using ANALYST service binding');
+      response = await env.ANALYST.fetch('https://dfg-analyst/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(listingData),
+      });
+      console.log('[callAnalystWorker] Service binding response status:', response.status);
+    } else if (env.ANALYST_URL) {
+      // Fallback to URL (development)
+      console.log('[callAnalystWorker] Using ANALYST_URL fallback:', env.ANALYST_URL);
+      response = await fetch(`${env.ANALYST_URL}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(listingData),
+      });
+    } else {
+      console.log('[callAnalystWorker] No ANALYST binding or ANALYST_URL configured, skipping AI analysis');
+      return null;
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[callAnalystWorker] Analyst worker error:', response.status, errorText);
+      return null;
+    }
+
+    const result = await response.json() as AiAnalysisResult;
+    console.log('[callAnalystWorker] AI analysis successful, verdict:', result?.investor_lens?.verdict);
+    return result;
+  } catch (error) {
+    console.error('[callAnalystWorker] Failed to call analyst worker:', error);
+    return null;
+  }
 }
 
 async function analyzeOpportunity(
@@ -1319,10 +1408,11 @@ async function analyzeOpportunity(
   const operatorInputs = parseJsonSafe<OperatorInputs>(row.operator_inputs_json);
 
   // Build listing facts for gate computation
+  const photos = parseJsonSafe<string[]>(row.photos) || [];
   const listingFacts: ListingFacts = {
     currentBid: row.current_bid ?? undefined,
     endTime: row.auction_ends_at ?? undefined,
-    photoCount: (parseJsonSafe<string[]>(row.photos) || []).length,
+    photoCount: photos.length,
   };
 
   // Compute listing snapshot hash
@@ -1331,12 +1421,66 @@ async function analyzeOpportunity(
   // Compute gates
   const gates = computeGates(listingFacts, operatorInputs);
 
-  // Determine recommendation based on gates
+  // ==========================================================================
+  // Call dfg-analyst for AI analysis (unless skipAiAnalysis is set)
+  // ==========================================================================
+  let aiAnalysisResult: AiAnalysisResult | null = null;
+
+  if (!body?.skipAiAnalysis) {
+    // Build listing data for analyst
+    const listingData = {
+      source: row.source,
+      listing_url: row.source_url,
+      lot_id: row.source_lot_id,
+      category_id: row.category_id,
+      title: row.title,
+      description: row.description || '',
+      photos: photos,
+      current_bid: row.current_bid || 0,
+      buy_now_price: row.buy_now_price,
+      location: {
+        city: row.location?.split(',')[0]?.trim() || 'Unknown',
+        state: row.location?.split(',')[1]?.trim() || 'Unknown',
+        distance_miles: row.distance_miles,
+      },
+      ends_at: row.auction_ends_at,
+      // Include operator inputs for the analyst
+      operator_inputs: operatorInputs ? {
+        title_status: operatorInputs.title?.titleStatus?.value,
+        title_in_hand: operatorInputs.title?.titleInHand?.value,
+        lien_status: operatorInputs.title?.lienStatus?.value,
+        vin: operatorInputs.title?.vin?.value,
+        odometer_miles: operatorInputs.title?.odometerMiles?.value,
+        title_status_verified: operatorInputs.title?.titleStatus?.verificationLevel !== 'unverified',
+        odometer_verified: operatorInputs.title?.odometerMiles?.verificationLevel !== 'unverified',
+      } : undefined,
+    };
+
+    aiAnalysisResult = await callAnalystWorker(env, listingData);
+  }
+
+  // ==========================================================================
+  // Determine recommendation (prefer AI verdict, fall back to gate-based)
+  // ==========================================================================
   let recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO' = 'NEEDS_INFO';
-  if (gates.allCriticalCleared) {
-    recommendation = 'BID';
-  } else if (gates.criticalOpen <= 2) {
-    recommendation = 'WATCH';
+
+  if (aiAnalysisResult?.investor_lens?.verdict) {
+    // Map AI verdict to our recommendation format
+    const aiVerdict = aiAnalysisResult.investor_lens.verdict;
+    if (aiVerdict === 'STRONG_BUY' || aiVerdict === 'BUY') {
+      recommendation = gates.allCriticalCleared ? 'BID' : 'WATCH';
+    } else if (aiVerdict === 'MARGINAL') {
+      recommendation = 'WATCH';
+    } else if (aiVerdict === 'PASS') {
+      recommendation = 'PASS';
+    }
+  } else {
+    // Fall back to gate-based recommendation
+    if (gates.allCriticalCleared) {
+      recommendation = 'BID';
+    } else if (gates.criticalOpen <= 2) {
+      recommendation = 'WATCH';
+    }
   }
 
   // Default assumptions (TODO: Get from config/env)
@@ -1347,12 +1491,19 @@ async function analyzeOpportunity(
     paymentFeesPct: 0.03,
   };
 
-  // Build derived values (placeholder - would integrate with calculation spine)
+  // Build derived values (prefer AI values, fall back to existing)
   const derived = {
-    maxBidLow: row.max_bid_low,
-    maxBidHigh: row.max_bid_high,
-    totalAllIn: row.current_bid ? row.current_bid * 1.15 : null, // Rough estimate
+    maxBidLow: aiAnalysisResult?.investor_lens?.max_bid
+      ? Math.round(aiAnalysisResult.investor_lens.max_bid * 0.9)
+      : row.max_bid_low,
+    maxBidHigh: aiAnalysisResult?.investor_lens?.max_bid || row.max_bid_high,
+    totalAllIn: row.current_bid ? row.current_bid * 1.15 : null,
     analysisTimestamp: now,
+    // Include key AI-derived values for quick access
+    aiVerdict: aiAnalysisResult?.investor_lens?.verdict || null,
+    aiMaxBid: aiAnalysisResult?.investor_lens?.max_bid || null,
+    repairEstimate: aiAnalysisResult?.investor_lens?.repair_plan?.grand_total || null,
+    conditionGrade: aiAnalysisResult?.condition?.overall_grade || null,
   };
 
   // Build trace
@@ -1367,16 +1518,17 @@ async function analyzeOpportunity(
       operatorInputs,
     },
     assumptions,
+    aiAnalysisSuccess: aiAnalysisResult !== null,
   };
 
-  // Insert analysis run
+  // Insert analysis run (now with ai_analysis_json column)
   await env.DB.prepare(`
     INSERT INTO analysis_runs (
       id, opportunity_id, created_at,
       listing_snapshot_hash, assumptions_json, operator_inputs_json,
       derived_json, gates_json, recommendation, trace_json,
-      calc_version, gates_version
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      calc_version, gates_version, ai_analysis_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     analysisRunId,
     id,
@@ -1390,22 +1542,51 @@ async function analyzeOpportunity(
     JSON.stringify(trace),
     '1.0', // calc_version
     '1.0', // gates_version
+    aiAnalysisResult ? JSON.stringify(aiAnalysisResult) : null,
   ).run();
 
-  // Update opportunity to point to new analysis run
-  await env.DB.prepare(`
-    UPDATE opportunities
-    SET current_analysis_run_id = ?,
-        last_analyzed_at = ?,
-        updated_at = ?
-    WHERE id = ?
-  `).bind(analysisRunId, now, now, id).run();
+  // Update opportunity with AI-derived values if available
+  // Also update last_operator_review_at to clear STALE badge (analysis = operator review)
+  if (aiAnalysisResult?.investor_lens?.max_bid) {
+    await env.DB.prepare(`
+      UPDATE opportunities
+      SET current_analysis_run_id = ?,
+          last_analyzed_at = ?,
+          last_operator_review_at = ?,
+          updated_at = ?,
+          max_bid_low = ?,
+          max_bid_high = ?
+      WHERE id = ?
+    `).bind(
+      analysisRunId,
+      now,
+      now,
+      now,
+      derived.maxBidLow,
+      derived.maxBidHigh,
+      id
+    ).run();
+  } else {
+    await env.DB.prepare(`
+      UPDATE opportunities
+      SET current_analysis_run_id = ?,
+          last_analyzed_at = ?,
+          last_operator_review_at = ?,
+          updated_at = ?
+      WHERE id = ?
+    `).bind(analysisRunId, now, now, now, id).run();
+  }
 
   // Log the re-analyze action
   await createOperatorAction(env, {
     opportunity_id: id,
     action_type: 're_analyze',
-    payload: { analysisRunId, recommendation },
+    payload: {
+      analysisRunId,
+      recommendation,
+      aiAnalysisSuccess: aiAnalysisResult !== null,
+      aiVerdict: aiAnalysisResult?.investor_lens?.verdict || null,
+    },
   });
 
   // Get previous analysis for delta computation (if exists)
@@ -1439,6 +1620,8 @@ async function analyzeOpportunity(
       recommendation,
       derived,
       gates,
+      // Include AI analysis for immediate display (also persisted in DB)
+      aiAnalysis: aiAnalysisResult,
     },
     delta,
   });

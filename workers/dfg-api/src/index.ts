@@ -193,9 +193,9 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
         id, title, source, status, max_bid_locked,
         auction_ends_at, status_changed_at, last_operator_review_at,
         last_analyzed_at, updated_at,
-        -- Compute staleness flags
+        -- Compute staleness flags (uses COALESCE to match opportunities.ts logic)
         CASE WHEN
-          julianday('now') - julianday(status_changed_at) > ?
+          julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?
           AND status NOT IN ('rejected', 'archived', 'won', 'lost')
         THEN 1 ELSE 0 END as is_stale,
 
@@ -232,7 +232,7 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
                AND julianday(auction_ends_at) - julianday('now') <= 2
                AND julianday(auction_ends_at) - julianday('now') > 0
           THEN 2  -- ENDING_SOON
-          WHEN julianday('now') - julianday(status_changed_at) > ?
+          WHEN julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?
                AND status NOT IN ('rejected', 'archived', 'won', 'lost')
           THEN 3  -- STALE
           WHEN last_analyzed_at IS NULL
@@ -263,7 +263,7 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
     FROM opportunities
     WHERE status NOT IN ('rejected', 'archived', 'won', 'lost')
       AND (
-        julianday('now') - julianday(status_changed_at) > ?
+        julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?
         OR (auction_ends_at IS NOT NULL
             AND julianday(auction_ends_at) - julianday('now') <= 2
             AND julianday(auction_ends_at) - julianday('now') > 0)
