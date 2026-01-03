@@ -184,13 +184,13 @@ function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction,
                 ${item.max_bid_locked.toLocaleString()}
               </span>
             )}
-            <ChevronRight className="h-4 w-4 text-gray-400 md:group-hover:hidden" />
+            <ChevronRight className="h-4 w-4 text-gray-400 hidden md:block md:group-hover:hidden" />
           </div>
         </div>
       </Link>
 
-      {/* Inline CTAs - shown on hover (desktop only) */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:group-hover:flex items-center gap-1 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+      {/* Inline CTAs - always visible on mobile, hover-reveal on desktop */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         {/* Re-analyze - only for analysis stale items */}
         {showReanalyze && (
           <button
