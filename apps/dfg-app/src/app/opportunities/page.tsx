@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Filter, RefreshCw, ChevronDown } from 'lucide-react';
+import { Filter, RefreshCw, ChevronDown, TrendingUp } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { OpportunityCard } from '@/components/OpportunityCard';
 import { Button } from '@/components/ui/Button';
@@ -108,6 +108,16 @@ function OpportunitiesContent() {
                 disabled={loading}
               >
                 <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+              </Button>
+              {/* Buy Box Quick Toggle (#70) */}
+              <Button
+                variant={scoreBand === 'high' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => updateFilter('score_band', scoreBand === 'high' ? null : 'high')}
+                title="Show only high-score opportunities (70+)"
+              >
+                <TrendingUp className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Buy Box</span>
               </Button>
               <Button
                 variant={hasActiveFilters ? 'primary' : 'secondary'}
