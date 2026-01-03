@@ -518,6 +518,11 @@ export interface AnalysisResult {
   };
 }
 
+/**
+ * @deprecated Sprint N+3 (#54): Use triggerAnalysis() instead.
+ * This function calls dfg-analyst directly without persisting the result.
+ * triggerAnalysis() goes through the API which persists the analysis.
+ */
 export async function analyzeOpportunity(
   opportunity: OpportunityDetail,
   operatorInputs?: OperatorInputs | null
@@ -610,11 +615,12 @@ export async function updateOperatorInputs(
 
 /**
  * Trigger a new analysis run for an opportunity.
- * Returns the analysis run info (opportunity is updated server-side).
+ * Sprint N+3 (#54): This now calls dfg-analyst AND persists the result.
+ * Returns the full analysis including AI analysis for immediate display.
  */
 export async function triggerAnalysis(
   opportunityId: string
-): Promise<{ analysisRun: AnalysisRunSummary }> {
+): Promise<{ analysisRun: AnalysisRunSummary & { aiAnalysis?: AnalysisResult | null }; delta: unknown }> {
   // The API returns { analysisRun: {...}, delta: {...} } directly (not wrapped in data)
   const response = await fetchApi<{
     analysisRun: {
@@ -622,6 +628,17 @@ export async function triggerAnalysis(
       opportunityId: string;
       createdAt: string;
       recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO';
+      derived?: {
+        aiVerdict?: string;
+        aiMaxBid?: number;
+        repairEstimate?: number;
+        conditionGrade?: string;
+      };
+      gates?: {
+        allCriticalCleared?: boolean;
+        criticalOpen?: number;
+      };
+      aiAnalysis?: AnalysisResult | null;
     };
     delta: unknown;
   }>(
@@ -635,9 +652,12 @@ export async function triggerAnalysis(
       id: response.analysisRun.id,
       createdAt: response.analysisRun.createdAt,
       recommendation: response.analysisRun.recommendation,
-      gatesSummary: '', // Not returned by API, but not needed for inline action
-      allCriticalPassed: response.analysisRun.recommendation === 'BID',
+      gatesSummary: '', // Not critical for display, gates are shown separately
+      allCriticalPassed: response.analysisRun.gates?.allCriticalCleared ?? (response.analysisRun.recommendation === 'BID'),
+      // Sprint N+3: Include full AI analysis for immediate display
+      aiAnalysis: response.analysisRun.aiAnalysis,
     },
+    delta: response.delta,
   };
 }
 

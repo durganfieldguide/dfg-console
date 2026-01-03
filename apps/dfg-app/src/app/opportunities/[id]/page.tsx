@@ -41,7 +41,7 @@ import {
   getOpportunity,
   updateOpportunity,
   dismissAlert,
-  analyzeOpportunity,
+  triggerAnalysis,
   updateOperatorInputs,
   checkStaleness,
   type AnalysisResult,
@@ -85,6 +85,15 @@ export default function OpportunityDetailPage() {
         }
         if (data.gates) {
           setGates(data.gates);
+        }
+
+        // Sprint N+3 (#54): Load persisted AI analysis if available
+        const dataWithAnalysis = data as OpportunityWithAnalysis & {
+          currentAnalysisRun?: { aiAnalysis?: AnalysisResult; createdAt?: string };
+        };
+        if (dataWithAnalysis.currentAnalysisRun?.aiAnalysis) {
+          setAnalysisResult(dataWithAnalysis.currentAnalysisRun.aiAnalysis);
+          setAnalysisTimestamp(dataWithAnalysis.currentAnalysisRun.createdAt || null);
         }
 
         // Check staleness
@@ -136,10 +145,12 @@ export default function OpportunityDetailPage() {
     setAnalyzing(true);
     setAnalysisError(null);
     try {
-      // Sprint 1.5: Pass operator inputs to analysis
-      const result = await analyzeOpportunity(opportunity, operatorInputs);
-      setAnalysisResult(result);
-      setAnalysisTimestamp(new Date().toISOString());
+      // Sprint N+3 (#54): Use unified triggerAnalysis which calls dfg-analyst AND persists
+      const { analysisRun } = await triggerAnalysis(opportunity.id);
+      if (analysisRun.aiAnalysis) {
+        setAnalysisResult(analysisRun.aiAnalysis);
+      }
+      setAnalysisTimestamp(analysisRun.createdAt);
       // Clear staleness after new analysis
       setIsStale(false);
       setStalenessReasons([]);
@@ -196,17 +207,19 @@ export default function OpportunityDetailPage() {
   };
 
   // Sprint 1.5: Handle re-analyze
-  // Uses the same client-side analysis as handleAnalyze to include operator inputs
+  // Sprint N+3 (#54): Uses unified triggerAnalysis which calls dfg-analyst AND persists
   const handleReAnalyze = async () => {
     if (!opportunity) return;
 
     setReAnalyzing(true);
     setAnalysisError(null);
     try {
-      // Re-run analysis with current operator inputs
-      const result = await analyzeOpportunity(opportunity, operatorInputs);
-      setAnalysisResult(result);
-      setAnalysisTimestamp(new Date().toISOString());
+      // Re-run analysis - API now handles AI analysis + persistence
+      const { analysisRun } = await triggerAnalysis(opportunity.id);
+      if (analysisRun.aiAnalysis) {
+        setAnalysisResult(analysisRun.aiAnalysis);
+      }
+      setAnalysisTimestamp(analysisRun.createdAt);
 
       // Clear staleness after re-analyze
       setIsStale(false);
