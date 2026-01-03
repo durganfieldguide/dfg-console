@@ -16,6 +16,7 @@ import { handleOpportunities } from './routes/opportunities';
 import { handleDismissAlert, handleAlerts } from './routes/alerts';
 import { handleSources } from './routes/sources';
 import { handleIngestRoute } from './routes/ingest';
+import { loadCategoryConfig, loadAllCategoryConfigs } from './lib/category-loader';
 
 // =============================================================================
 // MAIN HANDLER
@@ -92,6 +93,11 @@ const handler: ExportedHandler<Env> = {
       // Route: /api/ingest/*
       if (path.startsWith('/api/ingest')) {
         return handleIngestRoute(request, env, path, method);
+      }
+
+      // Route: /api/categories/* (category configuration)
+      if (path.startsWith('/api/categories')) {
+        return handleCategories(request, env, path, method);
       }
 
       // Route: /api/triggers/check (watch trigger evaluation)
@@ -516,4 +522,36 @@ async function handleScoutRun(request: Request, env: Env): Promise<Response> {
       message: 'No scout trigger configured. Set MAKE_WEBHOOK_URL or add SCOUT service binding.',
     },
   });
+}
+
+// =============================================================================
+// CATEGORY CONFIGURATION ENDPOINTS
+// =============================================================================
+
+/**
+ * Handle category configuration requests.
+ * GET /api/categories - List all enabled categories
+ * GET /api/categories/:id - Get specific category config
+ */
+async function handleCategories(
+  _request: Request,
+  env: Env,
+  path: string,
+  method: string
+): Promise<Response> {
+  // GET /api/categories - List all
+  if (path === '/api/categories' && method === 'GET') {
+    const categories = await loadAllCategoryConfigs(env);
+    return json({ data: categories });
+  }
+
+  // GET /api/categories/:id - Get specific
+  const idMatch = path.match(/^\/api\/categories\/([^/]+)$/);
+  if (idMatch && method === 'GET') {
+    const categoryId = decodeURIComponent(idMatch[1]);
+    const config = await loadCategoryConfig(env, categoryId);
+    return json({ data: config });
+  }
+
+  return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404);
 }

@@ -39,36 +39,36 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
   const buyerData = parseBuyerLensData(analysis.buyer_lens || {});
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-4 overflow-x-hidden', className)}>
       <Tabs defaultValue="summary">
-        <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
+        <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto overflow-x-auto scrollbar-hide">
           <TabsTrigger
             value="summary"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Summary
           </TabsTrigger>
           <TabsTrigger
             value="condition"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Condition
           </TabsTrigger>
           <TabsTrigger
             value="investor"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Investor
           </TabsTrigger>
           <TabsTrigger
             value="buyer"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Buyer
           </TabsTrigger>
           <TabsTrigger
             value="report"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Report
           </TabsTrigger>

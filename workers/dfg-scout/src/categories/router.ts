@@ -10,6 +10,7 @@ export interface Verdict {
   minScore: number;
   matchedPositive: string[];
   matchedNegative: string[];
+  hardGateFailures?: Array<{ field: string; reason: string }>;  // Failed hard gates
   rejectionReason?:
     | 'price_over_max'
     | 'no_category_match'
@@ -17,7 +18,18 @@ export interface Verdict {
     | 'below_min_score'
     | 'router_not_loaded'
     | 'global_negative_trigger'
+    | 'hard_gate_failed'
     | 'unpriced';
+}
+
+/**
+ * Hard gate rule for auto-reject/flag
+ */
+export interface HardGate {
+  field: string;           // e.g., "title_status", "parts_only", "mileage"
+  operator: 'equals' | 'in' | 'gt' | 'lt' | 'gte' | 'lte' | 'contains';
+  value: unknown;          // Single value or array for 'in' operator
+  action: 'reject' | 'flag';  // reject = auto-reject, flag = needs review
 }
 
 export type LoadedCategory = {
@@ -28,6 +40,7 @@ export type LoadedCategory = {
   requiresSnapshot: boolean;
   positive: string[];
   negative: string[];
+  hardGates: HardGate[];   // Hard gates loaded from D1
 };
 
 function escapeRegExp(s: string): string {
@@ -79,6 +92,67 @@ function includesKeyword(text: string, keyword: string): boolean {
 
   const re = new RegExp(`(?<![\\w-])${core}(?![\\w-])`, 'i');
   return re.test(text);
+}
+
+/**
+ * Evaluate hard gates against input data
+ * Returns array of failures (empty = all passed)
+ */
+function evaluateHardGates(
+  gates: HardGate[],
+  input: RouterInput
+): Array<{ field: string; reason: string; action: 'reject' | 'flag' }> {
+  const failures: Array<{ field: string; reason: string; action: 'reject' | 'flag' }> = [];
+
+  // Build a lookup of input fields
+  const data: Record<string, unknown> = {
+    title: input.title,
+    description: input.description,
+    price: input.price,
+    // Add any other fields that might be checked
+    ...((input as unknown as Record<string, unknown>) || {}),
+  };
+
+  for (const gate of gates) {
+    const value = data[gate.field];
+    let triggered = false;
+
+    switch (gate.operator) {
+      case 'equals':
+        triggered = value === gate.value;
+        break;
+      case 'in':
+        triggered = Array.isArray(gate.value) && (gate.value as unknown[]).includes(value);
+        break;
+      case 'gt':
+        triggered = typeof value === 'number' && typeof gate.value === 'number' && value > gate.value;
+        break;
+      case 'lt':
+        triggered = typeof value === 'number' && typeof gate.value === 'number' && value < gate.value;
+        break;
+      case 'gte':
+        triggered = typeof value === 'number' && typeof gate.value === 'number' && value >= gate.value;
+        break;
+      case 'lte':
+        triggered = typeof value === 'number' && typeof gate.value === 'number' && value <= gate.value;
+        break;
+      case 'contains':
+        if (typeof value === 'string' && typeof gate.value === 'string') {
+          triggered = value.toLowerCase().includes(gate.value.toLowerCase());
+        }
+        break;
+    }
+
+    if (triggered) {
+      failures.push({
+        field: gate.field,
+        reason: `${gate.field} ${gate.operator} ${JSON.stringify(gate.value)}`,
+        action: gate.action,
+      });
+    }
+  }
+
+  return failures;
 }
 
 export function evaluateLotPure(
@@ -224,6 +298,28 @@ export function evaluateLotPure(
     if (!hasValidPrice) continue;
     if (score < cat.minScore) continue;
 
+    // Evaluate hard gates for this category
+    const hardGateFailures = evaluateHardGates(cat.hardGates, input);
+    const rejectGates = hardGateFailures.filter(f => f.action === 'reject');
+
+    // If any hard gates with 'reject' action failed, skip this candidate
+    if (rejectGates.length > 0) {
+      const attempt: Verdict = {
+        status: 'rejected',
+        categoryId: cat.id,
+        categoryName: cat.name,
+        requiresSnapshot: Boolean(cat.requiresSnapshot),
+        score,
+        minScore: cat.minScore,
+        matchedPositive,
+        matchedNegative,
+        hardGateFailures: rejectGates.map(f => ({ field: f.field, reason: f.reason })),
+        rejectionReason: 'hard_gate_failed',
+      };
+      if (!bestAttempt || attempt.score > bestAttempt.score) bestAttempt = attempt;
+      continue;
+    }
+
     const candidate: Verdict = {
       status: 'candidate',
       categoryId: cat.id,
@@ -233,6 +329,8 @@ export function evaluateLotPure(
       minScore: cat.minScore,
       matchedPositive,
       matchedNegative,
+      // Include flag-level gate failures for operator awareness (but don't reject)
+      hardGateFailures: hardGateFailures.filter(f => f.action === 'flag').map(f => ({ field: f.field, reason: f.reason })),
     };
 
     if (!bestCandidate || candidate.score > bestCandidate.score) {
@@ -268,6 +366,20 @@ interface CategoryDefRow {
   requires_snapshot?: number;
   keywords_positive?: string;
   keywords_negative?: string;
+  hard_gates?: string;  // JSON string of HardGate[]
+}
+
+/**
+ * Parse hard_gates from JSON string
+ */
+function parseHardGates(json: string | null | undefined): HardGate[] {
+  if (!json) return [];
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export class CategoryRouter {
@@ -335,6 +447,7 @@ export class CategoryRouter {
             requiresSnapshot,
             positive: parseKeywords(cat.keywords_positive),
             negative: parseKeywords(cat.keywords_negative),
+            hardGates: parseHardGates(cat.hard_gates),
           };
         })
         .filter(c => c.id && c.enabled);

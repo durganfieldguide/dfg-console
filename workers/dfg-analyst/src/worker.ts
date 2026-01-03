@@ -50,6 +50,63 @@ interface Env {
   DEBUG?: string;
 }
 
+// ============================================
+// DESCRIPTION SANITIZER - Strip T&C Boilerplate
+// ============================================
+// Sierra Auction (and other sources) include Terms & Conditions boilerplate
+// in their listing descriptions. This T&C text often contains educational
+// references to "salvage", "rebuilt", "flood damage" etc. that confuse the LLM
+// into thinking the specific lot has those issues.
+//
+// This sanitizer strips common boilerplate patterns so Claude only sees
+// the actual lot-specific content.
+
+const TC_BOILERPLATE_PATTERNS = [
+  // Sierra Auction T&C sections (matches the full T&C block)
+  /PRE-AUCTION REGISTRATION AND BIDDING[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  /BIDDER DECLARATION[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  /TERMS AND CONDITIONS[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  /TITLE INFORMATION[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
+  /GENERAL TERMS[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  /PAYMENT METHODS[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  /AUCTION DAY INFORMATION[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  /DEFINITION OF TYPES OF AUCTIONS[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  /AUCTION PREVIEW[\s\S]*?(?=(?:Features:|Description:|$))/gi,
+  // Common T&C phrases that mention salvage/title status educationally
+  /Restored Salvage\s*[-–—]\s*Vehicle was previously salvaged[\s\S]*?(?=\.|$)/gi,
+  /Salvage\s*[-–—]\s*Vehicle has had one or more incidents[\s\S]*?(?=\.|$)/gi,
+  /Brand:[\s\S]*?(?=Odometer:|Title|$)/gi,
+  // Boilerplate about title branding explanation
+  /Left blank\s*[-–—]\s*CLEAN TITLE[\s\S]*?(?=Restored Salvage|Salvage|$)/gi,
+  // Remove any remaining HTML-style content
+  /<style[\s\S]*?<\/style>/gi,
+  /<script[\s\S]*?<\/script>/gi,
+];
+
+/**
+ * Sanitize listing description by removing T&C boilerplate.
+ * This prevents the LLM from misinterpreting educational text about
+ * salvage/rebuilt titles as applying to the specific lot.
+ */
+function sanitizeDescription(description: string | undefined): string {
+  if (!description) return '';
+
+  let sanitized = description;
+
+  // Apply each boilerplate pattern
+  for (const pattern of TC_BOILERPLATE_PATTERNS) {
+    sanitized = sanitized.replace(pattern, ' ');
+  }
+
+  // Clean up excessive whitespace
+  sanitized = sanitized
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\.\s*\.\s*/g, '. ')
+    .trim();
+
+  return sanitized;
+}
+
 // Buyer-lens sanity bounds (keep buyer value anchored to Phoenix comps unless we have strong evidence)
 
 const BUYER_MIN_MULTIPLIER = 1.1;
@@ -1830,53 +1887,41 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
 
   ensureSierraFees(listingData);
 
-  // Detect category and route to appropriate prompts/analysis
+  // =============================================================================
+  // CATEGORY DETECTION (config-driven)
+  // =============================================================================
+  // Uses category_config from D1 if provided, otherwise falls back to detection
+  const { detectCategoryType, getCategoryConfig } = await import('./category-config');
+
   const category = listingData.category_id || 'buy_box';
-  const categoryLower = category.toLowerCase();
-  const titleLower = (listingData.title || '').toLowerCase();
+  const categoryType = detectCategoryType(listingData.category_id, listingData.title);
 
-  // Known vehicle makes for title-based detection
-  const vehicleMakes = [
-    'toyota', 'honda', 'ford', 'chevrolet', 'chevy', 'dodge', 'ram', 'jeep',
-    'nissan', 'hyundai', 'kia', 'subaru', 'mazda', 'volkswagen', 'vw',
-    'bmw', 'mercedes', 'audi', 'lexus', 'acura', 'infiniti', 'cadillac',
-    'buick', 'gmc', 'chrysler', 'lincoln', 'volvo', 'porsche', 'jaguar',
-    'land rover', 'range rover', 'rover', 'mini', 'fiat', 'alfa romeo',
-    'tesla', 'rivian', 'lucid', 'genesis', 'maserati', 'bentley', 'rolls royce'
-  ];
-  const vehicleTypes = ['sedan', 'coupe', 'suv', 'crossover', 'hatchback', 'wagon', 'convertible', 'minivan', 'pickup'];
+  // Get category config (from request or defaults)
+  const categoryConfig = listingData.category_config || getCategoryConfig(listingData.category_id);
 
-  // Title-based vehicle detection (fallback when category is generic)
-  const titleHasVehicleMake = vehicleMakes.some(make => titleLower.includes(make));
-  const titleHasVehicleType = vehicleTypes.some(type => titleLower.includes(type));
-  const titleLooksLikeVehicle = titleHasVehicleMake || titleHasVehicleType ||
-    /\b(20\d{2}|19\d{2})\s+\w+\s+\w+\b/.test(titleLower); // Pattern like "2018 Honda Accord"
+  // Map category type to legacy flags (for backwards compatibility during transition)
+  const isPowerTools = categoryType === 'power_tools';
+  const isVehicle = categoryType === 'vehicle';
+  const isTrailer = categoryType === 'trailer';
 
-  // Category detection logic
-  const isPowerTools = categoryLower === 'power_tools';
-  const isVehicleByCategory = categoryLower === 'vehicle' || categoryLower === 'vehicles' ||
-    categoryLower === 'suv' || categoryLower === 'car' || categoryLower === 'truck' ||
-    categoryLower === 'cars_trucks' || categoryLower === 'auto' || categoryLower === 'automotive' ||
-    categoryLower === 'fleet_trucks' ||
-    categoryLower.includes('vehicle') || categoryLower.includes('car') ||
-    categoryLower.includes('suv') || categoryLower.includes('truck');
+  console.log(`[CATEGORY] Detected: ${category} -> type=${categoryType}, config=${categoryConfig.id} (prompt=${categoryConfig.prompt_file})`);
 
-  // Vehicle detection: explicit category OR title-based detection (when category is generic like buy_box)
-  const isVehicle = isVehicleByCategory || (categoryLower === 'buy_box' && titleLooksLikeVehicle);
-  const isTrailer = !isPowerTools && !isVehicle; // Default to trailer if not explicitly another category
-
-  console.log(`[CATEGORY] Detected: ${category} -> isPowerTools=${isPowerTools}, isVehicle=${isVehicle}, isTrailer=${isTrailer} (titleLooksLikeVehicle=${titleLooksLikeVehicle})`);
+  // Sanitize description to remove T&C boilerplate that confuses title_status detection
+  // This prevents false positives where educational text about "salvage" titles is
+  // misinterpreted as applying to the specific lot (Issue #21)
+  const sanitizedDescription = sanitizeDescription(listingData.description);
+  console.log(`[SANITIZE] Description length: ${listingData.description?.length ?? 0} -> ${sanitizedDescription.length} (removed ${(listingData.description?.length ?? 0) - sanitizedDescription.length} chars of boilerplate)`);
 
   // PHASE 1: Condition Assessment (category-specific prompts)
   let conditionPrompt: string;
   if (isPowerTools) {
     const { buildConditionPromptPowerTools } = await import('./prompts-power-tools');
-    conditionPrompt = buildConditionPromptPowerTools(listingData.description, listingData.photos.length);
+    conditionPrompt = buildConditionPromptPowerTools(sanitizedDescription, listingData.photos.length);
   } else if (isVehicle) {
     const { buildConditionPromptVehicles } = await import('./prompts-vehicles');
-    conditionPrompt = buildConditionPromptVehicles(listingData.description, listingData.photos.length);
+    conditionPrompt = buildConditionPromptVehicles(sanitizedDescription, listingData.photos.length);
   } else {
-    conditionPrompt = buildConditionPrompt(listingData.description, listingData.photos.length);
+    conditionPrompt = buildConditionPrompt(sanitizedDescription, listingData.photos.length);
   }
   
   // Track actual image fetch results (not Claude's claimed count)

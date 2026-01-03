@@ -100,20 +100,20 @@ function EndingSoonItem({ item }: EndingSoonItemProps) {
           </h4>
 
           {/* Status and Source */}
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mt-1">
             <span
               className={cn(
-                'px-2 py-0.5 rounded text-xs font-medium',
+                'px-2 py-0.5 rounded text-xs font-medium shrink-0',
                 STATUS_COLORS[item.status as OpportunityStatus]
               )}
             >
               {STATUS_LABELS[item.status as OpportunityStatus]}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
               {item.source}
             </span>
             {item.current_bid !== null && (
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 shrink-0">
                 ${item.current_bid.toLocaleString()}
               </span>
             )}
@@ -195,10 +195,10 @@ export function EndingSoonList({
     return (
       <Card className={className}>
         {showHeader && (
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-4">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-orange-500" />
-              <h2 className="font-medium text-gray-900 dark:text-white">
+              <Clock className="h-5 w-5 text-orange-500 shrink-0" />
+              <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 Ending Soon
               </h2>
             </div>
@@ -215,16 +215,16 @@ export function EndingSoonList({
     return (
       <Card className={cn('border-red-200 dark:border-red-800', className)}>
         {showHeader && (
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-4">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-red-500" />
-              <h2 className="font-medium text-gray-900 dark:text-white">
+              <Clock className="h-5 w-5 text-red-500 shrink-0" />
+              <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 Ending Soon
               </h2>
             </div>
           </CardHeader>
         )}
-        <CardContent>
+        <CardContent className="px-3 sm:px-4">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           <Button variant="secondary" size="sm" onClick={fetchData} className="mt-2">
             Retry
@@ -238,16 +238,16 @@ export function EndingSoonList({
     return (
       <Card className={cn('border-green-200 dark:border-green-800', className)}>
         {showHeader && (
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-4">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <h2 className="font-medium text-gray-900 dark:text-white">
+              <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+              <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 Ending Soon
               </h2>
             </div>
           </CardHeader>
         )}
-        <CardContent>
+        <CardContent className="px-3 sm:px-4">
           <p className="text-sm text-green-600 dark:text-green-400">
             No auctions ending soon. Check back later!
           </p>
@@ -259,17 +259,17 @@ export function EndingSoonList({
   return (
     <Card className={cn('border-orange-200 dark:border-orange-800', className)}>
       {showHeader && (
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-orange-500" />
-            <h2 className="font-medium text-gray-900 dark:text-white">
+        <CardHeader className="flex flex-row items-center justify-between px-3 sm:px-4 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Clock className="h-5 w-5 text-orange-500 shrink-0" />
+            <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">
               Ending Soon
             </h2>
-            <span className="ml-1 text-sm text-orange-600 dark:text-orange-400 font-semibold">
+            <span className="text-sm text-orange-600 dark:text-orange-400 font-semibold shrink-0">
               {totalCount}
             </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={fetchData}>
+          <Button variant="ghost" size="sm" onClick={fetchData} className="shrink-0">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </CardHeader>

@@ -148,15 +148,15 @@ function TitleField<T>({
 
       {/* Source and verification - shown when value is set */}
       {value !== undefined && (
-        <div className="flex gap-2 mt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
           <Select
-            className="flex-1 text-xs h-8"
+            className="text-xs h-8 w-full"
             value={source}
             onChange={(e) => onSourceChange(e.target.value as InputSource)}
             options={sourceOptions}
           />
           <Select
-            className="flex-1 text-xs h-8"
+            className="text-xs h-8 w-full"
             value={verification}
             onChange={(e) => onVerificationChange(e.target.value as VerificationLevel)}
             options={verificationOptions}
@@ -349,17 +349,17 @@ export function TitleInputs({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Title Information</span>
+      <CardHeader className="px-3 sm:px-4">
+        <CardTitle className="flex items-center justify-between gap-2">
+          <span className="text-sm sm:text-base truncate">Title Info</span>
           {isDirty && (
-            <span className="text-xs font-normal px-2 py-1 rounded bg-yellow-500 text-white">
-              Unsaved changes
+            <span className="text-xs font-normal px-2 py-1 rounded bg-yellow-500 text-white shrink-0 whitespace-nowrap">
+              Unsaved
             </span>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-3 sm:px-4">
         {/* Title Status */}
         <TitleField
           label="Title Status"

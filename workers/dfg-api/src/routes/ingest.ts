@@ -263,9 +263,10 @@ async function updateSourceLastRun(env: Env, sourceId: string): Promise<void> {
 /**
  * Pull listings directly from the scout's listings table.
  * This is called by a cron or scheduled task.
+ * Also syncs photos for existing opportunities that need updating.
  */
-export async function ingestFromScout(env: Env): Promise<IngestResult> {
-  const result: IngestResult = {
+export async function ingestFromScout(env: Env): Promise<IngestResult & { photos_synced?: number }> {
+  const result: IngestResult & { photos_synced?: number } = {
     created: 0,
     updated: 0,
     skipped: 0,
@@ -312,6 +313,108 @@ export async function ingestFromScout(env: Env): Promise<IngestResult> {
     }
   }
 
+  // Also sync photos for existing opportunities that need updating
+  const photoSync = await syncPhotosFromListings(env);
+  result.photos_synced = photoSync.updated;
+
+  return result;
+}
+
+// =============================================================================
+// SYNC PHOTOS FROM LISTINGS TO OPPORTUNITIES
+// =============================================================================
+
+interface PhotoSyncResult {
+  updated: number;
+  skipped: number;
+  errors: Array<{ opportunity_id: string; error: string }>;
+}
+
+/**
+ * Sync photos from listings table to opportunities.
+ * Fixes opportunities that were created before photo hydration completed.
+ * Also fixes double-encoded JSON issues.
+ */
+export async function syncPhotosFromListings(env: Env): Promise<PhotoSyncResult> {
+  const result: PhotoSyncResult = {
+    updated: 0,
+    skipped: 0,
+    errors: [],
+  };
+
+  // Find opportunities where listing has more photos than opportunity
+  // or where opportunity photos are malformed (double-encoded)
+  const opportunities = await env.DB.prepare(`
+    SELECT
+      o.id as opportunity_id,
+      o.photos as opp_photos,
+      l.photos as listing_photos,
+      l.image_url,
+      json_array_length(l.photos) as listing_photo_count
+    FROM opportunities o
+    JOIN listings l ON l.id = o.listing_id
+    WHERE
+      l.photos IS NOT NULL
+      AND json_array_length(l.photos) > 1
+      AND (
+        -- Opportunity has no photos or malformed photos
+        o.photos IS NULL
+        OR o.photos = ''
+        OR o.photos = '[]'
+        -- Opportunity has fewer photos than listing (wasn't synced)
+        OR json_array_length(o.photos) < json_array_length(l.photos)
+        -- Opportunity photos are double-encoded (starts with escaped quote)
+        OR o.photos LIKE '"%'
+      )
+  `).all();
+
+  const now = nowISO();
+
+  for (const row of opportunities.results || []) {
+    const r = row as {
+      opportunity_id: string;
+      opp_photos: string | null;
+      listing_photos: string | null;
+      image_url: string | null;
+      listing_photo_count: number;
+    };
+
+    try {
+      // Parse listing photos
+      let photos: string[] = parsePhotos(r.listing_photos);
+
+      // Fallback to image_url if no photos
+      if (photos.length === 0 && r.image_url) {
+        photos = [r.image_url];
+      }
+
+      if (photos.length === 0) {
+        result.skipped++;
+        continue;
+      }
+
+      // Update opportunity with correct photos (single JSON.stringify)
+      await env.DB.prepare(`
+        UPDATE opportunities
+        SET
+          photos = ?,
+          primary_image_url = COALESCE(primary_image_url, ?),
+          updated_at = ?
+        WHERE id = ?
+      `).bind(
+        JSON.stringify(photos),
+        photos[0] || null,
+        now,
+        r.opportunity_id
+      ).run();
+
+      result.updated++;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      result.errors.push({ opportunity_id: r.opportunity_id, error: message });
+    }
+  }
+
   return result;
 }
 
@@ -333,6 +436,15 @@ export async function handleIngestRoute(
   // POST /api/ingest/sync - Sync from scout's listings table
   if (path === '/api/ingest/sync' && method === 'POST') {
     const result = await ingestFromScout(env);
+    return json({
+      data: result,
+      meta: { synced_at: nowISO() },
+    });
+  }
+
+  // POST /api/ingest/sync-photos - Sync photos from listings to opportunities
+  if (path === '/api/ingest/sync-photos' && method === 'POST') {
+    const result = await syncPhotosFromListings(env);
     return json({
       data: result,
       meta: { synced_at: nowISO() },

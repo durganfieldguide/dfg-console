@@ -14,6 +14,7 @@ const mockCategories: LoadedCategory[] = [
     requiresSnapshot: true,
     positive: ['utility trailer', 'dump trailer', 'cargo trailer'],
     negative: ['toy', 'hitch', 'parts'],
+    hardGates: [],
   },
   {
     id: 'GENERATORS',
@@ -23,6 +24,7 @@ const mockCategories: LoadedCategory[] = [
     requiresSnapshot: true,
     positive: ['generator', 'honda generator', 'portable generator'],
     negative: ['battery', 'charger'],
+    hardGates: [],
   },
 ];
 

@@ -127,7 +127,7 @@ function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction,
   const showTouch = item.is_decision_stale;
 
   return (
-    <div className="group relative">
+    <div className="group relative overflow-hidden">
       <Link
         href={`/opportunities/${encodeURIComponent(item.id)}`}
         onClick={handleClick}
@@ -136,7 +136,7 @@ function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction,
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             {/* Title */}
-            <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate pr-24">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate md:pr-24">
               {item.title}
             </h4>
 
@@ -184,13 +184,13 @@ function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction,
                 ${item.max_bid_locked.toLocaleString()}
               </span>
             )}
-            <ChevronRight className="h-4 w-4 text-gray-400 group-hover:hidden" />
+            <ChevronRight className="h-4 w-4 text-gray-400 md:group-hover:hidden" />
           </div>
         </div>
       </Link>
 
-      {/* Inline CTAs - shown on hover */}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-1 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+      {/* Inline CTAs - shown on hover (desktop only) */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:group-hover:flex items-center gap-1 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 p-1">
         {/* Re-analyze - only for analysis stale items */}
         {showReanalyze && (
           <button
@@ -441,11 +441,11 @@ export function AttentionRequiredList({
     return (
       <Card className={className}>
         {showHeader && (
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              <h2 className="font-medium text-gray-900 dark:text-white">
-                Attention Required
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+              <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                Attention
               </h2>
             </div>
           </CardHeader>
@@ -461,16 +461,16 @@ export function AttentionRequiredList({
     return (
       <Card className={cn('border-red-200 dark:border-red-800', className)}>
         {showHeader && (
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              <h2 className="font-medium text-gray-900 dark:text-white">
-                Attention Required
+              <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
+              <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                Attention
               </h2>
             </div>
           </CardHeader>
         )}
-        <CardContent>
+        <CardContent className="px-3 sm:px-4">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           <Button variant="secondary" size="sm" onClick={fetchData} className="mt-2">
             Retry
@@ -484,16 +484,16 @@ export function AttentionRequiredList({
     return (
       <Card className={cn('border-green-200 dark:border-green-800', className)}>
         {showHeader && (
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-4">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-green-500" />
-              <h2 className="font-medium text-gray-900 dark:text-white">
-                Attention Required
+              <AlertTriangle className="h-5 w-5 text-green-500 shrink-0" />
+              <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
+                Attention
               </h2>
             </div>
           </CardHeader>
         )}
-        <CardContent>
+        <CardContent className="px-3 sm:px-4">
           <p className="text-sm text-green-600 dark:text-green-400">
             All caught up! No items need attention.
           </p>
@@ -505,17 +505,17 @@ export function AttentionRequiredList({
   return (
     <Card className={cn('border-amber-200 dark:border-amber-800', className)}>
       {showHeader && (
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            <h2 className="font-medium text-gray-900 dark:text-white">
-              Attention Required
+        <CardHeader className="flex flex-row items-center justify-between px-3 sm:px-4 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+            <h2 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">
+              Attention
             </h2>
-            <span className="ml-1 text-sm text-amber-600 dark:text-amber-400 font-semibold">
+            <span className="text-sm text-amber-600 dark:text-amber-400 font-semibold shrink-0">
               {totalCount}
             </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={fetchData}>
+          <Button variant="ghost" size="sm" onClick={fetchData} className="shrink-0">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </CardHeader>

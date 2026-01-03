@@ -29,6 +29,29 @@ export interface TieredFeeSchedule {
   above_threshold_percent?: number;
 }
 
+/**
+ * Category configuration passed from API (loaded from D1)
+ * Enables pluggable categories without code changes
+ */
+export interface CategoryConfigData {
+  id: string;
+  name: string;
+  min_profit_dollars: number;
+  min_margin_percent: number;    // 40 = 40%
+  max_acquisition: number;
+  target_days_to_sell: number;
+  max_distance_miles: number;
+  min_photos: number;
+  required_evidence: string[];
+  verdict_thresholds: {
+    buy: { min_profit: number; min_margin: number };
+    watch: { min_profit: number; min_margin: number };
+    pass?: { max_profit: number };
+  };
+  prompt_file: string;
+  market_comps_file: string;
+}
+
 export interface ListingData {
   source: "sierra_auction" | "fb_marketplace" | "craigslist" | "offerup" | string;
   listing_url: string;
@@ -64,6 +87,9 @@ export interface ListingData {
     title_status_verified?: boolean;
     odometer_verified?: boolean;
   };
+
+  // Sprint N+2: Category config from D1 (enables pluggable categories)
+  category_config?: CategoryConfigData;
 }
 
 // ============================================

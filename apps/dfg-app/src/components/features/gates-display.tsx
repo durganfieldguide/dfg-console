@@ -67,13 +67,13 @@ export function GatesDisplay({ gates, className }: GatesDisplayProps) {
   if (!gates) {
     return (
       <Card className={className}>
-        <CardHeader>
+        <CardHeader className="px-3 sm:px-4">
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Bid Readiness Gates
+            <Shield className="h-5 w-5 shrink-0" />
+            <span className="text-sm sm:text-base">Bid Readiness</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 sm:px-4">
           <div className="text-center py-6 text-gray-500 dark:text-gray-400">
             <HelpCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No gate information available</p>
@@ -89,21 +89,21 @@ export function GatesDisplay({ gates, className }: GatesDisplayProps) {
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Bid Readiness Gates
+      <CardHeader className="px-3 sm:px-4">
+        <CardTitle className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Shield className="h-5 w-5 shrink-0" />
+            <span className="text-sm sm:text-base truncate">Bid Readiness</span>
           </div>
           <span
             className={cn(
-              'text-sm font-normal px-2 py-1 rounded',
+              'text-xs sm:text-sm font-normal px-2 py-1 rounded shrink-0 whitespace-nowrap',
               gates.allCriticalPassed
                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                 : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
             )}
           >
-            {gates.passedCount}/{gates.totalCount} passed
+            {gates.passedCount}/{gates.totalCount}
           </span>
         </CardTitle>
       </CardHeader>

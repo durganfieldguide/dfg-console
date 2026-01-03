@@ -248,17 +248,17 @@ export default function OpportunityDetailPage() {
       : [];
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen overflow-x-hidden">
       <Navigation />
 
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1 pb-20 md:pb-0 min-w-0 overflow-x-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3 px-4 h-14">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
+        <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-14">
+            <Button variant="ghost" size="sm" onClick={() => router.back()} className="shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white truncate flex-1">
+            <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0">
               {opportunity.title}
             </h1>
             <Button
@@ -266,26 +266,27 @@ export default function OpportunityDetailPage() {
               size="sm"
               onClick={handleAnalyze}
               disabled={analyzing}
+              className="shrink-0"
             >
               {analyzing ? (
-                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                <RefreshCw className="h-4 w-4 sm:mr-1 animate-spin" />
               ) : (
-                <Sparkles className="h-4 w-4 mr-1" />
+                <Sparkles className="h-4 w-4 sm:mr-1" />
               )}
-              {analyzing ? 'Analyzing...' : 'Analyze'}
+              <span className="hidden sm:inline">{analyzing ? 'Analyzing...' : 'Analyze'}</span>
             </Button>
             {opportunity.source_url ? (
               <a
                 href={opportunity.source_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                className="shrink-0 inline-flex items-center gap-1 px-2 sm:px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
               >
                 <ExternalLink className="h-4 w-4" />
                 <span className="hidden sm:inline">View Listing</span>
               </a>
             ) : (
-              <span className="text-xs text-gray-400 dark:text-gray-500" title="Source link unavailable">
+              <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0" title="Source link unavailable">
                 No link
               </span>
             )}
@@ -533,8 +534,8 @@ export default function OpportunityDetailPage() {
         </div>
 
         {/* Action buttons - Fixed at bottom */}
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex gap-2 justify-center max-w-lg mx-auto">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 overflow-x-hidden">
+          <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
             {opportunity.status === 'inbox' && (
               <>
                 <Button

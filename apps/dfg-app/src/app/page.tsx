@@ -82,25 +82,26 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen overflow-x-hidden">
       <Navigation />
 
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1 pb-20 md:pb-0 min-w-0 overflow-x-hidden">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between px-4 h-14">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-2">
+            <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white shrink-0">
               Dashboard
             </h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleSync}
                 loading={syncing}
+                className="px-2 sm:px-3"
               >
-                <RefreshCw className={cn('h-4 w-4 mr-1', syncing && 'animate-spin')} />
-                Sync
+                <RefreshCw className={cn('h-4 w-4 sm:mr-1', syncing && 'animate-spin')} />
+                <span className="hidden sm:inline">Sync</span>
               </Button>
               <Button variant="ghost" size="sm" onClick={fetchStats} disabled={loading}>
                 <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />

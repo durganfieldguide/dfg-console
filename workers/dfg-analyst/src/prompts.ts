@@ -7,6 +7,12 @@ export const CONDITION_ASSESSMENT_PROMPT = `Extract trailer condition as JSON. F
 - "Stationary" in auctions = legal disclaimer, not broken
 - "Engine Issues" on generator = status "non-functional"
 
+## TITLE STATUS DETECTION (CRITICAL):
+- ONLY set title_status based on EXPLICIT per-lot declarations like "Title Status: Clean" or "Title Status: On File"
+- "Title Status: On File" = treat as "on_file" (unknown until physically verified)
+- DO NOT infer salvage/rebuilt from general auction T&C boilerplate or educational text
+- If no explicit title status is stated for THIS lot, use "unknown"
+
 ## RETURN JSON:
 {
   "assessment_confidence": "high|medium|low",
