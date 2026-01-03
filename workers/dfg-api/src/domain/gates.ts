@@ -218,3 +218,95 @@ export function formatBlockedMessage(gates: ComputedGates): string | null {
 
   return `Clear ${blocking.length} gates to bid: ${blocking.map(g => g.label).join(', ')}`;
 }
+
+// =============================================================================
+// HARD GATE AUTO-REJECTION (Sprint N+3)
+// =============================================================================
+
+/**
+ * Title statuses that should trigger auto-rejection when operator-verified.
+ * These are "kill switch" conditions - deal is dead on arrival.
+ */
+const DISQUALIFYING_TITLE_STATUSES: string[] = [
+  'salvage',
+  'parts_only',
+];
+
+/**
+ * Lien statuses that should trigger auto-rejection when operator-verified.
+ */
+const DISQUALIFYING_LIEN_STATUSES: string[] = [
+  'lien_present',
+];
+
+export interface HardGateFailure {
+  field: string;
+  value: unknown;
+  reason: string;
+}
+
+/**
+ * Check if operator inputs contain verified disqualifying conditions.
+ * Returns array of failures if any hard gates are tripped.
+ *
+ * Key principle: Only reject when operator has VERIFIED a disqualifying condition.
+ * Unknown/unverified values should NOT trigger auto-rejection.
+ */
+export function checkHardGateFailures(
+  operatorInputs: OperatorInputs | null
+): HardGateFailure[] {
+  const failures: HardGateFailure[] = [];
+
+  if (!operatorInputs?.title) {
+    return failures; // No operator inputs = no verified disqualifying conditions
+  }
+
+  const { titleStatus, lienStatus } = operatorInputs.title;
+
+  // Check title status - only if operator has attested to a disqualifying value
+  if (titleStatus) {
+    const isVerified = meetsVerificationThreshold(titleStatus.verificationLevel);
+    const isDisqualifying = DISQUALIFYING_TITLE_STATUSES.includes(titleStatus.value);
+
+    if (isVerified && isDisqualifying) {
+      failures.push({
+        field: 'title_status',
+        value: titleStatus.value,
+        reason: `Title status "${titleStatus.value}" is disqualifying (${titleStatus.verificationLevel})`,
+      });
+    }
+  }
+
+  // Check lien status - only if operator has attested to lien present
+  if (lienStatus) {
+    const isVerified = meetsVerificationThreshold(lienStatus.verificationLevel);
+    const isDisqualifying = DISQUALIFYING_LIEN_STATUSES.includes(lienStatus.value);
+
+    if (isVerified && isDisqualifying) {
+      failures.push({
+        field: 'lien_status',
+        value: lienStatus.value,
+        reason: `Lien status "${lienStatus.value}" blocks transaction (${lienStatus.verificationLevel})`,
+      });
+    }
+  }
+
+  return failures;
+}
+
+/**
+ * Check if an opportunity should be auto-rejected based on operator inputs.
+ * Returns true if there are verified disqualifying conditions.
+ */
+export function shouldAutoReject(operatorInputs: OperatorInputs | null): boolean {
+  return checkHardGateFailures(operatorInputs).length > 0;
+}
+
+/**
+ * Format auto-rejection message for logging/display.
+ */
+export function formatAutoRejectMessage(failures: HardGateFailure[]): string {
+  if (failures.length === 0) return '';
+
+  return `Auto-rejected: ${failures.map(f => f.reason).join('; ')}`;
+}

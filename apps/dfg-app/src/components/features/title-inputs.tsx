@@ -176,6 +176,7 @@ interface TitleInputsProps {
   initialInputs?: OperatorInputs | null;
   onInputsChange?: (inputs: OperatorInputs) => void;
   onSaveSuccess?: () => void;
+  onAutoReject?: (failures: Array<{ field: string; reason: string }>) => void;
 }
 
 export function TitleInputs({
@@ -183,6 +184,7 @@ export function TitleInputs({
   initialInputs,
   onInputsChange,
   onSaveSuccess,
+  onAutoReject,
 }: TitleInputsProps) {
   // Local state for form
   const [titleStatus, setTitleStatus] = useState<TitleStatus | ''>(
@@ -326,7 +328,16 @@ export function TitleInputs({
       if (!res.ok) {
         throw new Error('Failed to save inputs');
       }
+
+      const data = await res.json();
       setIsDirty(false);
+
+      // Check if auto-rejected due to hard gate failure
+      if (data.autoRejected && data.hardGateFailures) {
+        onAutoReject?.(data.hardGateFailures);
+        return;
+      }
+
       onSaveSuccess?.();
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Unknown error');

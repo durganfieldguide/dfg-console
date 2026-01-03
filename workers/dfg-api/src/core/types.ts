@@ -26,6 +26,7 @@ export type RejectionReason =
   | 'transport_kills_margin'
   | 'price_blown'
   | 'duplicate'
+  | 'hard_gate_failure'  // Auto-rejected due to disqualifying title/condition
   | 'other';
 
 // Allowed transitions from each status

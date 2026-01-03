@@ -14,7 +14,7 @@ import type {
   ListingFacts,
 } from '../core/types';
 import { canTransition } from '../core/types';
-import { computeGates } from '../domain/gates';
+import { computeGates, checkHardGateFailures, formatAutoRejectMessage } from '../domain/gates';
 import { computeListingSnapshotHash, checkStaleness, type AnalysisRunSnapshot } from '../domain/staleness';
 import {
   json,
@@ -1103,8 +1103,8 @@ async function updateOperatorInputs(
 
   // Get current opportunity
   const current = await env.DB.prepare(`
-    SELECT id, operator_inputs_json, current_analysis_run_id FROM opportunities WHERE id = ?
-  `).bind(id).first() as Pick<OpportunityRow, 'id' | 'operator_inputs_json' | 'current_analysis_run_id'> | null;
+    SELECT id, status, operator_inputs_json, current_analysis_run_id FROM opportunities WHERE id = ?
+  `).bind(id).first() as Pick<OpportunityRow, 'id' | 'status' | 'operator_inputs_json' | 'current_analysis_run_id'> | null;
 
   if (!current) {
     return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
@@ -1119,12 +1119,68 @@ async function updateOperatorInputs(
 
   const now = nowISO();
 
-  // Update operator_inputs_json
-  await env.DB.prepare(`
-    UPDATE opportunities
-    SET operator_inputs_json = ?, updated_at = ?
-    WHERE id = ?
-  `).bind(JSON.stringify(mergedInputs), now, id).run();
+  // ==========================================================================
+  // SPRINT N+3: Check for hard gate failures (auto-rejection)
+  // ==========================================================================
+  const hardGateFailures = checkHardGateFailures(mergedInputs);
+  let autoRejected = false;
+
+  if (hardGateFailures.length > 0) {
+    // Only auto-reject if not already in a terminal state
+    const terminalStatuses: OpportunityStatus[] = ['won', 'lost', 'rejected', 'archived'];
+    if (!terminalStatuses.includes(current.status as OpportunityStatus)) {
+      const rejectionNote = formatAutoRejectMessage(hardGateFailures);
+
+      // Update to rejected status with hard_gate_failure reason
+      await env.DB.prepare(`
+        UPDATE opportunities
+        SET status = 'rejected',
+            status_changed_at = ?,
+            rejection_reason = 'hard_gate_failure',
+            rejection_note = ?,
+            operator_inputs_json = ?,
+            updated_at = ?
+        WHERE id = ?
+      `).bind(now, rejectionNote, JSON.stringify(mergedInputs), now, id).run();
+
+      // Log status change action
+      await createOperatorAction(env, {
+        opportunity_id: id,
+        action_type: 'status_change',
+        from_status: current.status,
+        to_status: 'rejected',
+        payload: {
+          auto_rejected: true,
+          reason: 'hard_gate_failure',
+          failures: hardGateFailures,
+        },
+      });
+
+      // Create tuning event for ML feedback
+      await createTuningEvent(env, {
+        event_type: 'status_change',
+        opportunity_id: id,
+        signal_data: {
+          from_status: current.status,
+          to_status: 'rejected',
+          rejection_reason: 'hard_gate_failure',
+          auto_rejected: true,
+          hard_gate_failures: hardGateFailures,
+        },
+      });
+
+      autoRejected = true;
+    }
+  }
+
+  // If not auto-rejected, just update operator inputs normally
+  if (!autoRejected) {
+    await env.DB.prepare(`
+      UPDATE opportunities
+      SET operator_inputs_json = ?, updated_at = ?
+      WHERE id = ?
+    `).bind(JSON.stringify(mergedInputs), now, id).run();
+  }
 
   // Log the augmentation action
   await createOperatorAction(env, {
@@ -1144,6 +1200,8 @@ async function updateOperatorInputs(
     success: true,
     operatorInputs: mergedInputs,
     inputsChangedSinceAnalysis,
+    autoRejected,
+    hardGateFailures: autoRejected ? hardGateFailures : undefined,
   });
 }
 

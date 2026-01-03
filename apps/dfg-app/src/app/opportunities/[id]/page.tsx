@@ -187,6 +187,13 @@ export default function OpportunityDetailPage() {
     }
   };
 
+  // Sprint N+3: Handle auto-rejection from hard gate failures
+  const handleAutoReject = (failures: Array<{ field: string; reason: string }>) => {
+    const failureDescriptions = failures.map(f => f.reason).join(', ');
+    alert(`This opportunity has been auto-rejected due to disqualifying conditions:\n\n${failureDescriptions}\n\nYou will be redirected to the dashboard.`);
+    router.push('/');
+  };
+
   // Sprint 1.5: Handle re-analyze
   // Uses the same client-side analysis as handleAnalyze to include operator inputs
   const handleReAnalyze = async () => {
@@ -404,6 +411,7 @@ export default function OpportunityDetailPage() {
             opportunityId={opportunity.id}
             initialInputs={operatorInputs}
             onSaveSuccess={handleSaveInputs}
+            onAutoReject={handleAutoReject}
           />
 
           {/* Sprint 1.5: Required Exit Calculator */}
