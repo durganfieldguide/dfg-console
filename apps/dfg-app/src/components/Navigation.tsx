@@ -24,8 +24,8 @@ export function Navigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:relative md:border-t-0 md:border-r md:h-screen md:w-64">
-      {/* Mobile bottom nav */}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:relative md:border-t-0 md:border-r md:h-screen md:w-64 pb-[env(safe-area-inset-bottom)]">
+      {/* Mobile bottom nav - uses safe area inset for iOS home indicator (#78) */}
       <div className="flex justify-around items-center h-16 px-4 md:hidden">
         {navigation.slice(0, 5).map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '?');

@@ -141,7 +141,76 @@ function OpportunitiesContent() {
 
           {/* Filter panel */}
           {showFilters && (
-            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              {/* Active boolean filter chips (#77) */}
+              {(stale || analysisStale || decisionStale || endingSoon || attention || strikeZone || verificationNeeded || newToday) && (
+                <div className="flex flex-wrap gap-1.5">
+                  {stale && (
+                    <button
+                      onClick={() => updateFilter('stale', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full hover:bg-amber-200 dark:hover:bg-amber-900/50"
+                    >
+                      Stale <span className="text-amber-500">&times;</span>
+                    </button>
+                  )}
+                  {analysisStale && (
+                    <button
+                      onClick={() => updateFilter('analysis_stale', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                    >
+                      Needs Re-analysis <span className="text-blue-500">&times;</span>
+                    </button>
+                  )}
+                  {decisionStale && (
+                    <button
+                      onClick={() => updateFilter('decision_stale', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full hover:bg-red-200 dark:hover:bg-red-900/50"
+                    >
+                      Decision Needed <span className="text-red-500">&times;</span>
+                    </button>
+                  )}
+                  {endingSoon && (
+                    <button
+                      onClick={() => updateFilter('ending_soon', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full hover:bg-orange-200 dark:hover:bg-orange-900/50"
+                    >
+                      Ending Soon <span className="text-orange-500">&times;</span>
+                    </button>
+                  )}
+                  {attention && (
+                    <button
+                      onClick={() => updateFilter('attention', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full hover:bg-amber-200 dark:hover:bg-amber-900/50"
+                    >
+                      Needs Attention <span className="text-amber-500">&times;</span>
+                    </button>
+                  )}
+                  {strikeZone && (
+                    <button
+                      onClick={() => updateFilter('strike_zone', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full hover:bg-orange-200 dark:hover:bg-orange-900/50"
+                    >
+                      Strike Zone <span className="text-orange-500">&times;</span>
+                    </button>
+                  )}
+                  {verificationNeeded && (
+                    <button
+                      onClick={() => updateFilter('verification_needed', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full hover:bg-purple-200 dark:hover:bg-purple-900/50"
+                    >
+                      Needs Verification <span className="text-purple-500">&times;</span>
+                    </button>
+                  )}
+                  {newToday && (
+                    <button
+                      onClick={() => updateFilter('new_today', null)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                    >
+                      New Today <span className="text-blue-500">&times;</span>
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 {/* Status filter */}
                 <div className="relative">

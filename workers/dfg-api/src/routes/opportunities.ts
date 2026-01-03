@@ -230,8 +230,8 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
 
   if (analysisStale === true) {
     query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    query += ` AND last_analyzed_at IS NOT NULL`;
-    query += ` AND julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS}`;
+    // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix)
+    query += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS})`;
   }
 
   if (decisionStale === true) {
@@ -365,8 +365,8 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
   }
   if (analysisStale === true) {
     countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    countQuery += ` AND last_analyzed_at IS NOT NULL`;
-    countQuery += ` AND julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS}`;
+    // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix)
+    countQuery += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS})`;
   }
   if (decisionStale === true) {
     countQuery += ` AND status IN ('bid', 'watch')`;

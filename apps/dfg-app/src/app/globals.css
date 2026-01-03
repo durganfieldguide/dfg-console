@@ -32,7 +32,18 @@ body {
     rgb(var(--background-start-rgb)),
     rgb(var(--background-end-rgb))
   );
+  /* Use dvh for iOS Safari dynamic viewport (#78) */
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* iOS Safari: Fix for fixed bottom navigation floating issue (#78) */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes */
+  body {
+    /* Force hardware acceleration */
+    -webkit-transform: translateZ(0);
+  }
 }
 
 /* Mobile overflow prevention - apply to all page containers */

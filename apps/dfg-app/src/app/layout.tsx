@@ -17,6 +17,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: '#1f2937',
+  // iOS Safari: viewport-fit=cover allows content to extend into safe areas (#78)
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
