@@ -19,14 +19,12 @@ import { Button } from '@/components/ui/Button';
 import { AttentionRequiredList } from '@/components/features/attention-required-list';
 import { EndingSoonList } from '@/components/features/ending-soon-list';
 import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
-import { getStats, syncFromScout, triggerScoutRun } from '@/lib/api';
+import { getStats } from '@/lib/api';
 import type { DashboardStats, OpportunityStatus } from '@/types';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState<{ created: number; updated: number } | null>(null);
 
   useEffect(() => {
     fetchStats();
@@ -41,28 +39,6 @@ export default function DashboardPage() {
       console.error('Failed to fetch stats:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      const result = await syncFromScout();
-      setLastSync(result);
-      await fetchStats(); // Refresh stats after sync
-    } catch (error) {
-      console.error('Sync failed:', error);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleRunScout = async () => {
-    try {
-      const result = await triggerScoutRun();
-      alert(result.message);
-    } catch (error) {
-      console.error('Scout run failed:', error);
     }
   };
 
@@ -94,30 +70,11 @@ export default function DashboardPage() {
             <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white shrink-0 truncate">
               Dashboard
             </h1>
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 max-w-[50%]">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSync}
-                loading={syncing}
-                className="px-2 sm:px-3"
-              >
-                <RefreshCw className={cn('h-4 w-4 sm:mr-1', syncing && 'animate-spin')} />
-                <span className="hidden sm:inline">Sync</span>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={fetchStats} disabled={loading}>
-                <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
-              </Button>
-            </div>
+            <Button variant="ghost" size="sm" onClick={fetchStats} disabled={loading}>
+              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            </Button>
           </div>
         </header>
-
-        {/* Last sync notification */}
-        {lastSync && (
-          <div className="mx-4 mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm text-green-700 dark:text-green-300">
-            Synced: {lastSync.created} new, {lastSync.updated} updated
-          </div>
-        )}
 
         <div className="p-4 space-y-4">
           {/* Attention Required List - Priority-sorted staleness indicators */}
