@@ -91,6 +91,7 @@ type CTAAction = 'reanalyze' | 'touch' | 'pass' | 'watch';
 
 interface AttentionItemRowProps {
   item: AttentionItem;
+  rank: number; // 1-indexed position in the list
   onTouch: (id: string) => void;
   onChipClick: (chip: ReasonChip) => void;
   onAction: (id: string, action: CTAAction) => Promise<boolean>;
@@ -98,7 +99,7 @@ interface AttentionItemRowProps {
   error: string | null;
 }
 
-function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction, error }: AttentionItemRowProps) {
+function AttentionItemRow({ item, rank, onTouch, onChipClick, onAction, pendingAction, error }: AttentionItemRowProps) {
   const handleClick = () => {
     // Fire touch on click (fire-and-forget)
     onTouch(item.id);
@@ -126,6 +127,13 @@ function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction,
   const showReanalyze = item.is_analysis_stale;
   const showTouch = item.is_decision_stale;
 
+  // Compute rank badge styling - top 3 get special treatment
+  const rankBadgeStyles = rank <= 3
+    ? 'bg-red-500 text-white font-bold'
+    : rank <= 5
+      ? 'bg-amber-500 text-white font-semibold'
+      : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium';
+
   return (
     <div className="group relative overflow-hidden">
       <Link
@@ -133,7 +141,18 @@ function AttentionItemRow({ item, onTouch, onChipClick, onAction, pendingAction,
         onClick={handleClick}
         className="block hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors -mx-4 px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          {/* Rank Badge */}
+          <div
+            className={cn(
+              'flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs',
+              rankBadgeStyles
+            )}
+            title={`Priority #${rank}`}
+          >
+            {rank}
+          </div>
+
           <div className="flex-1 min-w-0">
             {/* Title */}
             <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate md:pr-24">
@@ -522,10 +541,11 @@ export function AttentionRequiredList({
       )}
       <CardContent className="p-0">
         <div className="divide-y divide-gray-100 dark:divide-gray-700">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <div key={item.id} className="px-4">
               <AttentionItemRow
                 item={item}
+                rank={index + 1}
                 onTouch={handleTouch}
                 onChipClick={handleChipClick}
                 onAction={handleAction}
