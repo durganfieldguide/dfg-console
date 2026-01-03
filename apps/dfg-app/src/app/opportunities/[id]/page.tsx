@@ -27,6 +27,7 @@ import { TabbedAnalysis } from '@/components/features/tabbed-analysis';
 import { TitleInputs, type OperatorInputs } from '@/components/features/title-inputs';
 import { GatesDisplay, type ComputedGates } from '@/components/features/gates-display';
 import { StalenessBanner, type StalenessReason } from '@/components/features/staleness-banner';
+import { KillSwitchBanner } from '@/components/features/kill-switch-banner';
 import { RequiredExit } from '@/components/features/required-exit';
 import {
   cn,
@@ -345,6 +346,9 @@ export default function OpportunityDetailPage() {
             onReAnalyze={handleReAnalyze}
             isReAnalyzing={reAnalyzing}
           />
+
+          {/* Sprint N+3: Kill Switch Banner - shows deal-breaker conditions */}
+          <KillSwitchBanner operatorInputs={operatorInputs} />
 
           {/* Analysis Error */}
           {analysisError && (
