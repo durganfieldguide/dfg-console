@@ -16,13 +16,16 @@
   }
 }
 
-html,
-body {
+html {
   overflow-x: hidden;
+  width: 100%;
   max-width: 100vw;
 }
 
 body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
     to bottom,
@@ -30,6 +33,19 @@ body {
     rgb(var(--background-end-rgb))
   );
   min-height: 100vh;
+}
+
+/* Mobile overflow prevention - apply to all page containers */
+@media (max-width: 767px) {
+  .flex.min-h-screen {
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .flex.min-h-screen > main {
+    width: 100%;
+    max-width: 100vw;
+  }
 }
 
 /* Custom scrollbar */

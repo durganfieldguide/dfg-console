@@ -82,10 +82,10 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden">
+    <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
       <Navigation />
 
-      <main className="flex-1 pb-20 md:pb-0 min-w-0 overflow-x-hidden">
+      <main className="flex-1 pb-20 md:pb-0 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
         {/* Header */}
         <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-2">
