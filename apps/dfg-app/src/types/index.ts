@@ -156,6 +156,7 @@ export interface Source {
 export interface DashboardStats {
   by_status: Record<OpportunityStatus, number>;
   strike_zone: number;  // Sprint N+3: High-value inbox items ready for action
+  verification_needed: number;  // Sprint N+3: Opportunities with open critical gates
   ending_soon: {
     within_24h: number;
     within_48h: number;

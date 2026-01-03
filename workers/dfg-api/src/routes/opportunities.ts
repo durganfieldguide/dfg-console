@@ -119,6 +119,8 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
   const endingSoon = getQueryParamBool(url, 'ending_soon');
   // Sprint N+3: Strike Zone filter (high-value inbox items ready for action)
   const strikeZone = getQueryParamBool(url, 'strike_zone');
+  // Sprint N+3: Verification Needed filter (opportunities with open critical gates)
+  const verificationNeeded = getQueryParamBool(url, 'verification_needed');
   const limit = Math.min(getQueryParamInt(url, 'limit', 50), 100);
   const offset = getQueryParamInt(url, 'offset', 0);
   const sort = getQueryParam(url, 'sort') || 'auction_ends_at';
@@ -278,6 +280,31 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
        AND datetime(auction_ends_at) <= datetime('now', '+48 hours'))
       -- OR created within last 12 hours (fresh opportunity)
       OR datetime(created_at) > datetime('now', '-12 hours')
+    )`;
+  }
+
+  // Verification Needed filter: Opportunities with open critical gates needing operator input
+  // These are analyzed opportunities where critical gates are still blocking bid action
+  if (verificationNeeded === true) {
+    query += ` AND status IN ('inbox', 'qualifying', 'watch', 'inspect')`;
+    query += ` AND last_analyzed_at IS NOT NULL`;
+    // Check for missing or incomplete operator inputs on critical gates
+    // We look for opportunities that have been analyzed but still have:
+    // - No operator_inputs_json OR
+    // - Missing title status verification OR
+    // - Missing title in hand verification OR
+    // - Missing lien status verification OR
+    // - Missing odometer verification
+    query += ` AND (
+      operator_inputs_json IS NULL
+      OR json_extract(operator_inputs_json, '$.title.titleStatus.value') IS NULL
+      OR json_extract(operator_inputs_json, '$.title.titleStatus.verificationLevel') = 'unverified'
+      OR json_extract(operator_inputs_json, '$.title.titleInHand.value') IS NULL
+      OR json_extract(operator_inputs_json, '$.title.titleInHand.verificationLevel') = 'unverified'
+      OR json_extract(operator_inputs_json, '$.title.lienStatus.value') IS NULL
+      OR json_extract(operator_inputs_json, '$.title.lienStatus.verificationLevel') = 'unverified'
+      OR json_extract(operator_inputs_json, '$.title.odometerMiles.value') IS NULL
+      OR json_extract(operator_inputs_json, '$.title.odometerMiles.verificationLevel') = 'unverified'
     )`;
   }
 
@@ -1028,10 +1055,29 @@ async function getStats(env: Env): Promise<Response> {
       )
   `).first() as { count: number } | null;
 
+  // Verification Needed: Opportunities with open critical gates needing operator input
+  const verificationNeeded = await env.DB.prepare(`
+    SELECT COUNT(*) as count FROM opportunities
+    WHERE status IN ('inbox', 'qualifying', 'watch', 'inspect')
+      AND last_analyzed_at IS NOT NULL
+      AND (
+        operator_inputs_json IS NULL
+        OR json_extract(operator_inputs_json, '$.title.titleStatus.value') IS NULL
+        OR json_extract(operator_inputs_json, '$.title.titleStatus.verificationLevel') = 'unverified'
+        OR json_extract(operator_inputs_json, '$.title.titleInHand.value') IS NULL
+        OR json_extract(operator_inputs_json, '$.title.titleInHand.verificationLevel') = 'unverified'
+        OR json_extract(operator_inputs_json, '$.title.lienStatus.value') IS NULL
+        OR json_extract(operator_inputs_json, '$.title.lienStatus.verificationLevel') = 'unverified'
+        OR json_extract(operator_inputs_json, '$.title.odometerMiles.value') IS NULL
+        OR json_extract(operator_inputs_json, '$.title.odometerMiles.verificationLevel') = 'unverified'
+      )
+  `).first() as { count: number } | null;
+
   return json({
     data: {
       by_status: byStatus,
       strike_zone: strikeZone?.count || 0,
+      verification_needed: verificationNeeded?.count || 0,
       ending_soon: {
         within_24h: ending24h?.count || 0,
         within_48h: ending48h?.count || 0,

@@ -31,6 +31,8 @@ function OpportunitiesContent() {
   const attention = searchParams.get('attention') === 'true';
   // Sprint N+3: Strike Zone filter
   const strikeZone = searchParams.get('strike_zone') === 'true';
+  // Sprint N+3: Verification Needed filter
+  const verificationNeeded = searchParams.get('verification_needed') === 'true';
 
   const fetchOpportunities = useCallback(async () => {
     setLoading(true);
@@ -50,6 +52,8 @@ function OpportunitiesContent() {
       if (attention) params.attention = true;
       // Sprint N+3: Strike Zone filter
       if (strikeZone) params.strike_zone = true;
+      // Sprint N+3: Verification Needed filter
+      if (verificationNeeded) params.verification_needed = true;
 
       const result = await listOpportunities(params);
       setOpportunities(result.opportunities);
@@ -59,7 +63,7 @@ function OpportunitiesContent() {
     } finally {
       setLoading(false);
     }
-  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone]);
+  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -79,7 +83,7 @@ function OpportunitiesContent() {
     router.push('/opportunities');
   };
 
-  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention || strikeZone;
+  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention || strikeZone || verificationNeeded;
 
   return (
     <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -114,7 +118,7 @@ function OpportunitiesContent() {
                 Filters
                 {hasActiveFilters && (
                   <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
-                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone].filter(Boolean).length}
+                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded].filter(Boolean).length}
                   </span>
                 )}
               </Button>

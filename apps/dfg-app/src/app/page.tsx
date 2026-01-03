@@ -11,6 +11,7 @@ import {
   XCircle,
   RefreshCw,
   Target,
+  ShieldQuestion,
 } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -135,6 +136,21 @@ export default function DashboardPage() {
                     {stats?.strike_zone || 0}
                   </p>
                   <p className="text-sm text-gray-500">Strike Zone</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Verification Needed: Opportunities with open critical gates */}
+            <Link href="/opportunities?verification_needed=true">
+              <Card hover className={stats?.verification_needed && stats.verification_needed > 0 ? 'border-purple-300 dark:border-purple-600' : ''}>
+                <CardContent className="text-center">
+                  <div className="flex justify-center mb-2">
+                    <ShieldQuestion className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {stats?.verification_needed || 0}
+                  </p>
+                  <p className="text-sm text-gray-500">Needs Verify</p>
                 </CardContent>
               </Card>
             </Link>
