@@ -150,7 +150,7 @@ export default function DashboardPage() {
                   <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {stats?.verification_needed || 0}
                   </p>
-                  <p className="text-sm text-gray-500">Needs Verify</p>
+                  <p className="text-sm text-gray-500">Needs Verification</p>
                 </CardContent>
               </Card>
             </Link>
