@@ -155,6 +155,7 @@ export interface Source {
 
 export interface DashboardStats {
   by_status: Record<OpportunityStatus, number>;
+  strike_zone: number;  // Sprint N+3: High-value inbox items ready for action
   ending_soon: {
     within_24h: number;
     within_48h: number;

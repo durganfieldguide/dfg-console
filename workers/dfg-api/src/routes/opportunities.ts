@@ -117,6 +117,8 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
   const analysisStale = getQueryParamBool(url, 'analysis_stale');
   const decisionStale = getQueryParamBool(url, 'decision_stale');
   const endingSoon = getQueryParamBool(url, 'ending_soon');
+  // Sprint N+3: Strike Zone filter (high-value inbox items ready for action)
+  const strikeZone = getQueryParamBool(url, 'strike_zone');
   const limit = Math.min(getQueryParamInt(url, 'limit', 50), 100);
   const offset = getQueryParamInt(url, 'offset', 0);
   const sort = getQueryParam(url, 'sort') || 'auction_ends_at';
@@ -260,6 +262,22 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
       -- Analysis stale: needs re-analysis
       OR (last_analyzed_at IS NOT NULL
           AND julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS})
+    )`;
+  }
+
+  // Strike Zone filter: High-value inbox items ready for immediate action
+  // Criteria: inbox/qualifying, high score (70+), analyzed, ending soon OR fresh
+  if (strikeZone === true) {
+    query += ` AND status IN ('inbox', 'qualifying')`;
+    query += ` AND buy_box_score >= 70`;
+    query += ` AND last_analyzed_at IS NOT NULL`;
+    query += ` AND (
+      -- Ending within 48 hours
+      (auction_ends_at IS NOT NULL
+       AND datetime(auction_ends_at) > datetime('now')
+       AND datetime(auction_ends_at) <= datetime('now', '+48 hours'))
+      -- OR created within last 12 hours (fresh opportunity)
+      OR datetime(created_at) > datetime('now', '-12 hours')
     )`;
   }
 
@@ -993,9 +1011,27 @@ async function getStats(env: Env): Promise<Response> {
   // Needs attention (watch fired + stale qualifying)
   const needsAttention = (watchFired?.count || 0) + (staleOver24h?.count || 0);
 
+  // Strike Zone: High-value inbox items ready for immediate action
+  // Criteria: inbox/qualifying, high score (70+), analyzed, ending soon OR fresh
+  const strikeZone = await env.DB.prepare(`
+    SELECT COUNT(*) as count FROM opportunities
+    WHERE status IN ('inbox', 'qualifying')
+      AND buy_box_score >= 70
+      AND last_analyzed_at IS NOT NULL
+      AND (
+        -- Ending within 48 hours
+        (auction_ends_at IS NOT NULL
+         AND datetime(auction_ends_at) > datetime('now')
+         AND datetime(auction_ends_at) <= datetime('now', '+48 hours'))
+        -- OR created within last 12 hours (fresh opportunity)
+        OR datetime(created_at) > datetime('now', '-12 hours')
+      )
+  `).first() as { count: number } | null;
+
   return json({
     data: {
       by_status: byStatus,
+      strike_zone: strikeZone?.count || 0,
       ending_soon: {
         within_24h: ending24h?.count || 0,
         within_48h: ending48h?.count || 0,

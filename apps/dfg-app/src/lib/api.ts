@@ -69,6 +69,8 @@ export interface ListOpportunitiesParams {
   ending_soon?: boolean;
   // Combined attention filter (all staleness conditions)
   attention?: boolean;
+  // Sprint N+3: Strike Zone filter (high-value inbox items ready for action)
+  strike_zone?: boolean;
   limit?: number;
   offset?: number;
   sort?: string;
@@ -95,6 +97,8 @@ export async function listOpportunities(
   if (params.decision_stale) searchParams.set('decision_stale', 'true');
   if (params.ending_soon) searchParams.set('ending_soon', 'true');
   if (params.attention) searchParams.set('attention', 'true');
+  // Sprint N+3: Strike Zone filter
+  if (params.strike_zone) searchParams.set('strike_zone', 'true');
   if (params.limit) searchParams.set('limit', params.limit.toString());
   if (params.offset) searchParams.set('offset', params.offset.toString());
   if (params.sort) searchParams.set('sort', params.sort);

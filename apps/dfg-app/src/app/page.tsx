@@ -10,6 +10,7 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
+  Target,
 } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
@@ -123,16 +124,17 @@ export default function DashboardPage() {
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <Link href="/opportunities?status=inbox">
-              <Card hover>
+            {/* Strike Zone: High-value opportunities ready for action */}
+            <Link href="/opportunities?strike_zone=true">
+              <Card hover className={stats?.strike_zone && stats.strike_zone > 0 ? 'border-orange-300 dark:border-orange-600' : ''}>
                 <CardContent className="text-center">
                   <div className="flex justify-center mb-2">
-                    <Inbox className="h-6 w-6 text-gray-500" />
+                    <Target className="h-6 w-6 text-orange-500" />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats?.by_status.inbox || 0}
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {stats?.strike_zone || 0}
                   </p>
-                  <p className="text-sm text-gray-500">Inbox</p>
+                  <p className="text-sm text-gray-500">Strike Zone</p>
                 </CardContent>
               </Card>
             </Link>

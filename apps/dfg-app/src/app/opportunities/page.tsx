@@ -29,6 +29,8 @@ function OpportunitiesContent() {
   const decisionStale = searchParams.get('decision_stale') === 'true';
   const endingSoon = searchParams.get('ending_soon') === 'true';
   const attention = searchParams.get('attention') === 'true';
+  // Sprint N+3: Strike Zone filter
+  const strikeZone = searchParams.get('strike_zone') === 'true';
 
   const fetchOpportunities = useCallback(async () => {
     setLoading(true);
@@ -46,6 +48,8 @@ function OpportunitiesContent() {
       if (decisionStale) params.decision_stale = true;
       if (endingSoon) params.ending_soon = true;
       if (attention) params.attention = true;
+      // Sprint N+3: Strike Zone filter
+      if (strikeZone) params.strike_zone = true;
 
       const result = await listOpportunities(params);
       setOpportunities(result.opportunities);
@@ -55,7 +59,7 @@ function OpportunitiesContent() {
     } finally {
       setLoading(false);
     }
-  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention]);
+  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -75,7 +79,7 @@ function OpportunitiesContent() {
     router.push('/opportunities');
   };
 
-  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention;
+  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention || strikeZone;
 
   return (
     <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -110,7 +114,7 @@ function OpportunitiesContent() {
                 Filters
                 {hasActiveFilters && (
                   <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
-                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention].filter(Boolean).length}
+                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone].filter(Boolean).length}
                   </span>
                 )}
               </Button>
