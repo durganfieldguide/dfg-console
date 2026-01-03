@@ -193,6 +193,8 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
         id, title, source, status, max_bid_locked,
         auction_ends_at, status_changed_at, last_operator_review_at,
         last_analyzed_at, updated_at,
+        -- Decision-grade fields (#69)
+        current_bid, buy_box_score, category_id,
         -- Compute staleness flags (uses COALESCE to match opportunities.ts logic)
         CASE WHEN
           julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?
@@ -281,6 +283,10 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
     auction_ends_at: row.auction_ends_at as string | null,
     status_changed_at: row.status_changed_at as string,
     last_operator_review_at: row.last_operator_review_at as string | null,
+    // Decision-grade fields (#69)
+    current_bid: row.current_bid as number | null,
+    buy_box_score: row.buy_box_score as number | null,
+    category_id: row.category_id as string | null,
     is_stale: row.is_stale === 1,
     is_decision_stale: row.is_decision_stale === 1,
     is_ending_soon: row.is_ending_soon === 1,

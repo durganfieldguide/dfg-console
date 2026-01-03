@@ -14,6 +14,7 @@ import {
   ThumbsDown,
   Eye,
   Loader2,
+  TrendingUp,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -159,8 +160,8 @@ function AttentionItemRow({ item, rank, onTouch, onChipClick, onAction, pendingA
               {item.title}
             </h4>
 
-            {/* Status and Source */}
-            <div className="flex items-center gap-2 mt-1">
+            {/* Status, Source, and Decision-Grade Info */}
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span
                 className={cn(
                   'px-2 py-0.5 rounded text-xs font-medium',
@@ -172,6 +173,29 @@ function AttentionItemRow({ item, rank, onTouch, onChipClick, onAction, pendingA
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {item.source}
               </span>
+              {/* Current bid (#69) */}
+              {item.current_bid != null && item.current_bid > 0 && (
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  ${item.current_bid.toLocaleString()}
+                </span>
+              )}
+              {/* Buy box score indicator (#69) */}
+              {item.buy_box_score != null && item.buy_box_score > 0 && (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded',
+                    item.buy_box_score >= 70
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : item.buy_box_score >= 40
+                        ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                  )}
+                  title={`Buy Box Score: ${item.buy_box_score}`}
+                >
+                  <TrendingUp className="h-3 w-3" />
+                  {item.buy_box_score}
+                </span>
+              )}
               {timeRemaining && (
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {timeRemaining}

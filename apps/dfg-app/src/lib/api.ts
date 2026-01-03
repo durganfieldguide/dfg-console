@@ -256,6 +256,10 @@ export interface AttentionItem {
   auction_ends_at: string | null;
   status_changed_at: string;
   last_operator_review_at: string | null;
+  // Decision-grade fields (#69)
+  current_bid: number | null;
+  buy_box_score: number | null;
+  category_id: string | null;
   is_stale: boolean;
   is_decision_stale: boolean;
   is_ending_soon: boolean;
