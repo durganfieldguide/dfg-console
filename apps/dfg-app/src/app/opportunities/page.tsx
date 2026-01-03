@@ -83,16 +83,16 @@ function OpportunitiesContent() {
 
       <main className="flex-1 pb-20 md:pb-0 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between px-4 h-14">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden max-w-full">
+          <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-2 min-w-0 max-w-full">
+            <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate shrink min-w-0">
               Opportunities
               {total > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-500">({total})</span>
               )}
             </h1>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
