@@ -33,6 +33,8 @@ function OpportunitiesContent() {
   const strikeZone = searchParams.get('strike_zone') === 'true';
   // Sprint N+3: Verification Needed filter
   const verificationNeeded = searchParams.get('verification_needed') === 'true';
+  // Sprint N+4: New today filter (#71)
+  const newToday = searchParams.get('new_today') === 'true';
 
   const fetchOpportunities = useCallback(async () => {
     setLoading(true);
@@ -54,6 +56,8 @@ function OpportunitiesContent() {
       if (strikeZone) params.strike_zone = true;
       // Sprint N+3: Verification Needed filter
       if (verificationNeeded) params.verification_needed = true;
+      // Sprint N+4: New today filter
+      if (newToday) params.new_today = true;
 
       const result = await listOpportunities(params);
       setOpportunities(result.opportunities);
@@ -63,7 +67,7 @@ function OpportunitiesContent() {
     } finally {
       setLoading(false);
     }
-  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded]);
+  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -83,7 +87,7 @@ function OpportunitiesContent() {
     router.push('/opportunities');
   };
 
-  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention || strikeZone || verificationNeeded;
+  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention || strikeZone || verificationNeeded || newToday;
 
   return (
     <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -128,7 +132,7 @@ function OpportunitiesContent() {
                 Filters
                 {hasActiveFilters && (
                   <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
-                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded].filter(Boolean).length}
+                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday].filter(Boolean).length}
                   </span>
                 )}
               </Button>

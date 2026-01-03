@@ -121,6 +121,8 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
   const strikeZone = getQueryParamBool(url, 'strike_zone');
   // Sprint N+3: Verification Needed filter (opportunities with open critical gates)
   const verificationNeeded = getQueryParamBool(url, 'verification_needed');
+  // Sprint N+4: New today filter (#71)
+  const newToday = getQueryParamBool(url, 'new_today');
   const limit = Math.min(getQueryParamInt(url, 'limit', 50), 100);
   const offset = getQueryParamInt(url, 'offset', 0);
   const sort = getQueryParam(url, 'sort') || 'auction_ends_at';
@@ -308,6 +310,11 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
     )`;
   }
 
+  // Sprint N+4: New today filter - created within last 24 hours (#71)
+  if (newToday === true) {
+    query += ` AND datetime(created_at) > datetime('now', '-24 hours')`;
+  }
+
   // Sorting
   const allowedSorts = ['auction_ends_at', 'buy_box_score', 'created_at', 'updated_at', 'status_changed_at'];
   const sortField = allowedSorts.includes(sort) ? sort : 'auction_ends_at';
@@ -371,6 +378,10 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
     countQuery += ` AND auction_ends_at IS NOT NULL`;
     countQuery += ` AND julianday(auction_ends_at) - julianday('now') <= 2`;
     countQuery += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+  }
+  // Sprint N+4: New today filter for count query (#71)
+  if (newToday === true) {
+    countQuery += ` AND datetime(created_at) > datetime('now', '-24 hours')`;
   }
 
   const countResult = await env.DB.prepare(countQuery).bind(...countParams).first();

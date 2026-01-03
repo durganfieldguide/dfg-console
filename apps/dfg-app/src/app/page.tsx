@@ -125,6 +125,21 @@ export default function DashboardPage() {
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
+            {/* Inbox: New opportunities to triage (#71) */}
+            <Link href="/opportunities?status=inbox">
+              <Card hover className={stats?.by_status.inbox && stats.by_status.inbox > 0 ? 'border-blue-300 dark:border-blue-600' : ''}>
+                <CardContent className="text-center">
+                  <div className="flex justify-center mb-2">
+                    <Inbox className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {stats?.by_status.inbox || 0}
+                  </p>
+                  <p className="text-sm text-gray-500">Inbox</p>
+                </CardContent>
+              </Card>
+            </Link>
+
             {/* Strike Zone: High-value opportunities ready for action */}
             <Link href="/opportunities?strike_zone=true">
               <Card hover className={stats?.strike_zone && stats.strike_zone > 0 ? 'border-orange-300 dark:border-orange-600' : ''}>
@@ -229,14 +244,16 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* New Today */}
+          {/* New Today (#71 - deep-linked) */}
           {stats?.new_today !== undefined && stats.new_today > 0 && (
-            <Card>
-              <CardContent className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-300">New opportunities today</span>
-                <span className="font-bold text-blue-600">{stats.new_today}</span>
-              </CardContent>
-            </Card>
+            <Link href="/opportunities?new_today=true">
+              <Card hover>
+                <CardContent className="flex items-center justify-between">
+                  <span className="text-gray-600 dark:text-gray-300">New opportunities today</span>
+                  <span className="font-bold text-blue-600">{stats.new_today}</span>
+                </CardContent>
+              </Card>
+            </Link>
           )}
         </div>
 

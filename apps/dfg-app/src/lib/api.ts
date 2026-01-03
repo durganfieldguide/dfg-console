@@ -73,6 +73,8 @@ export interface ListOpportunitiesParams {
   strike_zone?: boolean;
   // Sprint N+3: Verification Needed filter (opportunities with open critical gates)
   verification_needed?: boolean;
+  // Sprint N+4: New today filter (#71)
+  new_today?: boolean;
   limit?: number;
   offset?: number;
   sort?: string;
@@ -103,6 +105,8 @@ export async function listOpportunities(
   if (params.strike_zone) searchParams.set('strike_zone', 'true');
   // Sprint N+3: Verification Needed filter
   if (params.verification_needed) searchParams.set('verification_needed', 'true');
+  // Sprint N+4: New today filter
+  if (params.new_today) searchParams.set('new_today', 'true');
   if (params.limit) searchParams.set('limit', params.limit.toString());
   if (params.offset) searchParams.set('offset', params.offset.toString());
   if (params.sort) searchParams.set('sort', params.sort);
