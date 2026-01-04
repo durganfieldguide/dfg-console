@@ -178,14 +178,15 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
     params.push(...statuses);
   }
 
-  // Ending within filter
+  // Ending within filter (#99: parameterized)
   if (endingWithin) {
     const hoursMap: Record<string, number> = { '24h': 24, '48h': 48, '7d': 168 };
     const hours = hoursMap[endingWithin];
     if (hours) {
       query += ` AND auction_ends_at IS NOT NULL`;
       query += ` AND datetime(auction_ends_at) > datetime('now')`;
-      query += ` AND datetime(auction_ends_at) <= datetime('now', '+${hours} hours')`;
+      query += ` AND julianday(auction_ends_at) - julianday('now') <= ?`;
+      params.push(hours / 24); // Convert hours to days for julianday comparison
     }
   }
 
@@ -222,16 +223,18 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
 
   // TODO: has_active_alert filter requires checking dismissals - implement in v2
 
-  // Sprint N+1: Staleness filters
+  // Sprint N+1: Staleness filters (#99: parameterized)
   if (stale === true) {
     query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    query += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ${STALE_THRESHOLD_DAYS}`;
+    query += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?`;
+    params.push(STALE_THRESHOLD_DAYS);
   }
 
   if (analysisStale === true) {
     query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix)
-    query += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS})`;
+    // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix, #99: parameterized)
+    query += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ?)`;
+    params.push(ANALYSIS_STALE_DAYS);
   }
 
   if (decisionStale === true) {
@@ -249,11 +252,12 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
 
   // Combined attention filter (matches dashboard /api/dashboard/attention logic)
   // Returns all items needing operator attention: stale, decision stale, ending soon, or analysis stale
+  // (#99: parameterized)
   if (attention === true) {
     query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
     query += ` AND (
       -- Stale: no activity for STALE_THRESHOLD_DAYS
-      julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ${STALE_THRESHOLD_DAYS}
+      julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?
       -- Decision stale: bid/watch ending within 24h without recent review
       OR (status IN ('bid', 'watch')
           AND auction_ends_at IS NOT NULL
@@ -265,8 +269,9 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
           AND julianday(auction_ends_at) - julianday('now') > 0)
       -- Analysis stale: needs re-analysis
       OR (last_analyzed_at IS NOT NULL
-          AND julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS})
+          AND julianday('now') - julianday(last_analyzed_at) > ?)
     )`;
+    params.push(STALE_THRESHOLD_DAYS, ANALYSIS_STALE_DAYS);
   }
 
   // Strike Zone filter: High-value inbox items ready for immediate action
@@ -358,15 +363,17 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
     )`;
   }
 
-  // Sprint N+1: Staleness filters for count query
+  // Sprint N+1: Staleness filters for count query (#99: parameterized)
   if (stale === true) {
     countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    countQuery += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ${STALE_THRESHOLD_DAYS}`;
+    countQuery += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?`;
+    countParams.push(STALE_THRESHOLD_DAYS);
   }
   if (analysisStale === true) {
     countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix)
-    countQuery += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ${ANALYSIS_STALE_DAYS})`;
+    // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix, #99: parameterized)
+    countQuery += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ?)`;
+    countParams.push(ANALYSIS_STALE_DAYS);
   }
   if (decisionStale === true) {
     countQuery += ` AND status IN ('bid', 'watch')`;
