@@ -143,149 +143,155 @@ function OpportunitiesContent() {
             </div>
           </div>
 
-          {/* Mobile: Unified filter bar - horizontally scrollable chips (#83) */}
-          <div className="md:hidden overflow-x-auto scrollbar-hide border-t border-gray-200 dark:border-gray-700">
-            <div className="flex gap-2 px-3 py-2 min-w-max">
-              {/* Active filters - dismissible chips */}
-              {status && (
-                <button
-                  onClick={() => updateFilter('status', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full whitespace-nowrap"
-                >
-                  {STATUS_LABELS[status]} <span className="text-blue-500">&times;</span>
-                </button>
-              )}
-              {endingWithin && (
-                <button
-                  onClick={() => updateFilter('ending_within', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full whitespace-nowrap"
-                >
-                  {endingWithin === '24h' ? '24h' : endingWithin === '48h' ? '48h' : '7d'} <span className="text-orange-500">&times;</span>
-                </button>
-              )}
-              {scoreBand && (
-                <button
-                  onClick={() => updateFilter('score_band', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full whitespace-nowrap"
-                >
-                  {scoreBand === 'high' ? 'High' : scoreBand === 'medium' ? 'Medium' : 'Low'} <span className="text-green-500">&times;</span>
-                </button>
-              )}
-              {stale && (
-                <button
-                  onClick={() => updateFilter('stale', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full whitespace-nowrap"
-                >
-                  Stale <span className="text-amber-500">&times;</span>
-                </button>
-              )}
-              {analysisStale && (
-                <button
-                  onClick={() => updateFilter('analysis_stale', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full whitespace-nowrap"
-                >
-                  Re-analysis <span className="text-blue-500">&times;</span>
-                </button>
-              )}
-              {decisionStale && (
-                <button
-                  onClick={() => updateFilter('decision_stale', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full whitespace-nowrap"
-                >
-                  Decision <span className="text-red-500">&times;</span>
-                </button>
-              )}
-              {endingSoon && (
-                <button
-                  onClick={() => updateFilter('ending_soon', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full whitespace-nowrap"
-                >
-                  Ending Soon <span className="text-orange-500">&times;</span>
-                </button>
-              )}
-              {attention && (
-                <button
-                  onClick={() => updateFilter('attention', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full whitespace-nowrap"
-                >
-                  Attention <span className="text-amber-500">&times;</span>
-                </button>
-              )}
-              {strikeZone && (
-                <button
-                  onClick={() => updateFilter('strike_zone', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full whitespace-nowrap"
-                >
-                  Strike Zone <span className="text-orange-500">&times;</span>
-                </button>
-              )}
-              {verificationNeeded && (
-                <button
-                  onClick={() => updateFilter('verification_needed', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full whitespace-nowrap"
-                >
-                  Verification <span className="text-purple-500">&times;</span>
-                </button>
-              )}
-              {newToday && (
-                <button
-                  onClick={() => updateFilter('new_today', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full whitespace-nowrap"
-                >
-                  New Today <span className="text-blue-500">&times;</span>
-                </button>
-              )}
-              {/* Clear all if any filters active */}
-              {hasActiveFilters && (
+          {/* Mobile: Filter chips - wrapping layout (#92) */}
+          <div className="md:hidden border-t border-gray-200 dark:border-gray-700">
+            {/* Active filters row - always visible, wraps to multiple lines */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap gap-1.5 px-3 py-2">
+                {status && (
+                  <button
+                    onClick={() => updateFilter('status', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
+                  >
+                    {STATUS_LABELS[status]} <span className="text-blue-500">&times;</span>
+                  </button>
+                )}
+                {endingWithin && (
+                  <button
+                    onClick={() => updateFilter('ending_within', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full"
+                  >
+                    {endingWithin} <span className="text-orange-500">&times;</span>
+                  </button>
+                )}
+                {scoreBand && (
+                  <button
+                    onClick={() => updateFilter('score_band', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full"
+                  >
+                    {scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'} <span className="text-green-500">&times;</span>
+                  </button>
+                )}
+                {stale && (
+                  <button
+                    onClick={() => updateFilter('stale', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"
+                  >
+                    Stale <span className="text-amber-500">&times;</span>
+                  </button>
+                )}
+                {analysisStale && (
+                  <button
+                    onClick={() => updateFilter('analysis_stale', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
+                  >
+                    Re-analysis <span className="text-blue-500">&times;</span>
+                  </button>
+                )}
+                {decisionStale && (
+                  <button
+                    onClick={() => updateFilter('decision_stale', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full"
+                  >
+                    Decision <span className="text-red-500">&times;</span>
+                  </button>
+                )}
+                {endingSoon && (
+                  <button
+                    onClick={() => updateFilter('ending_soon', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full"
+                  >
+                    Ending Soon <span className="text-orange-500">&times;</span>
+                  </button>
+                )}
+                {attention && (
+                  <button
+                    onClick={() => updateFilter('attention', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"
+                  >
+                    Attention <span className="text-amber-500">&times;</span>
+                  </button>
+                )}
+                {strikeZone && (
+                  <button
+                    onClick={() => updateFilter('strike_zone', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full"
+                  >
+                    Strike Zone <span className="text-orange-500">&times;</span>
+                  </button>
+                )}
+                {verificationNeeded && (
+                  <button
+                    onClick={() => updateFilter('verification_needed', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full"
+                  >
+                    Verification <span className="text-purple-500">&times;</span>
+                  </button>
+                )}
+                {newToday && (
+                  <button
+                    onClick={() => updateFilter('new_today', null)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
+                  >
+                    New Today <span className="text-blue-500">&times;</span>
+                  </button>
+                )}
                 <button
                   onClick={clearFilters}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 whitespace-nowrap"
+                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
                 >
                   Clear all
                 </button>
-              )}
-              {/* Quick filter toggles - always visible for easy access */}
-              {!status && (
-                <button
-                  onClick={() => updateFilter('status', 'inbox')}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full whitespace-nowrap"
-                >
-                  Inbox
-                </button>
-              )}
-              {!strikeZone && (
-                <button
-                  onClick={() => updateFilter('strike_zone', 'true')}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full whitespace-nowrap"
-                >
-                  Strike Zone
-                </button>
-              )}
-              {!endingSoon && (
-                <button
-                  onClick={() => updateFilter('ending_soon', 'true')}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full whitespace-nowrap"
-                >
-                  Ending Soon
-                </button>
-              )}
-              {!attention && (
-                <button
-                  onClick={() => updateFilter('attention', 'true')}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full whitespace-nowrap"
-                >
-                  Attention
-                </button>
-              )}
-              {!newToday && (
-                <button
-                  onClick={() => updateFilter('new_today', 'true')}
-                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full whitespace-nowrap"
-                >
-                  New Today
-                </button>
-              )}
-            </div>
+              </div>
+            )}
+            {/* Quick filters - shown when no filters active OR when Filters panel open */}
+            {(!hasActiveFilters || showFilters) && (
+              <div className={cn(
+                "flex flex-wrap gap-1.5 px-3 py-2",
+                hasActiveFilters && "border-t border-gray-100 dark:border-gray-700"
+              )}>
+                {!status && (
+                  <button
+                    onClick={() => updateFilter('status', 'inbox')}
+                    className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Inbox
+                  </button>
+                )}
+                {!strikeZone && (
+                  <button
+                    onClick={() => updateFilter('strike_zone', 'true')}
+                    className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Strike Zone
+                  </button>
+                )}
+                {!endingSoon && (
+                  <button
+                    onClick={() => updateFilter('ending_soon', 'true')}
+                    className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Ending Soon
+                  </button>
+                )}
+                {!attention && (
+                  <button
+                    onClick={() => updateFilter('attention', 'true')}
+                    className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Attention
+                  </button>
+                )}
+                {!newToday && (
+                  <button
+                    onClick={() => updateFilter('new_today', 'true')}
+                    className="inline-flex items-center px-2.5 py-1 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    New Today
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Desktop: Traditional filter panel */}

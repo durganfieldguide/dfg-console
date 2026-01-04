@@ -76,8 +76,8 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
 
   return (
     <>
-      {/* Mobile Header - sticky top bar (#82) */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 md:hidden">
+      {/* Mobile Header - fixed at top, full width (#91) */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 md:hidden">
         <div className="flex items-center justify-between h-14 px-4">
           {/* Left: Back button or Hamburger */}
           {shouldShowBack ? (
@@ -121,16 +121,19 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay (#82) */}
+      {/* Mobile Header Spacer - reserves space for fixed header (#91) */}
+      <div className="h-14 shrink-0 md:hidden" aria-hidden="true" />
+
+      {/* Mobile Menu Overlay (#82, #91) */}
       {menuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-[60] md:hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setMenuOpen(false)}
           />
 
-          {/* Menu Panel */}
+          {/* Menu Panel - slides in from left, overlays content */}
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-xl">
             {/* Menu Header */}
             <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200 dark:border-gray-700">
@@ -178,7 +181,7 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
             </nav>
 
             {/* Menu Footer */}
-            <div className="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 dark:border-gray-700 pb-safe">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Durgan Field Guide v0.1
               </p>
@@ -187,8 +190,8 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <nav className="hidden md:flex md:flex-col md:h-screen md:w-64 md:border-r md:border-gray-200 dark:md:border-gray-700 md:bg-white dark:md:bg-gray-800">
+      {/* Desktop Sidebar - fixed width, sticky for scroll */}
+      <nav className="hidden md:flex md:flex-col md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:border-r md:border-gray-200 dark:md:border-gray-700 md:bg-white dark:md:bg-gray-800">
         {/* Logo */}
         <div className="flex items-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
           <Link href="/" className="flex items-center">
