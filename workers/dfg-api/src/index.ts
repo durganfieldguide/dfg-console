@@ -9,7 +9,7 @@
 
 import * as Sentry from '@sentry/cloudflare';
 import type { Env } from './core/env';
-import { json, jsonError, authorize, ErrorCodes } from './core/http';
+import { json, jsonError, authorize, ErrorCodes, corsHeaders, setCurrentRequest } from './core/http';
 
 // Route handlers
 import { handleOpportunities } from './routes/opportunities';
@@ -32,14 +32,15 @@ const handler: ExportedHandler<Env> = {
     const path = url.pathname.replace(/\/$/, ''); // Remove trailing slash
     const method = request.method;
 
-    // CORS preflight
+    // Set request for CORS helpers (#98)
+    setCurrentRequest(request);
+
+    // CORS preflight (#98: restricted origins)
     if (method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          ...corsHeaders(request),
           'Access-Control-Max-Age': '86400',
         },
       });

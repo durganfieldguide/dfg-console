@@ -5,19 +5,48 @@
 import type { Env } from './env';
 
 // =============================================================================
+// CORS CONFIGURATION (#98)
+// =============================================================================
+
+const ALLOWED_ORIGINS = [
+  'https://app.durganfieldguide.com',
+  'https://durganfieldguide.com',
+  'http://localhost:3000',
+];
+
+export function getCorsOrigin(request: Request): string {
+  const origin = request.headers.get('Origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+  // Default to prod origin for non-browser requests
+  return ALLOWED_ORIGINS[0];
+}
+
+export function corsHeaders(request: Request): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': getCorsOrigin(request),
+    'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
+// =============================================================================
 // JSON RESPONSE HELPERS
 // =============================================================================
 
+// Store request for CORS - uses thread-local pattern
+let currentRequest: Request | null = null;
+export function setCurrentRequest(request: Request) {
+  currentRequest = request;
+}
+
 export function json<T>(data: T, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...corsHeaders(currentRequest || new Request('https://app.durganfieldguide.com')),
+  };
+  return new Response(JSON.stringify(data), { status, headers });
 }
 
 export function jsonError(

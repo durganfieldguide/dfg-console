@@ -26,15 +26,34 @@ interface GitHubIssueResponse {
   title: string;
 }
 
+// CORS configuration (#98)
+const ALLOWED_ORIGINS = [
+  'https://app.durganfieldguide.com',
+  'https://durganfieldguide.com',
+  'http://localhost:3000',
+];
+
+function getCorsOrigin(request: Request): string {
+  const origin = request.headers.get('Origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+  return ALLOWED_ORIGINS[0];
+}
+
+// Store request for CORS in responses
+let currentRequest: Request | null = null;
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    
-    // CORS headers for preflight
+    currentRequest = request;
+
+    // CORS headers for preflight (#98: restricted origins)
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': getCorsOrigin(request),
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         },
@@ -177,14 +196,14 @@ async function createGitHubIssue(
 }
 
 /**
- * Helper: JSON response with CORS
+ * Helper: JSON response with CORS (#98: restricted origins)
  */
 function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data, null, 2), {
     status,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': currentRequest ? getCorsOrigin(currentRequest) : ALLOWED_ORIGINS[0],
     },
   });
 }
