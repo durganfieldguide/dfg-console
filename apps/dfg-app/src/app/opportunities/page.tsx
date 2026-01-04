@@ -88,6 +88,7 @@ function OpportunitiesContent() {
   };
 
   const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention || strikeZone || verificationNeeded || newToday;
+  const activeFilterCount = [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday].filter(Boolean).length;
 
   return (
     <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -95,7 +96,8 @@ function OpportunitiesContent() {
 
       <main className="flex-1 pb-4 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
         {/* Header - title hidden on mobile since Navigation provides it (#82) */}
-        <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden max-w-full">
+        {/* Mobile: sticky below fixed nav header (top-14); Desktop: sticky at top (#111) */}
+        <header className="sticky top-14 md:top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden max-w-full">
           <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-2 min-w-0 max-w-full">
             <h1 className="hidden md:block text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate shrink min-w-0">
               Opportunities
@@ -136,7 +138,7 @@ function OpportunitiesContent() {
                 Filters
                 {hasActiveFilters && (
                   <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
-                    {[status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday].filter(Boolean).length}
+                    {activeFilterCount}
                   </span>
                 )}
               </Button>
@@ -183,7 +185,7 @@ function OpportunitiesContent() {
                   onClick={() => updateFilter('analysis_stale', null)}
                   className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
                 >
-                  Re-analysis <span className="text-blue-500">&times;</span>
+                  Re-analyze <span className="text-blue-500">&times;</span>
                 </button>
               )}
               {decisionStale && (
@@ -234,12 +236,15 @@ function OpportunitiesContent() {
                   New Today <span className="text-blue-500">&times;</span>
                 </button>
               )}
-              <button
-                onClick={clearFilters}
-                className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline ml-auto"
-              >
-                Clear all
-              </button>
+              {/* Only show "Clear all" when multiple filters are active (#111) */}
+              {activeFilterCount > 1 && (
+                <button
+                  onClick={clearFilters}
+                  className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline ml-auto"
+                >
+                  Clear all
+                </button>
+              )}
             </div>
           )}
         </header>
@@ -347,7 +352,7 @@ function OpportunitiesContent() {
                             : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
                         )}
                       >
-                        Re-analysis
+                        Re-analyze
                       </button>
                       <button
                         onClick={() => updateFilter('verification_needed', verificationNeeded ? null : 'true')}
@@ -487,7 +492,7 @@ function OpportunitiesContent() {
                       : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                   )}
                 >
-                  Re-analysis
+                  Re-analyze
                 </button>
                 <button
                   onClick={() => updateFilter('verification_needed', verificationNeeded ? null : 'true')}
