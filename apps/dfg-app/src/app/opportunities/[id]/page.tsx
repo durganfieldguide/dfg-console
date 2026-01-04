@@ -234,7 +234,7 @@ export default function OpportunityDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen">
+      <div className="flex flex-col md:flex-row min-h-screen">
         <Navigation />
         <main className="flex-1 flex items-center justify-center">
           <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
@@ -245,7 +245,7 @@ export default function OpportunityDetailPage() {
 
   if (!opportunity) {
     return (
-      <div className="flex min-h-screen">
+      <div className="flex flex-col md:flex-row min-h-screen">
         <Navigation />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -269,7 +269,7 @@ export default function OpportunityDetailPage() {
       : [];
 
   return (
-    <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen w-full max-w-[100vw] overflow-x-hidden">
       <Navigation title={opportunity.title} />
 
       <main className="flex-1 pb-24 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
