@@ -18,51 +18,6 @@ export default {
       return json({ status: 'ok', env: env.ENVIRONMENT });
     }
 
-    // 1b. Debug: Check analyses table (PROTECTED)
-    if (cleanPath === '/debug/analyses') {
-      if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
-      try {
-        const result = await env.DFG_DB.prepare('SELECT listing_id, verdict FROM analyses LIMIT 5').all();
-        return json({ analyses: result.results, count: result.results?.length || 0 });
-      } catch (err: any) {
-        return json({ error: err.message });
-      }
-    }
-
-    // 1c. Debug: Check sources (PROTECTED)
-    if (cleanPath === '/debug/sources') {
-      if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
-      try {
-        // Direct DB test - bypass getStats to isolate the issue
-        const countResult = await env.DFG_DB.prepare('SELECT COUNT(*) as cnt FROM listings WHERE status = ?').bind('candidate').first();
-        return json({
-          sources: ['sierra_auction', 'ironplanet'],
-          total_candidates: (countResult as any)?.cnt || 0,
-          success: true
-        });
-      } catch (err: any) {
-        return json({ error: err.message, env_keys: Object.keys(env || {}) });
-      }
-    }
-
-    // 1d. Debug: Test analysis lookup (PROTECTED)
-    if (cleanPath.startsWith('/debug/analysis/')) {
-      if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
-      const listingId = decodeURIComponent(cleanPath.replace('/debug/analysis/', ''));
-      try {
-        const result = await env.DFG_DB.prepare(
-          'SELECT listing_id, verdict, max_bid_mid FROM analyses WHERE listing_id = ?'
-        ).bind(listingId).first();
-        return json({
-          searched_for: listingId,
-          found: !!result,
-          result: result || null
-        });
-      } catch (err: any) {
-        return json({ error: err.message, searched_for: listingId });
-      }
-    }
-
     // 2. Stats Endpoint
     if (cleanPath === '/ops/stats') {
       if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
@@ -274,27 +229,7 @@ export default {
       return json({ ok: true, count: list.objects.length, sample: list.objects });
     }
 
-    // 5. Debug: Test source-category mapping
-    if (cleanPath === '/ops/debug/scm') {
-      if (!isOps) return json({ error: 'Unauthorized' }, 401);
-      const results1 = await env.DFG_DB.prepare(`
-        SELECT cd.*
-        FROM category_defs cd
-        INNER JOIN source_category_map scm ON cd.id = scm.category_id
-        WHERE cd.enabled = 1
-          AND scm.enabled = 1
-          AND scm.source = ?
-      `).bind('sierra').all();
-      const results2 = await env.DFG_DB.prepare('SELECT * FROM category_defs WHERE enabled = 1').all();
-      return json({
-        with_join: results1.results,
-        join_count: results1.results?.length || 0,
-        without_join: results2.results,
-        no_join_count: results2.results?.length || 0
-      });
-    }
-
-    // 6. GET Analysis by listing ID
+    // 5. GET Analysis by listing ID
     if (cleanPath.startsWith('/ops/analysis/') && request.method === 'GET') {
       if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
       const listingId = decodeURIComponent(cleanPath.replace('/ops/analysis/', ''));
@@ -530,16 +465,8 @@ export default {
       }
     }
 
-    // Fallback 404 with Debug Info
-    return json({
-      error: 'Not Found',
-      debug: {
-        path: pathname,
-        isOps,
-        isAdmin,
-        hasAuthHeader: request.headers.has('Authorization')
-      }
-    }, 404);
+    // Fallback 404 - no debug info in production (#97)
+    return json({ error: 'Not Found' }, 404);
   },
 
   // Fixed: Standard ScheduledEvent handling for Cloudflare
