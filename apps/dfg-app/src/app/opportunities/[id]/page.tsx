@@ -270,18 +270,22 @@ export default function OpportunityDetailPage() {
 
   return (
     <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
-      <Navigation />
+      <Navigation title={opportunity.title} />
 
-      <main className="flex-1 pb-20 md:pb-0 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
-        {/* Header */}
+      <main className="flex-1 pb-24 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
+        {/* Header - back/title hidden on mobile, Navigation provides (#82) */}
         <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-14">
-            <Button variant="ghost" size="sm" onClick={() => router.back()} className="shrink-0">
+            {/* Back button - desktop only, Navigation has mobile back */}
+            <Button variant="ghost" size="sm" onClick={() => router.back()} className="shrink-0 hidden md:flex">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0">
+            {/* Title - desktop only, Navigation has mobile title */}
+            <h1 className="hidden md:block text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0">
               {opportunity.title}
             </h1>
+            {/* Spacer for mobile to push buttons right */}
+            <div className="flex-1 md:hidden" />
             <Button
               variant="secondary"
               size="sm"
@@ -558,8 +562,8 @@ export default function OpportunityDetailPage() {
           )}
         </div>
 
-        {/* Action buttons - Fixed at bottom */}
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 overflow-x-hidden">
+        {/* Action buttons - Fixed at bottom (#82: no bottom nav on mobile anymore) */}
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 overflow-x-hidden pb-safe">
           <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
             {opportunity.status === 'inbox' && (
               <>

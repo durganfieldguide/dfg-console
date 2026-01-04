@@ -93,16 +93,20 @@ function OpportunitiesContent() {
     <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
       <Navigation />
 
-      <main className="flex-1 pb-20 md:pb-0 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
-        {/* Header */}
+      <main className="flex-1 pb-4 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
+        {/* Header - title hidden on mobile since Navigation provides it (#82) */}
         <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden max-w-full">
           <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-2 min-w-0 max-w-full">
-            <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate shrink min-w-0">
+            <h1 className="hidden md:block text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate shrink min-w-0">
               Opportunities
               {total > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-500">({total})</span>
               )}
             </h1>
+            {/* Mobile: show count only */}
+            <span className="md:hidden text-sm text-gray-500">
+              {total > 0 && `${total} results`}
+            </span>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Button

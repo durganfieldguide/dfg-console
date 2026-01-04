@@ -56,12 +56,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
       <Navigation />
 
-      <main className="flex-1 pb-20 md:pb-0">
-        {/* Header */}
-        <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <main className="flex-1 pb-4 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
+        {/* Header - hidden on mobile, Navigation provides mobile header (#82) */}
+        <header className="hidden md:block sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between px-4 h-14">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
               Settings
