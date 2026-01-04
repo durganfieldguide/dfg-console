@@ -52,7 +52,7 @@ const CHIP_CONFIG: Record<ReasonChip, { label: string; icon: typeof AlertTriangl
     filterUrl: '/opportunities?stale=true',
   },
   ANALYSIS_STALE: {
-    label: 'Needs Re-analyze',
+    label: 'Re-analyze',
     icon: FlaskConical,
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
     filterUrl: '/opportunities?analysis_stale=true',

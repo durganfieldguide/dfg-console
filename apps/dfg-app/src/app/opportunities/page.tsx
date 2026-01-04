@@ -249,183 +249,9 @@ function OpportunitiesContent() {
           )}
         </header>
 
-        {/* Filter Panel - Desktop: inline dropdown, Mobile: bottom sheet (#108) */}
+        {/* Filter Panel - Desktop only: inline dropdown (#108, #113) */}
         {showFilters && (
-          <>
-            {/* Mobile: Bottom sheet overlay - z-[70] above nav header z-50 (#112) */}
-            <div className="md:hidden fixed inset-0 z-[70]">
-              {/* Backdrop */}
-              <div
-                className="absolute inset-0 bg-black/50"
-                onClick={() => setShowFilters(false)}
-              />
-              {/* Sheet */}
-              <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl shadow-xl pb-safe">
-                {/* Handle */}
-                <div className="flex justify-center py-2">
-                  <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
-                </div>
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">Filters</h3>
-                  <button
-                    onClick={() => setShowFilters(false)}
-                    className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-                {/* Filter options */}
-                <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-                  {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <div className="relative">
-                      <select
-                        value={status || ''}
-                        onChange={(e) => updateFilter('status', e.target.value || null)}
-                        className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">All Statuses</option>
-                        {ACTIVE_STATUSES.map((s) => (
-                          <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-                  {/* Score */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Score</label>
-                    <div className="relative">
-                      <select
-                        value={scoreBand || ''}
-                        onChange={(e) => updateFilter('score_band', e.target.value || null)}
-                        className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Any Score</option>
-                        <option value="high">High (70+)</option>
-                        <option value="medium">Medium (40-69)</option>
-                        <option value="low">Low (&lt;40)</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-                  {/* Ending */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ending</label>
-                    <div className="relative">
-                      <select
-                        value={endingWithin || ''}
-                        onChange={(e) => updateFilter('ending_within', e.target.value || null)}
-                        className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Any Time</option>
-                        <option value="24h">Within 24 hours</option>
-                        <option value="48h">Within 48 hours</option>
-                        <option value="7d">Within 7 days</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-                  {/* Toggle filters */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Filters</label>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => updateFilter('stale', stale ? null : 'true')}
-                        className={cn(
-                          "px-3 py-1.5 text-sm rounded-lg border transition-colors",
-                          stale
-                            ? "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
-                        )}
-                      >
-                        Stale
-                      </button>
-                      <button
-                        onClick={() => updateFilter('analysis_stale', analysisStale ? null : 'true')}
-                        className={cn(
-                          "px-3 py-1.5 text-sm rounded-lg border transition-colors",
-                          analysisStale
-                            ? "bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
-                        )}
-                      >
-                        Re-analyze
-                      </button>
-                      <button
-                        onClick={() => updateFilter('verification_needed', verificationNeeded ? null : 'true')}
-                        className={cn(
-                          "px-3 py-1.5 text-sm rounded-lg border transition-colors",
-                          verificationNeeded
-                            ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-900/30 dark:border-purple-700 dark:text-purple-400"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
-                        )}
-                      >
-                        Verification
-                      </button>
-                      <button
-                        onClick={() => updateFilter('ending_soon', endingSoon ? null : 'true')}
-                        className={cn(
-                          "px-3 py-1.5 text-sm rounded-lg border transition-colors",
-                          endingSoon
-                            ? "bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
-                        )}
-                      >
-                        Ending Soon
-                      </button>
-                      <button
-                        onClick={() => updateFilter('attention', attention ? null : 'true')}
-                        className={cn(
-                          "px-3 py-1.5 text-sm rounded-lg border transition-colors",
-                          attention
-                            ? "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
-                        )}
-                      >
-                        Attention
-                      </button>
-                      <button
-                        onClick={() => updateFilter('strike_zone', strikeZone ? null : 'true')}
-                        className={cn(
-                          "px-3 py-1.5 text-sm rounded-lg border transition-colors",
-                          strikeZone
-                            ? "bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
-                        )}
-                      >
-                        Strike Zone
-                      </button>
-                      <button
-                        onClick={() => updateFilter('new_today', newToday ? null : 'true')}
-                        className={cn(
-                          "px-3 py-1.5 text-sm rounded-lg border transition-colors",
-                          newToday
-                            ? "bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400"
-                            : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
-                        )}
-                      >
-                        New Today
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                {/* Footer actions */}
-                <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
-                  <Button variant="secondary" className="flex-1" onClick={clearFilters}>
-                    Clear All
-                  </Button>
-                  <Button variant="primary" className="flex-1" onClick={() => setShowFilters(false)}>
-                    Done
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop: Inline panel */}
-            <div className="hidden md:block px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+          <div className="hidden md:block px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <div className="flex flex-wrap gap-2 items-center">
                 {/* Status filter */}
                 <div className="relative">
@@ -551,7 +377,6 @@ function OpportunitiesContent() {
                 </button>
               </div>
             </div>
-          </>
         )}
 
         {/* Content */}
@@ -578,6 +403,180 @@ function OpportunitiesContent() {
           )}
         </div>
       </main>
+
+      {/* Mobile: Bottom sheet overlay - OUTSIDE main to avoid overflow clipping (#113) */}
+      {showFilters && (
+        <div className="md:hidden fixed inset-0 z-[70]">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowFilters(false)}
+          />
+          {/* Sheet */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-2xl shadow-xl pb-safe">
+            {/* Handle */}
+            <div className="flex justify-center py-2">
+              <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+            </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Filters</h3>
+              <button
+                onClick={() => setShowFilters(false)}
+                className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {/* Filter options */}
+            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                <div className="relative">
+                  <select
+                    value={status || ''}
+                    onChange={(e) => updateFilter('status', e.target.value || null)}
+                    className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Statuses</option>
+                    {ACTIVE_STATUSES.map((s) => (
+                      <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              {/* Score */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Score</label>
+                <div className="relative">
+                  <select
+                    value={scoreBand || ''}
+                    onChange={(e) => updateFilter('score_band', e.target.value || null)}
+                    className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Any Score</option>
+                    <option value="high">High (70+)</option>
+                    <option value="medium">Medium (40-69)</option>
+                    <option value="low">Low (&lt;40)</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              {/* Ending */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ending</label>
+                <div className="relative">
+                  <select
+                    value={endingWithin || ''}
+                    onChange={(e) => updateFilter('ending_within', e.target.value || null)}
+                    className="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Any Time</option>
+                    <option value="24h">Within 24 hours</option>
+                    <option value="48h">Within 48 hours</option>
+                    <option value="7d">Within 7 days</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              {/* Toggle filters */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Filters</label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => updateFilter('stale', stale ? null : 'true')}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                      stale
+                        ? "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
+                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
+                    )}
+                  >
+                    Stale
+                  </button>
+                  <button
+                    onClick={() => updateFilter('analysis_stale', analysisStale ? null : 'true')}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                      analysisStale
+                        ? "bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400"
+                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
+                    )}
+                  >
+                    Re-analyze
+                  </button>
+                  <button
+                    onClick={() => updateFilter('verification_needed', verificationNeeded ? null : 'true')}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                      verificationNeeded
+                        ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-900/30 dark:border-purple-700 dark:text-purple-400"
+                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
+                    )}
+                  >
+                    Verification
+                  </button>
+                  <button
+                    onClick={() => updateFilter('ending_soon', endingSoon ? null : 'true')}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                      endingSoon
+                        ? "bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400"
+                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
+                    )}
+                  >
+                    Ending Soon
+                  </button>
+                  <button
+                    onClick={() => updateFilter('attention', attention ? null : 'true')}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                      attention
+                        ? "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
+                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
+                    )}
+                  >
+                    Attention
+                  </button>
+                  <button
+                    onClick={() => updateFilter('strike_zone', strikeZone ? null : 'true')}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                      strikeZone
+                        ? "bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400"
+                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
+                    )}
+                  >
+                    Strike Zone
+                  </button>
+                  <button
+                    onClick={() => updateFilter('new_today', newToday ? null : 'true')}
+                    className={cn(
+                      "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                      newToday
+                        ? "bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400"
+                        : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400"
+                    )}
+                  >
+                    New Today
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* Footer actions */}
+            <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
+              <Button variant="secondary" className="flex-1" onClick={clearFilters}>
+                Clear All
+              </Button>
+              <Button variant="primary" className="flex-1" onClick={() => setShowFilters(false)}>
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
