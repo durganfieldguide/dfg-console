@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -99,14 +100,19 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
 
           {/* Center: Logo or Title */}
           {title ? (
-            <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+            <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate max-w-[200px]">
               {title}
             </h1>
           ) : (
             <Link href="/" className="flex items-center">
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                DFG
-              </span>
+              <Image
+                src="/logo.svg"
+                alt="DFG"
+                width={50}
+                height={40}
+                className="h-8 w-auto"
+                priority
+              />
             </Link>
           )}
 
@@ -128,9 +134,13 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-xl">
             {/* Menu Header */}
             <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200 dark:border-gray-700">
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                DFG Console
-              </span>
+              <Image
+                src="/logo.svg"
+                alt="DFG"
+                width={50}
+                height={40}
+                className="h-8 w-auto"
+              />
               <button
                 onClick={() => setMenuOpen(false)}
                 className="p-2 -mr-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
@@ -177,14 +187,18 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
         </div>
       )}
 
-      {/* Desktop Sidebar - unchanged */}
+      {/* Desktop Sidebar */}
       <nav className="hidden md:flex md:flex-col md:h-screen md:w-64 md:border-r md:border-gray-200 dark:md:border-gray-700 md:bg-white dark:md:bg-gray-800">
         {/* Logo */}
         <div className="flex items-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
           <Link href="/" className="flex items-center">
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
-              DFG Console
-            </span>
+            <Image
+              src="/logo.svg"
+              alt="DFG"
+              width={60}
+              height={48}
+              className="h-10 w-auto"
+            />
           </Link>
         </div>
 
