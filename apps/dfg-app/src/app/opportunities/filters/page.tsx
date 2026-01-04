@@ -18,6 +18,11 @@ function FiltersContent() {
   const [stale, setStale] = useState(searchParams.get('stale') === 'true');
   const [analysisStale, setAnalysisStale] = useState(searchParams.get('analysis_stale') === 'true');
   const [verificationNeeded, setVerificationNeeded] = useState(searchParams.get('verification_needed') === 'true');
+  // Quick filters matching desktop chips (#117)
+  const [endingSoon, setEndingSoon] = useState(searchParams.get('ending_soon') === 'true');
+  const [attention, setAttention] = useState(searchParams.get('attention') === 'true');
+  const [strikeZone, setStrikeZone] = useState(searchParams.get('strike_zone') === 'true');
+  const [newToday, setNewToday] = useState(searchParams.get('new_today') === 'true');
 
   // Build URL with current filter state
   const buildUrl = () => {
@@ -28,6 +33,10 @@ function FiltersContent() {
     if (stale) params.set('stale', 'true');
     if (analysisStale) params.set('analysis_stale', 'true');
     if (verificationNeeded) params.set('verification_needed', 'true');
+    if (endingSoon) params.set('ending_soon', 'true');
+    if (attention) params.set('attention', 'true');
+    if (strikeZone) params.set('strike_zone', 'true');
+    if (newToday) params.set('new_today', 'true');
     const queryString = params.toString();
     return `/opportunities${queryString ? `?${queryString}` : ''}`;
   };
@@ -45,6 +54,10 @@ function FiltersContent() {
     setStale(false);
     setAnalysisStale(false);
     setVerificationNeeded(false);
+    setEndingSoon(false);
+    setAttention(false);
+    setStrikeZone(false);
+    setNewToday(false);
   };
 
   // Go back without changes
@@ -144,7 +157,7 @@ function FiltersContent() {
         {/* Divider */}
         <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
 
-        {/* Checkbox Toggles */}
+        {/* Checkbox Toggles - Attention/Action Items */}
         <div className="space-y-3">
           <label className="flex items-center cursor-pointer">
             <input
@@ -171,7 +184,50 @@ function FiltersContent() {
               onChange={(e) => setVerificationNeeded(e.target.checked)}
               className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
             />
-            <span className="ml-3 text-sm text-gray-900 dark:text-white">Verification</span>
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">Verification Needed</span>
+          </label>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+
+        {/* Quick Filters (#117) */}
+        <div className="space-y-3">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={endingSoon}
+              onChange={(e) => setEndingSoon(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+            />
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">Ending Soon</span>
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={attention}
+              onChange={(e) => setAttention(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+            />
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">Attention Required</span>
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={strikeZone}
+              onChange={(e) => setStrikeZone(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+            />
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">Strike Zone</span>
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={newToday}
+              onChange={(e) => setNewToday(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+            />
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">New Today</span>
           </label>
         </div>
       </div>
