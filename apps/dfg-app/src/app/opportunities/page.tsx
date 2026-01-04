@@ -91,12 +91,12 @@ function OpportunitiesContent() {
   const activeFilterCount = [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday].filter(Boolean).length;
 
   return (
-    <div className="flex min-h-screen w-full max-w-[100vw] overflow-x-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen w-full max-w-[100vw] overflow-x-hidden">
       <Navigation />
 
-      <main className="flex-1 pb-4 min-w-0 w-full max-w-[100vw] overflow-x-hidden">
+      <main className="flex-1 pb-4 min-w-0 w-full max-w-[100vw] overflow-x-hidden overflow-y-auto">
         {/* Header - title hidden on mobile since Navigation provides it (#82) */}
-        {/* Mobile: sticky below fixed nav header (top-14); Desktop: sticky at top (#111) */}
+        {/* Mobile: top-14 sticks below fixed nav; Desktop: top-0 sticks at viewport top (#112) */}
         <header className="sticky top-14 md:top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden max-w-full">
           <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-2 min-w-0 max-w-full">
             <h1 className="hidden md:block text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate shrink min-w-0">
@@ -252,8 +252,8 @@ function OpportunitiesContent() {
         {/* Filter Panel - Desktop: inline dropdown, Mobile: bottom sheet (#108) */}
         {showFilters && (
           <>
-            {/* Mobile: Bottom sheet overlay */}
-            <div className="md:hidden fixed inset-0 z-50">
+            {/* Mobile: Bottom sheet overlay - z-[70] above nav header z-50 (#112) */}
+            <div className="md:hidden fixed inset-0 z-[70]">
               {/* Backdrop */}
               <div
                 className="absolute inset-0 bg-black/50"
