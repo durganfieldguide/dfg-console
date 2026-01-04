@@ -1,56 +1,50 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ChevronDown, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { cn, STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils';
+import { STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils';
 import type { OpportunityStatus } from '@/types';
 
 function FiltersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Read current filter values from URL
-  const currentStatus = searchParams.get('status') as OpportunityStatus | null;
-  const currentScoreBand = searchParams.get('score_band') as 'high' | 'medium' | 'low' | null;
-  const currentEndingWithin = searchParams.get('ending_within') as '24h' | '48h' | '7d' | null;
-  const currentStale = searchParams.get('stale') === 'true';
-  const currentAnalysisStale = searchParams.get('analysis_stale') === 'true';
-  const currentDecisionStale = searchParams.get('decision_stale') === 'true';
-  const currentEndingSoon = searchParams.get('ending_soon') === 'true';
-  const currentAttention = searchParams.get('attention') === 'true';
-  const currentStrikeZone = searchParams.get('strike_zone') === 'true';
-  const currentVerificationNeeded = searchParams.get('verification_needed') === 'true';
-  const currentNewToday = searchParams.get('new_today') === 'true';
+  // Local state for building filters before applying
+  const [status, setStatus] = useState<string>(searchParams.get('status') || '');
+  const [scoreBand, setScoreBand] = useState<string>(searchParams.get('score_band') || '');
+  const [endingWithin, setEndingWithin] = useState<string>(searchParams.get('ending_within') || '');
+  const [stale, setStale] = useState(searchParams.get('stale') === 'true');
+  const [analysisStale, setAnalysisStale] = useState(searchParams.get('analysis_stale') === 'true');
+  const [verificationNeeded, setVerificationNeeded] = useState(searchParams.get('verification_needed') === 'true');
 
-  // Build URL with updated filter
-  const buildUrl = (updates: Record<string, string | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === '') {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    });
+  // Build URL with current filter state
+  const buildUrl = () => {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (scoreBand) params.set('score_band', scoreBand);
+    if (endingWithin) params.set('ending_within', endingWithin);
+    if (stale) params.set('stale', 'true');
+    if (analysisStale) params.set('analysis_stale', 'true');
+    if (verificationNeeded) params.set('verification_needed', 'true');
     const queryString = params.toString();
     return `/opportunities${queryString ? `?${queryString}` : ''}`;
   };
 
-  // Navigate to opportunities with filter applied
-  const applyFilter = (key: string, value: string | null) => {
-    router.push(buildUrl({ [key]: value }));
-  };
-
-  // Toggle a boolean filter
-  const toggleFilter = (key: string, currentValue: boolean) => {
-    router.push(buildUrl({ [key]: currentValue ? null : 'true' }));
+  // Apply filters and navigate back
+  const applyFilters = () => {
+    router.push(buildUrl());
   };
 
   // Clear all filters
   const clearAll = () => {
-    router.push('/opportunities');
+    setStatus('');
+    setScoreBand('');
+    setEndingWithin('');
+    setStale(false);
+    setAnalysisStale(false);
+    setVerificationNeeded(false);
   };
 
   // Go back without changes
@@ -59,7 +53,7 @@ function FiltersContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between h-14 px-4">
@@ -82,209 +76,104 @@ function FiltersContent() {
         </div>
       </header>
 
-      {/* Filter Sections */}
-      <div className="p-4 space-y-6">
-        {/* Status */}
-        <section>
-          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Status</h2>
-          <div className="space-y-2">
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="status"
-                checked={!currentStatus}
-                onChange={() => applyFilter('status', null)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">All Statuses</span>
+      {/* Filter Content */}
+      <div className="flex-1 p-4 space-y-4">
+        {/* Dropdown Selects */}
+        <div className="space-y-3">
+          {/* Status */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Status
             </label>
-            {ACTIVE_STATUSES.map((s) => (
-              <label key={s} className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={currentStatus === s}
-                  onChange={() => applyFilter('status', s)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-3 text-sm text-gray-900 dark:text-white">{STATUS_LABELS[s]}</span>
-              </label>
-            ))}
+            <div className="relative">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]"
+              >
+                <option value="">All Statuses</option>
+                {ACTIVE_STATUSES.map((s) => (
+                  <option key={s} value={s}>{STATUS_LABELS[s as OpportunityStatus]}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
-        </section>
 
-        {/* Score */}
-        <section>
-          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Score</h2>
-          <div className="space-y-2">
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="score"
-                checked={!currentScoreBand}
-                onChange={() => applyFilter('score_band', null)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Any Score</span>
+          {/* Score */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Score
             </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="score"
-                checked={currentScoreBand === 'high'}
-                onChange={() => applyFilter('score_band', 'high')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">High (70+)</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="score"
-                checked={currentScoreBand === 'medium'}
-                onChange={() => applyFilter('score_band', 'medium')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Medium (40-69)</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="score"
-                checked={currentScoreBand === 'low'}
-                onChange={() => applyFilter('score_band', 'low')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Low (&lt;40)</span>
-            </label>
+            <div className="relative">
+              <select
+                value={scoreBand}
+                onChange={(e) => setScoreBand(e.target.value)}
+                className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]"
+              >
+                <option value="">Any Score</option>
+                <option value="high">High (70+)</option>
+                <option value="medium">Medium (40-69)</option>
+                <option value="low">Low (&lt;40)</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
-        </section>
 
-        {/* Ending */}
-        <section>
-          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Ending</h2>
-          <div className="space-y-2">
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="ending"
-                checked={!currentEndingWithin}
-                onChange={() => applyFilter('ending_within', null)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Any Time</span>
+          {/* Ending */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Ending
             </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="ending"
-                checked={currentEndingWithin === '24h'}
-                onChange={() => applyFilter('ending_within', '24h')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Within 24 hours</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="ending"
-                checked={currentEndingWithin === '48h'}
-                onChange={() => applyFilter('ending_within', '48h')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Within 48 hours</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="radio"
-                name="ending"
-                checked={currentEndingWithin === '7d'}
-                onChange={() => applyFilter('ending_within', '7d')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Within 7 days</span>
-            </label>
+            <div className="relative">
+              <select
+                value={endingWithin}
+                onChange={(e) => setEndingWithin(e.target.value)}
+                className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg pl-3 pr-8 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]"
+              >
+                <option value="">Any Time</option>
+                <option value="24h">Within 24h</option>
+                <option value="48h">Within 48h</option>
+                <option value="7d">Within 7 days</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
-        </section>
+        </div>
 
-        {/* Quick Filters (toggles) */}
-        <section>
-          <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Filters</h2>
-          <div className="space-y-2">
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentStale}
-                onChange={() => toggleFilter('stale', currentStale)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Stale</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentAnalysisStale}
-                onChange={() => toggleFilter('analysis_stale', currentAnalysisStale)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Re-analyze</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentDecisionStale}
-                onChange={() => toggleFilter('decision_stale', currentDecisionStale)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Decision Stale</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentEndingSoon}
-                onChange={() => toggleFilter('ending_soon', currentEndingSoon)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Ending Soon</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentAttention}
-                onChange={() => toggleFilter('attention', currentAttention)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Attention</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentStrikeZone}
-                onChange={() => toggleFilter('strike_zone', currentStrikeZone)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Strike Zone</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentVerificationNeeded}
-                onChange={() => toggleFilter('verification_needed', currentVerificationNeeded)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">Verification Needed</span>
-            </label>
-            <label className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={currentNewToday}
-                onChange={() => toggleFilter('new_today', currentNewToday)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="ml-3 text-sm text-gray-900 dark:text-white">New Today</span>
-            </label>
-          </div>
-        </section>
+        {/* Divider */}
+        <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+
+        {/* Checkbox Toggles */}
+        <div className="space-y-3">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={stale}
+              onChange={(e) => setStale(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+            />
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">Stale</span>
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={analysisStale}
+              onChange={(e) => setAnalysisStale(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+            />
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">Re-analyze</span>
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={verificationNeeded}
+              onChange={(e) => setVerificationNeeded(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 dark:border-gray-600"
+            />
+            <span className="ml-3 text-sm text-gray-900 dark:text-white">Verification</span>
+          </label>
+        </div>
       </div>
 
       {/* Fixed bottom button */}
@@ -292,9 +181,9 @@ function FiltersContent() {
         <Button
           variant="primary"
           className="w-full"
-          onClick={goBack}
+          onClick={applyFilters}
         >
-          Done
+          Apply Filters
         </Button>
       </div>
     </div>
