@@ -96,20 +96,15 @@ function OpportunitiesContent() {
       <Navigation />
 
       <main className="flex-1 pb-4 min-w-0 w-full max-w-[100vw] overflow-x-hidden overflow-y-auto">
-        {/* Header - title hidden on mobile since Navigation provides it (#82) */}
-        {/* Mobile: top-14 sticks below fixed nav; Desktop: top-0 sticks at viewport top (#112) */}
-        <header className="sticky top-14 md:top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden max-w-full">
+        {/* Desktop Header - hidden on mobile, Navigation provides mobile header (#82, #116) */}
+        <header className="hidden md:block sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden max-w-full">
           <div className="flex items-center justify-between px-3 sm:px-4 h-14 gap-2 min-w-0 max-w-full">
-            <h1 className="hidden md:block text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate shrink min-w-0">
+            <h1 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate shrink min-w-0">
               Opportunities
               {total > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-500">({total})</span>
               )}
             </h1>
-            {/* Mobile: show count only */}
-            <span className="md:hidden text-sm text-gray-500">
-              {total > 0 && `${total} results`}
-            </span>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Button
@@ -128,31 +123,12 @@ function OpportunitiesContent() {
                 title="Show only high-score opportunities (70+)"
               >
                 <TrendingUp className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Buy Box</span>
+                Buy Box
               </Button>
-              {/* Mobile: Navigate to filter page (#114); Desktop: Toggle inline filters */}
-              <Link
-                href={`/opportunities/filters?${searchParams.toString()}`}
-                className={cn(
-                  "md:hidden inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors px-3 py-1.5",
-                  hasActiveFilters
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                )}
-              >
-                <Filter className="h-4 w-4 mr-1" />
-                Filters
-                {hasActiveFilters && (
-                  <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Link>
               <Button
                 variant={hasActiveFilters ? 'primary' : 'secondary'}
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className="hidden md:inline-flex"
               >
                 <Filter className="h-4 w-4 mr-1" />
                 Filters
@@ -268,6 +244,101 @@ function OpportunitiesContent() {
             </div>
           )}
         </header>
+
+        {/* Mobile Toolbar - action buttons below Navigation (#116) */}
+        <div className="md:hidden flex items-center justify-between px-3 py-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-500">
+            {total > 0 ? `${total} results` : 'Loading...'}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchOpportunities}
+              disabled={loading}
+            >
+              <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            </Button>
+            <Button
+              variant={scoreBand === 'high' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => updateFilter('score_band', scoreBand === 'high' ? null : 'high')}
+            >
+              <TrendingUp className="h-4 w-4" />
+            </Button>
+            <Link
+              href={`/opportunities/filters?${searchParams.toString()}`}
+              className={cn(
+                "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors px-3 py-1.5",
+                hasActiveFilters
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              )}
+            >
+              <Filter className="h-4 w-4 mr-1" />
+              Filters
+              {hasActiveFilters && (
+                <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        </div>
+
+        {/* Mobile Active Filters - chips row (#116) */}
+        {hasActiveFilters && (
+          <div className="md:hidden flex flex-wrap items-center gap-1.5 px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            {status && (
+              <button
+                onClick={() => updateFilter('status', null)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
+              >
+                {STATUS_LABELS[status]} <span className="text-blue-500">&times;</span>
+              </button>
+            )}
+            {scoreBand && (
+              <button
+                onClick={() => updateFilter('score_band', null)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full"
+              >
+                {scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'} <span className="text-green-500">&times;</span>
+              </button>
+            )}
+            {stale && (
+              <button
+                onClick={() => updateFilter('stale', null)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"
+              >
+                Stale <span className="text-amber-500">&times;</span>
+              </button>
+            )}
+            {analysisStale && (
+              <button
+                onClick={() => updateFilter('analysis_stale', null)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
+              >
+                Re-analyze <span className="text-blue-500">&times;</span>
+              </button>
+            )}
+            {verificationNeeded && (
+              <button
+                onClick={() => updateFilter('verification_needed', null)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full"
+              >
+                Verification <span className="text-purple-500">&times;</span>
+              </button>
+            )}
+            {activeFilterCount > 1 && (
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center px-2.5 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline ml-auto"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Filter Panel - Desktop only: inline dropdown (#108, #113) */}
         {showFilters && (
