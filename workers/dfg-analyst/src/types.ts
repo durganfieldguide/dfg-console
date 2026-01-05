@@ -388,11 +388,9 @@ export interface AcquisitionModel {
 
 export interface ProfitScenario {
   sale_price: number;
-  total_cost: number;
   gross_profit: number;
   margin: number;
-  days_to_sell: string;
-  meets_threshold: boolean;
+  days_to_sell: number;
 }
 
 export interface InvestorLensOutput {
@@ -407,9 +405,9 @@ export interface InvestorLensOutput {
   total_investment: number;
   
   scenarios: {
-    conservative: ProfitScenario;
+    quick_sale: ProfitScenario;
     expected: ProfitScenario;
-    optimistic: ProfitScenario;
+    premium: ProfitScenario;
   };
   
   verdict: "STRONG_BUY" | "BUY" | "MARGINAL" | "PASS";

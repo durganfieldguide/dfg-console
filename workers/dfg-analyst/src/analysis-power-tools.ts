@@ -3,7 +3,7 @@
 import type { RepairPlan, PriceRange } from "./types";
 
 export function calculateMinimumViableRepairPowerTools(condition: any): RepairPlan {
-  const items: Array<{ item: string; cost: number; marketing_note?: string }> = [];
+  const items: Array<{ item: string; approach: string; cost: number; required: boolean; marketing_note?: string }> = [];
 
   // Battery replacement (if dead/missing/swollen)
   const batteryCondition = condition.battery_system?.condition;
@@ -19,32 +19,36 @@ export function calculateMinimumViableRepairPowerTools(condition: any): RepairPl
     const batteriesToReplace = batteryCount > 0 ? batteryCount : 1;
     items.push({
       item: `Replace ${batteriesToReplace}x ${voltage} battery`,
+      approach: "Aftermarket replacement",
       cost: batteriesToReplace * costPerBattery,
+      required: true,
       marketing_note: "New battery included"
     });
   }
 
   // Charger (if missing and battery system exists)
   if (condition.charger_included === "no" && condition.power_source === "cordless") {
-    items.push({ item: "Charger", cost: 35 });
+    items.push({ item: "Charger", approach: "Aftermarket charger", cost: 35, required: true });
   }
 
   // Chuck/blade replacement (if worn/damaged)
   if (condition.condition?.chuck_or_blade === "worn" || condition.condition?.chuck_or_blade === "damaged") {
-    items.push({ item: "Chuck/blade replacement", cost: 25 });
+    items.push({ item: "Chuck/blade replacement", approach: "Standard replacement", cost: 25, required: true });
   }
 
   // Deep cleaning (if heavy wear)
   if (condition.condition?.cosmetic === "heavy_wear") {
-    items.push({ item: "Deep clean + detail", cost: 0, marketing_note: "Professionally cleaned" });
+    items.push({ item: "Deep clean + detail", approach: "DIY cleaning", cost: 0, required: false, marketing_note: "Professionally cleaned" });
   }
 
   const grandTotal = items.reduce((sum, i) => sum + i.cost, 0);
 
   return {
     items,
+    total_required: items.filter(i => i.required).reduce((sum, i) => sum + i.cost, 0),
+    contingency: 0,
     grand_total: grandTotal,
-    assumptions: ["DIY labor", "Amazon/eBay parts pricing", "OEM batteries from liquidation"]
+    confidence: "medium"
   };
 }
 

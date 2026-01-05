@@ -79,7 +79,7 @@ export function buildNextSteps(investorLens: InvestorLensOutput, _condition: Con
 // ============================================
 
 export function calculateMinimumViableRepair(condition: ConditionAssessment): RepairPlan {
-  const items: Array<{ item: string; cost: number; marketing_note?: string }> = [];
+  const items: Array<{ item: string; approach: string; cost: number; required: boolean; marketing_note?: string }> = [];
 
   // Tires: Phoenix dry-rot reality (axle-aware)
   const tireCount =
@@ -90,25 +90,27 @@ export function calculateMinimumViableRepair(condition: ConditionAssessment): Re
   const costPerTire = 125; // tire + mount/balance in PHX
 
   if (condition.tires_need_replacement) {
-    items.push({ item: `Replace tires (${tireCount}x)`, cost: tireCount * costPerTire });
+    items.push({ item: `Replace tires (${tireCount}x)`, approach: "DIY replacement", cost: tireCount * costPerTire, required: true });
   }
 
   if (condition.lights_inoperable) {
-    items.push({ item: "Fix lights/wiring", cost: 75 });
+    items.push({ item: "Fix lights/wiring", approach: "DIY repair", cost: 75, required: true });
   }
   if (condition.deck_needs_repair) {
-    items.push({ item: "Deck boards", cost: 150 });
+    items.push({ item: "Deck boards", approach: "DIY replacement", cost: 150, required: true });
   }
   if (condition.rust_treatment_needed) {
-    items.push({ item: "Rust treatment/paint", cost: 100 });
+    items.push({ item: "Rust treatment/paint", approach: "DIY treatment", cost: 100, required: false });
   }
 
   const grandTotal = items.reduce((sum, i) => sum + i.cost, 0);
 
   return {
     items,
+    total_required: items.filter(i => i.required).reduce((sum, i) => sum + i.cost, 0),
+    contingency: 0,
     grand_total: grandTotal,
-    assumptions: ["DIY labor", "Phoenix metro pricing", "Parts from standard suppliers"]
+    confidence: "medium"
   };
 }
 
@@ -180,11 +182,13 @@ export function calculateAcquisitionFromCurrentBid_DEPRECATED(listing: ListingDa
   const acq = calculateAcquisitionForBid(listing, bid, { payment_method: "cash" });
 
   return {
-    winning_bid: bid,
-    buyer_premium: (acq as any).buyer_premium,
-    sales_tax: (acq as any).sales_tax,
-    total_acquisition: (acq as any).total_acquisition
-  } as AcquisitionModel;
+    current_bid: listing.current_bid,
+    estimated_winning_bid: bid,
+    buyer_premium: acq.buyer_premium,
+    sales_tax: acq.sales_tax,
+    transport_estimate: 0,
+    total_acquisition: acq.total_acquisition
+  };
 }
 
 /** @deprecated Use calculateAcquisitionForBid instead. */
@@ -500,7 +504,7 @@ export function generateInspectionPriorities(condition: ConditionAssessment): st
   if (condition.frame_rust_severity === "severe") {
     priorities.push("CHECK: Frame integrity - rust appears severe");
   }
-  if (condition.axle_condition === "questionable") {
+  if (condition.axle_condition === "worn" || condition.axle_condition === "bent") {
     priorities.push("CHECK: Axle alignment and bearing play");
   }
   if (condition.tires_need_replacement) {
