@@ -9,6 +9,7 @@
     "test:full": "npx tsx test-carson.ts"
   },
   "dependencies": {
+    "@dfg/money-math": "file:../../packages/dfg-money-math",
     "dfg-data-gateway": "file:../../packages/dfg-data-gateway"
   },
   "devDependencies": {

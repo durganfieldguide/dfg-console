@@ -100,7 +100,24 @@ export const PHOENIX_FLIP_COSTS: FlipCosts = {
 // ============================================
 // SIERRA AUCTION FEE SCHEDULE
 // ============================================
+//
+// CANONICAL SOURCE: Use @dfg/money-math SIERRA_FEE_SCHEDULE for calculations.
+// The SIERRA_FEES export below is DEPRECATED and has incorrect tier boundaries.
+// See issue #125 for details on the Sierra buyer premium bug fix.
 
+// Re-export canonical fee schedule from @dfg/money-math
+export { SIERRA_FEE_SCHEDULE } from '@dfg/money-math';
+
+/**
+ * @deprecated Use SIERRA_FEE_SCHEDULE from @dfg/money-math instead.
+ * This schedule has INCORRECT tier boundaries (was treating flat dollars as tiers).
+ * Kept for backward compatibility only - calculations now use @dfg/money-math directly.
+ *
+ * CORRECT Sierra schedule (from @dfg/money-math):
+ * - $0-$2,500: $75 flat
+ * - $2,501-$5,000: 3% of bid
+ * - $5,001+: 3% with $150 cap
+ */
 export const SIERRA_FEES = {
   buyer_premium: {
     tiers: [

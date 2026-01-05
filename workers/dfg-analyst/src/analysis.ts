@@ -9,6 +9,11 @@ import type {
   AssetSummary
 } from "./types";
 
+import {
+  calculateBuyerPremium,
+  SIERRA_FEE_SCHEDULE
+} from '@dfg/money-math';
+
 export const CONFIG = {
   models: {
     CONDITION_MODEL: "claude-sonnet-4-20250514",
@@ -208,7 +213,12 @@ export function calculateAcquisitionForBid(
   const bid = normalizeBid(assumedBid);
   const feeSchedule = listing.fee_schedule;
 
-  const premium = computeBuyerPremium(bid, feeSchedule);
+  // Use @dfg/money-math canonical fee schedule for Sierra sources
+  // This correctly handles flat fees, percent fees, and caps
+  const isSierra = listing.source === 'sierra' || listing.source === 'sierra_auction';
+  const premium = isSierra
+    ? { amount: calculateBuyerPremium(bid, SIERRA_FEE_SCHEDULE), method: 'tier' as PremiumMethod }
+    : computeBuyerPremium(bid, feeSchedule);
   const debug = opts?.debug === true;
 
   const salesTaxRate = normalizeRate(feeSchedule?.sales_tax_percent, CONFIG.phoenix_market.sales_tax);

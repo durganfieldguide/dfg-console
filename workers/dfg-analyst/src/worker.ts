@@ -2236,6 +2236,7 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
   const hasAuctionEndTime = !!(assetSummary?.auction_end);
 
   // Build the single source of truth for all numbers
+  // Pass source so buildCalculationSpine uses correct fee schedule (e.g., Sierra from @dfg/money-math)
   const calculationSpine = buildCalculationSpine({
     bidAmount: maxBid,
     feeSchedule: listingData.fee_schedule || { buyer_premium: 0.15, sales_tax_percent: 0.0725 },
@@ -2247,7 +2248,8 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
       market_rate: phoenixRangeObj.market_rate,
       premium: phoenixRangeObj.premium
     },
-    marketSource: 'phoenix_comps'
+    marketSource: 'phoenix_comps',
+    source: listingData.source
   });
 
   // Evaluate risks using strict taxonomy with evidence status and two-axis verdict
@@ -2300,7 +2302,8 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
       quick_sale: phoenixRangeObj.quick_sale,
       market_rate: phoenixRangeObj.market_rate,
       premium: phoenixRangeObj.premium
-    }
+    },
+    source: listingData.source
   });
 
   // Market demand assessment - never say "Unknown", always provide heuristic
