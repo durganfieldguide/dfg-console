@@ -155,8 +155,8 @@ async function createOpportunity(
   const now = nowISO();
   const initialStatus: OpportunityStatus = 'inbox';
 
-  // Map source names (scout uses 'sierra', frontend expects 'sierra_auction')
-  const source = listing.source === 'sierra' ? 'sierra_auction' : listing.source;
+  // Use source as-is (#100: standardized to canonical names)
+  const source = listing.source;
 
   // Parse end_time to ISO
   const auctionEndsAt = listing.end_time

@@ -53,7 +53,7 @@ export interface CategoryConfigData {
 }
 
 export interface ListingData {
-  source: "sierra_auction" | "fb_marketplace" | "craigslist" | "offerup" | string;
+  source: "sierra" | "fb_marketplace" | "craigslist" | "offerup" | string; // #100: standardized to 'sierra'
   listing_url: string;
   lot_id?: string;
   auction_id?: string;

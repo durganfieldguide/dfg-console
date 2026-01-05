@@ -36,6 +36,7 @@ import {
   formatDateTime,
   isEndingSoon,
   SEVERITY_COLORS,
+  formatSourceLabel,
 } from '@/lib/utils';
 import {
   getOpportunity,
@@ -414,7 +415,7 @@ export default function OpportunityDetailPage() {
               <div className="flex items-center gap-3">
                 <StatusBadge status={opportunity.status} />
                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {opportunity.source === 'sierra_auction' ? 'Sierra Auctions' : opportunity.source}
+                  {formatSourceLabel(opportunity.source)}
                 </span>
               </div>
               <div className="flex items-center gap-2">

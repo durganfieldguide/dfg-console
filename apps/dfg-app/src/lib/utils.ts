@@ -144,3 +144,20 @@ export function getScoreColor(score: number): string {
       return 'text-red-600 dark:text-red-400';
   }
 }
+
+// =============================================================================
+// SOURCE HELPERS (#100)
+// =============================================================================
+
+const SOURCE_LABELS: Record<string, string> = {
+  sierra: 'Sierra',
+  sierra_auction: 'Sierra', // Legacy support
+  ironplanet: 'IronPlanet',
+  fb_marketplace: 'FB Marketplace',
+  craigslist: 'Craigslist',
+  offerup: 'OfferUp',
+};
+
+export function formatSourceLabel(source: string): string {
+  return SOURCE_LABELS[source] || source;
+}

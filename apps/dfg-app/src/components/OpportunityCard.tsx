@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Clock, MapPin, AlertCircle, ExternalLink, AlertTriangle, FlaskConical, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { StatusBadge, ScoreBadge } from '@/components/ui/Badge';
-import { cn, formatCurrency, formatRelativeTime, isEndingSoon } from '@/lib/utils';
+import { cn, formatCurrency, formatRelativeTime, isEndingSoon, formatSourceLabel } from '@/lib/utils';
 import type { OpportunitySummary } from '@/types';
 
 interface OpportunityCardProps {
@@ -176,7 +176,7 @@ export function OpportunityCard({ opportunity, selected, onSelect }: Opportunity
               )}
 
               <span className="text-gray-400 dark:text-gray-500 ml-auto">
-                {opportunity.source === 'sierra_auction' ? 'Sierra' : opportunity.source}
+                {formatSourceLabel(opportunity.source)}
               </span>
             </div>
           </div>
