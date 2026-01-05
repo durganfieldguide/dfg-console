@@ -32,3 +32,10 @@ coverage/
 # Cache
 .cache/
 .turbo/
+
+# TypeScript incremental build artifacts
+**/*.tsbuildinfo
+
+# Local / tool-specific
+.claude/
+docs/DEV/
