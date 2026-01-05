@@ -7,6 +7,7 @@ import { Filter, RefreshCw, ChevronDown, TrendingUp } from 'lucide-react';
 import { Navigation } from '@/components/Navigation';
 import { OpportunityCard } from '@/components/OpportunityCard';
 import { Button } from '@/components/ui/Button';
+import { ActiveFilterChip, ToggleFilterChip } from '@/components/ui/FilterChip';
 import { listOpportunities, type ListOpportunitiesParams } from '@/lib/api';
 import { cn, STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils';
 import type { OpportunitySummary, OpportunityStatus } from '@/types';
@@ -141,96 +142,45 @@ function OpportunitiesContent() {
             </div>
           </div>
 
-          {/* Active filters - chips row (both mobile and desktop) (#108) */}
+          {/* Active filters - chips row (both mobile and desktop) (#108, #103) */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-gray-200 dark:border-gray-700">
               {status && (
-                <button
-                  onClick={() => updateFilter('status', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
-                >
-                  {STATUS_LABELS[status]} <span className="text-blue-500">&times;</span>
-                </button>
+                <ActiveFilterChip label={STATUS_LABELS[status]} color="blue" onDismiss={() => updateFilter('status', null)} />
               )}
               {endingWithin && (
-                <button
-                  onClick={() => updateFilter('ending_within', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full"
-                >
-                  {endingWithin} <span className="text-orange-500">&times;</span>
-                </button>
+                <ActiveFilterChip label={endingWithin} color="orange" onDismiss={() => updateFilter('ending_within', null)} />
               )}
               {scoreBand && (
-                <button
-                  onClick={() => updateFilter('score_band', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full"
-                >
-                  {scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'} <span className="text-green-500">&times;</span>
-                </button>
+                <ActiveFilterChip
+                  label={scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'}
+                  color="green"
+                  onDismiss={() => updateFilter('score_band', null)}
+                />
               )}
               {stale && (
-                <button
-                  onClick={() => updateFilter('stale', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"
-                >
-                  Stale <span className="text-amber-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="Stale" color="amber" onDismiss={() => updateFilter('stale', null)} />
               )}
               {analysisStale && (
-                <button
-                  onClick={() => updateFilter('analysis_stale', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
-                >
-                  Re-analyze <span className="text-blue-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="Re-analyze" color="blue" onDismiss={() => updateFilter('analysis_stale', null)} />
               )}
               {decisionStale && (
-                <button
-                  onClick={() => updateFilter('decision_stale', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full"
-                >
-                  Decision <span className="text-red-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="Decision" color="red" onDismiss={() => updateFilter('decision_stale', null)} />
               )}
               {endingSoon && (
-                <button
-                  onClick={() => updateFilter('ending_soon', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full"
-                >
-                  Ending Soon <span className="text-orange-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="Ending Soon" color="orange" onDismiss={() => updateFilter('ending_soon', null)} />
               )}
               {attention && (
-                <button
-                  onClick={() => updateFilter('attention', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"
-                >
-                  Attention <span className="text-amber-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="Attention" color="amber" onDismiss={() => updateFilter('attention', null)} />
               )}
               {strikeZone && (
-                <button
-                  onClick={() => updateFilter('strike_zone', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 rounded-full"
-                >
-                  Strike Zone <span className="text-orange-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="Strike Zone" color="orange" onDismiss={() => updateFilter('strike_zone', null)} />
               )}
               {verificationNeeded && (
-                <button
-                  onClick={() => updateFilter('verification_needed', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full"
-                >
-                  Verification <span className="text-purple-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="Verification" color="purple" onDismiss={() => updateFilter('verification_needed', null)} />
               )}
               {newToday && (
-                <button
-                  onClick={() => updateFilter('new_today', null)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
-                >
-                  New Today <span className="text-blue-500">&times;</span>
-                </button>
+                <ActiveFilterChip label="New Today" color="blue" onDismiss={() => updateFilter('new_today', null)} />
               )}
               {/* Only show "Clear all" when multiple filters are active (#111) */}
               {activeFilterCount > 1 && (
@@ -286,48 +236,27 @@ function OpportunitiesContent() {
           </div>
         </div>
 
-        {/* Mobile Active Filters - chips row (#116) */}
+        {/* Mobile Active Filters - chips row (#116, #103) */}
         {hasActiveFilters && (
           <div className="md:hidden flex flex-wrap items-center gap-1.5 px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             {status && (
-              <button
-                onClick={() => updateFilter('status', null)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
-              >
-                {STATUS_LABELS[status]} <span className="text-blue-500">&times;</span>
-              </button>
+              <ActiveFilterChip label={STATUS_LABELS[status]} color="blue" onDismiss={() => updateFilter('status', null)} />
             )}
             {scoreBand && (
-              <button
-                onClick={() => updateFilter('score_band', null)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full"
-              >
-                {scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'} <span className="text-green-500">&times;</span>
-              </button>
+              <ActiveFilterChip
+                label={scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'}
+                color="green"
+                onDismiss={() => updateFilter('score_band', null)}
+              />
             )}
             {stale && (
-              <button
-                onClick={() => updateFilter('stale', null)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full"
-              >
-                Stale <span className="text-amber-500">&times;</span>
-              </button>
+              <ActiveFilterChip label="Stale" color="amber" onDismiss={() => updateFilter('stale', null)} />
             )}
             {analysisStale && (
-              <button
-                onClick={() => updateFilter('analysis_stale', null)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full"
-              >
-                Re-analyze <span className="text-blue-500">&times;</span>
-              </button>
+              <ActiveFilterChip label="Re-analyze" color="blue" onDismiss={() => updateFilter('analysis_stale', null)} />
             )}
             {verificationNeeded && (
-              <button
-                onClick={() => updateFilter('verification_needed', null)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded-full"
-              >
-                Verification <span className="text-purple-500">&times;</span>
-              </button>
+              <ActiveFilterChip label="Verification" color="purple" onDismiss={() => updateFilter('verification_needed', null)} />
             )}
             {activeFilterCount > 1 && (
               <button
@@ -388,84 +317,14 @@ function OpportunitiesContent() {
                 </div>
                 {/* Divider */}
                 <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-                {/* Toggle buttons */}
-                <button
-                  onClick={() => updateFilter('stale', stale ? null : 'true')}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors",
-                    stale
-                      ? "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  )}
-                >
-                  Stale
-                </button>
-                <button
-                  onClick={() => updateFilter('analysis_stale', analysisStale ? null : 'true')}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors",
-                    analysisStale
-                      ? "bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  )}
-                >
-                  Re-analyze
-                </button>
-                <button
-                  onClick={() => updateFilter('verification_needed', verificationNeeded ? null : 'true')}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors",
-                    verificationNeeded
-                      ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-900/30 dark:border-purple-700 dark:text-purple-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  )}
-                >
-                  Verification
-                </button>
-                <button
-                  onClick={() => updateFilter('ending_soon', endingSoon ? null : 'true')}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors",
-                    endingSoon
-                      ? "bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  )}
-                >
-                  Ending Soon
-                </button>
-                <button
-                  onClick={() => updateFilter('attention', attention ? null : 'true')}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors",
-                    attention
-                      ? "bg-amber-100 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  )}
-                >
-                  Attention
-                </button>
-                <button
-                  onClick={() => updateFilter('strike_zone', strikeZone ? null : 'true')}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors",
-                    strikeZone
-                      ? "bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  )}
-                >
-                  Strike Zone
-                </button>
-                <button
-                  onClick={() => updateFilter('new_today', newToday ? null : 'true')}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-lg border transition-colors",
-                    newToday
-                      ? "bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  )}
-                >
-                  New Today
-                </button>
+                {/* Toggle buttons (#103) */}
+                <ToggleFilterChip label="Stale" color="amber" active={stale} onToggle={() => updateFilter('stale', stale ? null : 'true')} />
+                <ToggleFilterChip label="Re-analyze" color="blue" active={analysisStale} onToggle={() => updateFilter('analysis_stale', analysisStale ? null : 'true')} />
+                <ToggleFilterChip label="Verification" color="purple" active={verificationNeeded} onToggle={() => updateFilter('verification_needed', verificationNeeded ? null : 'true')} />
+                <ToggleFilterChip label="Ending Soon" color="orange" active={endingSoon} onToggle={() => updateFilter('ending_soon', endingSoon ? null : 'true')} />
+                <ToggleFilterChip label="Attention" color="amber" active={attention} onToggle={() => updateFilter('attention', attention ? null : 'true')} />
+                <ToggleFilterChip label="Strike Zone" color="orange" active={strikeZone} onToggle={() => updateFilter('strike_zone', strikeZone ? null : 'true')} />
+                <ToggleFilterChip label="New Today" color="blue" active={newToday} onToggle={() => updateFilter('new_today', newToday ? null : 'true')} />
               </div>
             </div>
         )}
