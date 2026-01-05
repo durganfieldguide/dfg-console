@@ -35,3 +35,7 @@ coverage/
 
 # TypeScript incremental build artifacts
 **/*.tsbuildinfo
+
+# Local / tool-specific
+.claude/
+docs/DEV/
