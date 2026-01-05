@@ -6,7 +6,7 @@ import type { ListingData } from "../types";
 
 function makeBaseListing(): ListingData {
   return {
-    source: "sierra_auction",
+    source: "sierra", // #100: standardized source name
     listing_url: "https://example.com/listing/123",
     title: "Test Sierra Listing",
     description: "Test description",

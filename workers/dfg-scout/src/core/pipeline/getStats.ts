@@ -46,7 +46,7 @@ export async function getStats(env: Env) {
 
       return {
         run_id: run.run_id,
-        source: 'sierra_auction', // Map to frontend source name
+        source: 'sierra', // Standardized source name (#100)
         started_at: new Date(startedAt * 1000).toISOString(),
         completed_at: completedAt ? new Date(completedAt * 1000).toISOString() : null,
         total_candidates: run.total_candidates || 0,
@@ -59,16 +59,12 @@ export async function getStats(env: Env) {
       };
     });
 
-    // Get all registered sources and map to frontend names
+    // Get all registered sources (#100: use canonical names)
     const registeredSources = registry.list();
     console.log('[getStats] Registered sources:', registeredSources, 'count:', registry.count());
-    const sourceNameMap: Record<string, string> = {
-      'sierra': 'sierra_auction',
-      'ironplanet': 'ironplanet',
-    };
     const sources = registeredSources.length > 0
-      ? registeredSources.map(s => sourceNameMap[s] || s)
-      : ['sierra_auction', 'ironplanet']; // Fallback if registry is empty
+      ? registeredSources
+      : ['sierra', 'ironplanet']; // Fallback if registry is empty
 
     return {
       success: true,

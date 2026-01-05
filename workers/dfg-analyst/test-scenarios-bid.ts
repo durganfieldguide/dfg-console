@@ -3,7 +3,7 @@ import { calculateAcquisitionForBid, calculateProfitScenarios } from "./src/anal
 import type { ListingData } from "./src/types";
 
 const listing: ListingData = {
-  source: "sierra_auction",
+  source: "sierra", // #100: standardized source name
   listing_url: "https://example.com/listing/123",
   title: "Test Trailer",
   description: "Test description",

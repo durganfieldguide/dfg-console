@@ -1451,7 +1451,8 @@ function buildDeterministicInvestorReasoning(args: {
 }
 
 export function ensureSierraFees(listing: ListingData) {
-  if (listing.source !== "sierra_auction") return;
+  // Accept both canonical 'sierra' and legacy 'sierra_auction' (#100)
+  if (listing.source !== "sierra" && listing.source !== "sierra_auction") return;
   const fs = listing.fee_schedule ?? {};
   // Always enforce the Sierra tiered schedule to avoid silent numeric fallbacks.
   const buyer_premium = SIERRA_FEES.buyer_premium;
@@ -2176,7 +2177,7 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
 
   ensureSierraFees(listingData);
   const acqAtMax = calculateAcquisitionForBid(listingData, maxBid, { payment_method: "cash", debug: env.DEBUG === "true" });
-  if (listingData.source === "sierra_auction" && Math.round(maxBid) === 1600) {
+  if ((listingData.source === "sierra" || listingData.source === "sierra_auction") && Math.round(maxBid) === 1600) { // #100
     console.log(`[FEES] Sierra premium sanity: bid=${maxBid}, premium=${acqAtMax.buyer_premium} (expect ~299)`);
   }
   const transportEstimate = investorLens.acquisition_model?.transport_estimate ?? 0;

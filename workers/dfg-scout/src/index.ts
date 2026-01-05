@@ -62,10 +62,10 @@ export default {
         const params: any[] = [];
 
         if (source) {
-          // Map frontend source names to backend
-          const backendSource = source === 'sierra_auction' ? 'sierra' : source;
+          // Accept both 'sierra' and legacy 'sierra_auction' (#100)
+          const normalizedSource = source === 'sierra_auction' ? 'sierra' : source;
           query += ` AND source = ?`;
-          params.push(backendSource);
+          params.push(normalizedSource);
         }
 
         if (status) {
@@ -87,9 +87,10 @@ export default {
         let countQuery = `SELECT COUNT(*) as count FROM listings WHERE 1=1`;
         const countParams: any[] = [];
         if (source) {
-          const backendSource = source === 'sierra_auction' ? 'sierra' : source;
+          // Accept both 'sierra' and legacy 'sierra_auction' (#100)
+          const normalizedSource = source === 'sierra_auction' ? 'sierra' : source;
           countQuery += ` AND source = ?`;
-          countParams.push(backendSource);
+          countParams.push(normalizedSource);
         }
         if (status) {
           countQuery += ` AND status = ?`;
@@ -119,7 +120,7 @@ export default {
 
           return {
             id: row.id,
-            source: row.source === 'sierra' ? 'sierra_auction' : row.source,
+            source: row.source, // Return as-is; frontend handles display (#100)
             source_id: row.source_id,
             url: row.url,
             title: row.title,
@@ -190,7 +191,7 @@ export default {
 
         const listing = {
           id: row.id,
-          source: row.source === 'sierra' ? 'sierra_auction' : row.source,
+          source: row.source, // Return as-is; frontend handles display (#100)
           source_id: row.source_id,
           url: row.url,
           title: row.title,

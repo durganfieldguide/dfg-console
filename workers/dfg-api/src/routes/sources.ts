@@ -206,8 +206,8 @@ export async function seedDefaultSources(env: Env): Promise<void> {
 
   const defaultSources = [
     {
-      id: 'sierra_auction',
-      name: 'sierra_auction',
+      id: 'sierra', // Standardized source name (#100)
+      name: 'sierra',
       display_name: 'Sierra Auctions',
       base_url: 'https://sierraauction.com',
       default_buyer_premium_pct: 15,
