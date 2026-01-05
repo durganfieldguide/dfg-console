@@ -2,6 +2,47 @@
 
 DFG is an operator tool and subscription SaaS for identifying undervalued physical assets and producing conservative, explainable flip guidance. It is not a marketplace and must not inflate confidence.
 
+## Repository structure
+
+```
+dfg/
+├── apps/
+│   └── dfg-app/          # Next.js 14 operator console (React, TypeScript, Tailwind)
+├── workers/
+│   ├── dfg-api/          # Cloudflare Worker - REST API for opportunities
+│   ├── dfg-scout/        # Cloudflare Worker - auction scraping/pipeline
+│   ├── dfg-analyst/      # Cloudflare Worker - AI analysis engine
+│   └── dfg-relay/        # Cloudflare Worker - GitHub issue integration
+├── packages/             # Shared packages (currently minimal)
+├── docs/                 # Documentation and specs
+└── AGENTS.md            # This file - Codex review guidelines
+```
+
+**Key technologies:**
+- Frontend: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
+- Backend: Cloudflare Workers, D1 (SQLite), R2 (object storage)
+- Auth: Bearer tokens (OPS_TOKEN, ADMIN_TOKEN)
+
+## Dev environment
+
+```bash
+# Install dependencies (from repo root)
+npm install
+
+# Frontend (dfg-app)
+cd apps/dfg-app
+npm run dev          # Start dev server (localhost:3000)
+npm run build        # Production build
+npm run type-check   # TypeScript check
+npm run lint         # ESLint
+
+# Workers (each worker directory)
+cd workers/dfg-api   # or dfg-scout, dfg-analyst, dfg-relay
+npx tsc --noEmit     # TypeScript check
+npx wrangler dev     # Local dev server
+npx wrangler deploy  # Deploy to Cloudflare
+```
+
 ## Review guidelines
 
 ### P0 blockers (must flag; do not approve)
@@ -53,6 +94,20 @@ When stale or CRITICAL gates are open:
 - Ensure server-only secrets never reach Next.js client bundles.
 - Restrict debug endpoints and internal admin routes behind auth + allowlist.
 
+### Mobile-first requirements
+DFG operators primarily use the app on iOS Safari. All UI changes must:
+- Use `flex-col md:flex-row` for page layouts (mobile column, desktop row)
+- Account for fixed Navigation header (h-14 spacer on mobile)
+- Use `position: sticky` instead of `position: fixed` where possible
+- Avoid `-webkit-transform: translateZ(0)` on body (breaks fixed positioning)
+- Test touch interactions: 44px minimum tap targets, proper scroll behavior
+- Use `pb-safe` for bottom-fixed elements (safe area inset)
+
+Critical iOS Safari gotchas:
+- Transforms create new stacking contexts (fixed children escape to viewport)
+- Viewport height (100vh) includes Safari's address bar
+- Use `min-h-screen` with flexbox instead of fixed heights
+
 ## What a good Codex review looks like (output format)
 1) PR intent summary (3 bullets)
 2) Blockers (P0) — each with:
@@ -70,3 +125,62 @@ When stale or CRITICAL gates are open:
 - If staleness/gating is touched: require a manual QA checklist proving gating works (stale banner, re-analyze, last analyzed).
 - If scout/classification is touched: require parsing/classification tests that pin expected outputs.
 - If security surface is touched: require explicit reasoning and a test or proof path (route protection, auth middleware, signed URLs, etc.).
+
+## Codebase Review Task
+
+When asked to "perform a DFG codebase review" or similar, execute this checklist:
+
+### 1. Run automated checks
+```bash
+# Frontend
+cd apps/dfg-app
+npm run type-check 2>&1 | head -50
+npm run lint 2>&1 | head -50
+npm run build 2>&1 | tail -20
+
+# Workers (run for each)
+for worker in dfg-api dfg-scout dfg-analyst dfg-relay; do
+  echo "=== $worker ==="
+  cd workers/$worker
+  npx tsc --noEmit 2>&1 | head -20
+  cd ../..
+done
+```
+
+### 2. Scan critical paths
+Review these files for P0 issues:
+- `apps/dfg-app/src/lib/api.ts` — API client, auth token handling
+- `apps/dfg-app/src/lib/utils.ts` — Money math utilities
+- `workers/dfg-api/src/routes/opportunities.ts` — SQL queries, status transitions
+- `workers/dfg-api/src/core/http.ts` — CORS, auth middleware
+- `workers/dfg-scout/src/index.ts` — Endpoint exposure, auth checks
+
+### 3. Check for common issues
+- [ ] No `Access-Control-Allow-Origin: *` in production code
+- [ ] No template literal SQL (use `.bind()` parameterization)
+- [ ] No exposed /debug/* or /test/* endpoints without auth
+- [ ] No hardcoded secrets or API keys
+- [ ] Money math matches canonical definitions above
+- [ ] Mobile layouts use `flex-col md:flex-row` pattern
+
+### 4. Output structured report
+```markdown
+# DFG Codebase Review — [DATE]
+
+## Automated Check Results
+- TypeScript: [PASS/FAIL with error count]
+- ESLint: [PASS/FAIL with error count]
+- Build: [PASS/FAIL]
+
+## P0 Blockers
+[List any blockers found, or "None found"]
+
+## P1 High Priority
+[List issues, or "None found"]
+
+## P2 Nice-to-have
+[List suggestions]
+
+## Recommendations
+[Action items for next sprint]
+```
