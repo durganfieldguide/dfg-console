@@ -32,3 +32,6 @@ coverage/
 # Cache
 .cache/
 .turbo/
+
+# TypeScript incremental build artifacts
+**/*.tsbuildinfo
