@@ -39,3 +39,4 @@ coverage/
 # Local / tool-specific
 .claude/
 docs/DEV/
+tsconfig.tsbuildinfo
