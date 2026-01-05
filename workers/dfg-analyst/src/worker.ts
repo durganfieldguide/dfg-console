@@ -1129,7 +1129,7 @@ function buildReportMarkdown(args: {
   }
 
   // Mechanical unknowns - SOURCE: condition_assessment
-  if (condition.engine_status === 'unknown' || condition.mechanical_confidence === 'low') {
+  if (condition.mechanical?.engine_status === 'unknown' || condition.assessment_confidence === 'low') {
     whyFail.push({ text: `Mechanical status unverified — repair estimate uncertain`, source: 'condition_assessment', confidence: 'medium' });
   }
 
@@ -1453,16 +1453,16 @@ function buildDeterministicInvestorReasoning(args: {
 export function ensureSierraFees(listing: ListingData) {
   // Accept both canonical 'sierra' and legacy 'sierra_auction' (#100)
   if (listing.source !== "sierra" && listing.source !== "sierra_auction") return;
-  const fs = listing.fee_schedule ?? {};
+  const fs = listing.fee_schedule;
   // Always enforce the Sierra tiered schedule to avoid silent numeric fallbacks.
   const buyer_premium = SIERRA_FEES.buyer_premium;
   const sales_tax_percent =
-    typeof fs.sales_tax_percent === "number" && Number.isFinite(fs.sales_tax_percent)
+    (fs && typeof fs.sales_tax_percent === "number" && Number.isFinite(fs.sales_tax_percent))
       ? fs.sales_tax_percent
       : SIERRA_FEES.sales_tax_percent;
 
-  listing.fee_schedule = { ...fs, buyer_premium, sales_tax_percent };
-  listing.fee_schedule_source = fs.buyer_premium ? "listing" : "injected_sierra_default";
+  listing.fee_schedule = { buyer_premium, sales_tax_percent };
+  listing.fee_schedule_source = fs?.buyer_premium ? "listing" : "injected_sierra_default";
   console.log(`[FEES] Enforced Sierra tiered fee schedule for listing ${listing.title || listing.listing_url || ""} (source=${listing.fee_schedule_source})`);
 }
 
@@ -2028,7 +2028,7 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
   if (isPowerTools) {
     const { lookupPowerToolComps, calculateMinimumViableRepairPowerTools } = await import('./analysis-power-tools');
     phoenixRangeObj = lookupPowerToolComps(
-      condition.tool_type,
+      condition.tool_type ?? "other",
       condition.make,
       condition.model,
       condition.battery_system?.voltage ?? null
@@ -2047,8 +2047,8 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
     repairPlan = calculateMinimumViableRepairVehicles(condition);
   } else {
     phoenixRangeObj = lookupPhoenixComps(
-      condition.trailer_type,
-      condition.axle_status,
+      condition.trailer_type ?? "other",
+      condition.axle_status ?? "unknown",
       condition.dimensions?.width_ft ?? null,
       condition.dimensions?.length_ft ?? null
     );
@@ -2269,7 +2269,7 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
     exterior: typeof condition.exterior === 'object' ? (condition.exterior?.paint_condition || condition.exterior?.body_damage || null) : condition.exterior,
     interior: typeof condition.interior === 'object' ? (condition.interior?.condition || condition.interior?.seats || null) : condition.interior,
     mechanical: typeof condition.mechanical === 'object' ? (condition.mechanical?.engine_status || condition.mechanical?.transmission_status || null) : condition.mechanical,
-    tires: typeof condition.tires === 'object' ? (condition.tires?.condition || null) : (condition.tires_condition || condition.tires),
+    tires: typeof condition.tires === 'object' ? (condition.tires?.condition || null) : (condition.tires || null),
     frame: condition.frame_integrity || condition.frame_rust_severity,
     photos_analyzed: condition.photos_analyzed
   });
@@ -2281,8 +2281,8 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
 
   const bidReadiness = evaluateBidReadiness({
     hasAuctionEndTime,
-    hasTitleStatus: condition.title_status && condition.title_status !== 'unknown',
-    titleStatus: condition.title_status,
+    hasTitleStatus: !!(condition.title_status && condition.title_status !== 'unknown'),
+    titleStatus: condition.title_status ?? null,
     economicsVerdict: economicsOk ? 'BUY' : 'PASS',
     hasConfirmedDealBreakers: riskAssessment.summary.has_deal_breakers,
     infoGapsCount: riskAssessment.info_gaps.length,
@@ -2317,12 +2317,12 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
 
   // Split confidence into 4 meters
   const confidenceBreakdown = evaluateConfidenceBreakdown({
-    priceVerified: listingData.price_verified || false,
-    priceKind: listingData.price_kind || 'starting_bid',
-    titleStatus: condition.title_status,
+    priceVerified: !!(listingData.current_bid > 0),
+    priceKind: listingData.buy_now_price ? 'buy_now' : 'starting_bid',
+    titleStatus: condition.title_status ?? null,
     photoCount: condition.photos_analyzed || 0,
     hasConditionDetails: !!(condition.exterior || condition.interior),
-    mechanicalKnown: condition.mechanical && condition.mechanical !== 'unknown',
+    mechanicalKnown: !!(condition.mechanical && typeof condition.mechanical === 'object'),
     hasAuctionEndTime
   });
 
@@ -2346,8 +2346,8 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
     },
 
     // From condition
-    titleStatus: condition.title_status,
-    mechanicalKnown: !!(condition.mechanical && condition.mechanical !== 'unknown'),
+    titleStatus: condition.title_status ?? null,
+    mechanicalKnown: !!(condition.mechanical && typeof condition.mechanical === 'object'),
     photoCount: condition.photos_analyzed || 0,
 
     // From market demand

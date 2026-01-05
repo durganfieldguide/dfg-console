@@ -302,7 +302,7 @@ export function buildAssetSummaryForType(
   source: string;
   listing_url: string;
   current_bid: number;
-  auction_end: string | null;
+  auction_end?: string;
 } {
   const parts: string[] = [];
 
@@ -318,6 +318,6 @@ export function buildAssetSummaryForType(
     source: listing.source,
     listing_url: listing.listing_url,
     current_bid: listing.current_bid,
-    auction_end: listing.ends_at || null
+    auction_end: listing.ends_at || undefined
   };
 }
