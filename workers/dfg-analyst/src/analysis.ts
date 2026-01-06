@@ -169,9 +169,13 @@ function computeBuyerPremium(
     return { amount: Math.round(bid * pct), method: "percent" };
   }
 
-  // Flat premium (rare)
+  // Numeric premium = percentage (not flat dollar)
+  // Normalize: >1 = whole-number pct (15 → 0.15), ≤1 = decimal (0.15)
+  // Fix for #126: 0.15 was incorrectly treated as $0.15 flat instead of 15%
   if (typeof buyerPremium === "number") {
-    return { amount: buyerPremium, method: "flat" };
+    const rate = buyerPremium > 1 ? buyerPremium / 100 : buyerPremium;
+    const premiumAmount = Math.round(bid * rate);
+    return { amount: premiumAmount, method: "percent" };
   }
 
   return { amount: 0, method: "none" };

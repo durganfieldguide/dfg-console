@@ -87,3 +87,68 @@ function makeBaseListing(): ListingData {
 }
 
 console.log("\n✅ All Sierra tier premium tests passed (issue #125)");
+
+// ============================================
+// ISSUE #126: Buyer Premium Semantic Mismatch Fix
+// ============================================
+// Acceptance Criteria:
+// - buyerPremium: 0.15 + bid: $1,000 → $150 premium (not $0.15)
+// - buyerPremium: 15 + bid: $1,000 → $150 premium (whole-number tolerance)
+// - Method returns "percent" not "flat"
+
+// Test F: Decimal percentage format (0.15 = 15%)
+// $1,000 bid with 0.15 (15%) premium → $150 (NOT $0.15)
+{
+  const listing: ListingData = {
+    source: "ironplanet", // Non-Sierra source using simple percentage
+    listing_url: "https://example.com/listing/456",
+    title: "Test IronPlanet Listing",
+    description: "Test description",
+    photos: [],
+    current_bid: 0,
+    fee_schedule: { buyer_premium: 0.15, sales_tax_percent: 0.086 },
+    location: { city: "Phoenix", state: "AZ" }
+  };
+  const acq = calculateAcquisitionForBid(listing, 1000, { payment_method: "cash", debug: true });
+  assert.strictEqual(acq.buyer_premium, 150, "#126: 0.15 decimal → $150 premium on $1,000 bid (not $0.15)");
+  assert.strictEqual(acq.premium_method, "percent", "Method should be 'percent' not 'flat'");
+  console.log(`✓ #126 Decimal format: 0.15 on $1,000 bid → $${acq.buyer_premium} premium (expected $150)`);
+}
+
+// Test G: Whole-number percentage format (15 = 15%)
+// $1,000 bid with 15 (15%) premium → $150
+{
+  const listing: ListingData = {
+    source: "rbid", // Another non-Sierra source
+    listing_url: "https://example.com/listing/789",
+    title: "Test RBid Listing",
+    description: "Test description",
+    photos: [],
+    current_bid: 0,
+    fee_schedule: { buyer_premium: 15, sales_tax_percent: 0.086 },
+    location: { city: "Phoenix", state: "AZ" }
+  };
+  const acq = calculateAcquisitionForBid(listing, 1000, { payment_method: "cash", debug: true });
+  assert.strictEqual(acq.buyer_premium, 150, "#126: 15 whole-number → $150 premium on $1,000 bid");
+  assert.strictEqual(acq.premium_method, "percent", "Method should be 'percent'");
+  console.log(`✓ #126 Whole-number format: 15 on $1,000 bid → $${acq.buyer_premium} premium (expected $150)`);
+}
+
+// Test H: Edge case - 12% premium
+{
+  const listing: ListingData = {
+    source: "govplanet",
+    listing_url: "https://example.com/listing/abc",
+    title: "Test GovPlanet Listing",
+    description: "Test description",
+    photos: [],
+    current_bid: 0,
+    fee_schedule: { buyer_premium: 0.12, sales_tax_percent: 0.086 },
+    location: { city: "Phoenix", state: "AZ" }
+  };
+  const acq = calculateAcquisitionForBid(listing, 5000, { payment_method: "cash", debug: true });
+  assert.strictEqual(acq.buyer_premium, 600, "#126: 0.12 (12%) on $5,000 bid → $600 premium");
+  console.log(`✓ #126 Edge case: 0.12 on $5,000 bid → $${acq.buyer_premium} premium (expected $600)`);
+}
+
+console.log("\n✅ All buyer premium semantic tests passed (issue #126)");
