@@ -44,31 +44,31 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
         <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto overflow-x-auto scrollbar-hide">
           <TabsTrigger
             value="summary"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:opacity-60 rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Summary
           </TabsTrigger>
           <TabsTrigger
             value="condition"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:opacity-60 rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Condition
           </TabsTrigger>
           <TabsTrigger
             value="investor"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:opacity-60 rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Investor
           </TabsTrigger>
           <TabsTrigger
             value="buyer"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:opacity-60 rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Buyer
           </TabsTrigger>
           <TabsTrigger
             value="report"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:opacity-60 rounded-none px-3 sm:px-4 py-2 text-sm shrink-0"
           >
             Report
           </TabsTrigger>

@@ -93,6 +93,7 @@ function TabsTrigger({
     <button
       role="tab"
       aria-selected={isActive}
+      data-state={isActive ? 'active' : 'inactive'}
       disabled={disabled}
       onClick={() => setActiveTab(value)}
       className={cn(
