@@ -480,14 +480,16 @@ export function calculateMaxBidBySearch(params: {
     const totalInvestment = assertFiniteNumber("totalInvestment", (acq as any).total_acquisition + rt);
 
     const profit = mr - totalInvestment;
-    const margin = mr > 0 ? profit / mr : 0;
+    // FIX #127: Margin = profit / acquisitionCost (NOT sale price)
+    const margin = totalInvestment > 0 ? profit / totalInvestment : 0;
 
     if (profit < reqProfit || margin < reqMargin) continue;
 
     if (hasDownsideConstraint) {
       const qs = quickSalePrice as number;
       const quickProfit = qs - totalInvestment;
-      const quickMargin = qs > 0 ? quickProfit / qs : 0;
+      // FIX #127: Margin = profit / acquisitionCost (NOT sale price)
+      const quickMargin = totalInvestment > 0 ? quickProfit / totalInvestment : 0;
 
       const downsideOk = quickProfit >= minQuickProfit || quickMargin >= minQuickMargin;
       if (!downsideOk) continue;

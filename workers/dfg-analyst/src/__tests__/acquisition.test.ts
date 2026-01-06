@@ -152,3 +152,86 @@ console.log("\n✅ All Sierra tier premium tests passed (issue #125)");
 }
 
 console.log("\n✅ All buyer premium semantic tests passed (issue #126)");
+
+// ============================================
+// ISSUE #127: Margin Denominator Fix
+// ============================================
+// Acceptance Criteria:
+// - margin = profit / acquisitionCost (NOT sale price)
+// - Example: $1,000 acquisition, $1,200 sale, $200 profit → 20% margin (not 16.7%)
+
+// Test I: Margin uses acquisition cost as denominator
+// Verify the formula: margin = profit / acquisitionCost (NOT profit / salePrice)
+{
+  const spine = buildCalculationSpine({
+    bidAmount: 1000,
+    feeSchedule: { buyer_premium: 0.10, sales_tax_percent: 0.05 },
+    transport: 100,
+    repairs: 200,
+    repairsBasis: 'estimated',
+    marketPrices: { quick_sale: 1800, market_rate: 2000, premium: 2500 }
+  });
+
+  // Calculate expected values:
+  // premium = 1000 * 0.10 = 100
+  // tax = (1000 + 100) * 0.05 = 55
+  // subtotal = 1000 + 100 + 55 = 1155
+  // total_all_in = 1155 + 100 + 200 = 1455
+
+  // For market_rate = 2000:
+  // profit = 2000 - 1455 = 545
+  // CORRECT margin = 545 / 1455 = 0.3746 (37.5%)
+  // WRONG margin = 545 / 2000 = 0.2725 (27.3%)
+
+  const profit = spine.expected_profit;
+  const acquisitionCost = spine.total_all_in;
+  const salePrice = spine.market_rate_price;
+
+  const correctMargin = profit / acquisitionCost;
+  const wrongMargin = profit / salePrice;
+
+  // Verify margin uses acquisition cost, not sale price
+  assert.ok(
+    Math.abs(spine.expected_margin - correctMargin) < 0.001,
+    `#127: Margin should be profit/acquisition (${correctMargin.toFixed(3)}), got ${spine.expected_margin.toFixed(3)}`
+  );
+  assert.ok(
+    Math.abs(spine.expected_margin - wrongMargin) > 0.05,
+    `#127: Margin should NOT be profit/sale (${wrongMargin.toFixed(3)})`
+  );
+
+  console.log(`✓ #127: $${profit} profit on $${acquisitionCost} acquisition → ${(spine.expected_margin * 100).toFixed(1)}% margin`);
+  console.log(`  (Wrong formula would give ${(wrongMargin * 100).toFixed(1)}%)`);
+}
+
+// Test J: All three margin scenarios use correct denominator
+{
+  const spine = buildCalculationSpine({
+    bidAmount: 800,
+    feeSchedule: { buyer_premium: 0.10, sales_tax_percent: 0.05 },
+    transport: 50,
+    repairs: 100,
+    repairsBasis: 'estimated',
+    marketPrices: { quick_sale: 1200, market_rate: 1500, premium: 2000 }
+  });
+
+  // premium = 80, tax = 44, subtotal = 924, total = 924 + 50 + 100 = 1074
+  const acquisitionCost = spine.total_all_in;
+
+  // Verify each margin is profit / acquisitionCost
+  const quickCorrect = spine.quick_sale_profit / acquisitionCost;
+  const expectedCorrect = spine.expected_profit / acquisitionCost;
+  const premiumCorrect = spine.premium_profit / acquisitionCost;
+
+  assert.ok(Math.abs(spine.quick_sale_margin - quickCorrect) < 0.001,
+    `Quick margin: expected ${quickCorrect.toFixed(3)}, got ${spine.quick_sale_margin.toFixed(3)}`);
+  assert.ok(Math.abs(spine.expected_margin - expectedCorrect) < 0.001,
+    `Expected margin: expected ${expectedCorrect.toFixed(3)}, got ${spine.expected_margin.toFixed(3)}`);
+  assert.ok(Math.abs(spine.premium_margin - premiumCorrect) < 0.001,
+    `Premium margin: expected ${premiumCorrect.toFixed(3)}, got ${spine.premium_margin.toFixed(3)}`);
+
+  console.log(`✓ #127: All margins use acquisition cost denominator`);
+  console.log(`  Quick=${(spine.quick_sale_margin * 100).toFixed(0)}%, Expected=${(spine.expected_margin * 100).toFixed(0)}%, Premium=${(spine.premium_margin * 100).toFixed(0)}%`);
+}
+
+console.log("\n✅ All margin denominator tests passed (issue #127)");
