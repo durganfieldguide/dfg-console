@@ -1,0 +1,7 @@
+{
+  "allowedTools": [
+    "Edit",
+    "Write",
+    "Bash(*)"
+  ]
+}
