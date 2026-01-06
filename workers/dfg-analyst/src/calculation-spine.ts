@@ -138,14 +138,16 @@ export function buildCalculationSpine(args: {
   const totalAllIn = subtotalAcquisition + transport + repairs + otherFees;
 
   // Profits and margins
+  // FIX #127: Margin = profit / acquisitionCost (NOT sale price)
+  // This measures ROI on capital invested, per DFG doctrine
   const quickSaleProfit = marketPrices.quick_sale - totalAllIn;
-  const quickSaleMargin = marketPrices.quick_sale > 0 ? quickSaleProfit / marketPrices.quick_sale : 0;
+  const quickSaleMargin = totalAllIn > 0 ? quickSaleProfit / totalAllIn : 0;
 
   const expectedProfit = marketPrices.market_rate - totalAllIn;
-  const expectedMargin = marketPrices.market_rate > 0 ? expectedProfit / marketPrices.market_rate : 0;
+  const expectedMargin = totalAllIn > 0 ? expectedProfit / totalAllIn : 0;
 
   const premiumProfit = marketPrices.premium - totalAllIn;
-  const premiumMargin = marketPrices.premium > 0 ? premiumProfit / marketPrices.premium : 0;
+  const premiumMargin = totalAllIn > 0 ? premiumProfit / totalAllIn : 0;
 
   return {
     bid_amount: bidAmount,
