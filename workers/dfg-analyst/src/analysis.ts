@@ -275,19 +275,19 @@ export function calculateProfitScenarios(
     quick_sale: {
       sale_price: qs,
       gross_profit: qs > 0 ? qs - ti : -ti,
-      margin: qs > 0 ? (qs - ti) / qs : 0,
+      margin: ti > 0 ? (qs - ti) / ti : 0,  // FIX #159: margin = profit / acquisition (not sale)
       days_to_sell: 7
     },
     expected: {
       sale_price: mr,
       gross_profit: mr > 0 ? mr - ti : -ti,
-      margin: mr > 0 ? (mr - ti) / mr : 0,
+      margin: ti > 0 ? (mr - ti) / ti : 0,  // FIX #159: margin = profit / acquisition (not sale)
       days_to_sell: holdingDays
     },
     premium: {
       sale_price: pr,
       gross_profit: pr > 0 ? pr - ti : -ti,
-      margin: pr > 0 ? (pr - ti) / pr : 0,
+      margin: ti > 0 ? (pr - ti) / ti : 0,  // FIX #159: margin = profit / acquisition (not sale)
       days_to_sell: 30
     }
   };
@@ -405,7 +405,8 @@ export function calculateMaxBid(
   targetMargin: number = 0.35
 ): number {
   const profitBasedMax = marketRate - repairTotal - targetProfit;
-  const marginBasedMax = Math.round(marketRate * (1 - targetMargin) - repairTotal);
+  // FIX #159: margin = profit / acquisition, so acquisition = sale / (1 + margin)
+  const marginBasedMax = Math.round(marketRate / (1 + targetMargin) - repairTotal);
   return Math.floor(Math.min(profitBasedMax, marginBasedMax) / 50) * 50;
 }
 
@@ -417,7 +418,8 @@ export function calculateMaxBidAllIn(
   targetMargin: number = 0.35
 ): number {
   const profitBased = (marketRate - repairTotal - targetProfit) / allInMultiplier;
-  const marginBased = (marketRate * (1 - targetMargin) - repairTotal) / allInMultiplier;
+  // FIX #159: margin = profit / acquisition, so acquisition = sale / (1 + margin)
+  const marginBased = (marketRate / (1 + targetMargin) - repairTotal) / allInMultiplier;
   return Math.floor(Math.min(profitBased, marginBased) / 50) * 50;
 }
 
