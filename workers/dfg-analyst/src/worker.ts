@@ -1602,6 +1602,7 @@ async function fetchImageAsBase64(
   maxRetries = 2
 ): Promise<{ result: ImageFetchResult; base64?: string; mediaType?: string }> {
   let lastError = 'Unknown error';
+  let useProxy = false;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -1612,13 +1613,27 @@ async function fetchImageAsBase64(
         await sleep(delayMs);
       }
 
+      // Use proxy on retry if direct fetch failed with hotlink protection error
+      const fetchUrl = useProxy
+        ? `https://images.weserv.nl/?url=${encodeURIComponent(url)}&default=404`
+        : url;
+
+      if (useProxy) {
+        console.log(`[IMAGE] Using proxy for image ${index} (hotlink bypass)`);
+      }
+
       // Use AbortController for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-      const response = await fetch(url, {
+      const response = await fetch(fetchUrl, {
         signal: controller.signal,
-        headers: {
+        headers: useProxy ? {
+          // Minimal headers for proxy
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'image/*',
+        } : {
+          // Full headers for direct fetch
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
@@ -1637,6 +1652,13 @@ async function fetchImageAsBase64(
         continue; // Retry
       }
 
+      // 403/401 = likely hotlink protection - retry with proxy on next attempt
+      if (!useProxy && (response.status === 403 || response.status === 401)) {
+        lastError = `HTTP ${response.status} (hotlink blocked)`;
+        useProxy = true;
+        continue; // Retry with proxy
+      }
+
       if (!response.ok) {
         // Non-retryable HTTP error
         return {
@@ -1644,7 +1666,7 @@ async function fetchImageAsBase64(
             index,
             url,
             status: 'failed',
-            fail_reason: `HTTP ${response.status}`,
+            fail_reason: useProxy ? `Proxy failed: HTTP ${response.status}` : `HTTP ${response.status}`,
           }
         };
       }
