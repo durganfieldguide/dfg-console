@@ -5,6 +5,12 @@
  * No more mismatched totals between Summary, Investor Lens, and Full Report.
  */
 
+import {
+  calculateBuyerPremium,
+  SIERRA_FEE_SCHEDULE,
+  type FeeSchedule as MoneyMathFeeSchedule
+} from '@dfg/money-math';
+
 export interface CalculationAssumptions {
   // Fee assumptions
   buyer_premium_pct: number;      // e.g., 0.15 or tiered (Sierra)
@@ -57,6 +63,9 @@ export interface CalculationSpine {
 
 /**
  * Build calculation spine from inputs - SINGLE SOURCE OF TRUTH
+ *
+ * @param args.source - Listing source (e.g., 'sierra'). When 'sierra', uses canonical
+ *                      SIERRA_FEE_SCHEDULE from @dfg/money-math for correct tiered premiums.
  */
 export function buildCalculationSpine(args: {
   bidAmount: number;
@@ -74,6 +83,8 @@ export function buildCalculationSpine(args: {
     premium: number;
   };
   marketSource?: string;
+  /** Listing source - 'sierra' uses canonical fee schedule from @dfg/money-math */
+  source?: string;
 }): CalculationSpine {
   const {
     bidAmount,
@@ -83,18 +94,27 @@ export function buildCalculationSpine(args: {
     repairsBasis,
     otherFees = 0,
     marketPrices,
-    marketSource = 'phoenix_comps'
+    marketSource = 'phoenix_comps',
+    source
   } = args;
 
-  // Calculate buyer premium (handle tiered Sierra fees)
+  // Calculate buyer premium using @dfg/money-math for Sierra (canonical source of truth)
   let buyerPremiumPct: number;
   let buyerPremium: number;
 
-  if (typeof feeSchedule.buyer_premium === 'number') {
+  if (source === 'sierra') {
+    // Use canonical Sierra fee schedule from @dfg/money-math
+    // This correctly handles flat fees, percent fees, and caps
+    buyerPremium = calculateBuyerPremium(bidAmount, SIERRA_FEE_SCHEDULE);
+    // Calculate effective percentage for assumptions tracking
+    buyerPremiumPct = bidAmount > 0 ? buyerPremium / bidAmount : 0;
+  } else if (typeof feeSchedule.buyer_premium === 'number') {
+    // Simple percentage-based premium
     buyerPremiumPct = feeSchedule.buyer_premium;
     buyerPremium = bidAmount * buyerPremiumPct;
   } else {
-    // Sierra tiered schedule - find applicable tier
+    // Legacy tiered schedule (non-Sierra) - treat tier.premium as percentage
+    // TODO: Migrate other sources to @dfg/money-math fee schedules
     const tieredSchedule = feeSchedule.buyer_premium;
     const applicableTier = tieredSchedule.tiers.find(t => bidAmount <= t.max_bid);
     if (applicableTier) {
@@ -102,7 +122,6 @@ export function buildCalculationSpine(args: {
     } else if (tieredSchedule.above_threshold_percent) {
       buyerPremiumPct = tieredSchedule.above_threshold_percent;
     } else {
-      // Fallback to last tier or default
       buyerPremiumPct = tieredSchedule.tiers[tieredSchedule.tiers.length - 1]?.premium || 0.12;
     }
     buyerPremium = bidAmount * buyerPremiumPct;
@@ -225,8 +244,10 @@ export function buildGatedEconomics(args: {
     market_rate: number;
     premium: number;
   };
+  /** Listing source - passed through to buildCalculationSpine for correct fee calculation */
+  source?: string;
 }): GatedEconomics {
-  const { verifiedSpine, bidReadiness, feeSchedule, transport, repairs, marketPrices } = args;
+  const { verifiedSpine, bidReadiness, feeSchedule, transport, repairs, marketPrices, source } = args;
 
   const isGated = bidReadiness.status === 'NOT_BID_READY';
 
@@ -263,7 +284,8 @@ export function buildGatedEconomics(args: {
     transport,
     repairs,
     repairsBasis: 'estimated',
-    marketPrices
+    marketPrices,
+    source
   });
 
   // Build haircut reason from blockers
