@@ -70,7 +70,7 @@ Check GitHub for:
 
 **Claude Code setup:**
 - Root `CLAUDE.md` + child files in each worker
-- 9 slash commands available (`/build-all`, `/test-all`, `/deploy-worker`, etc.)
+- 11 slash commands available (`/build-all`, `/test-all`, `/deploy-worker`, `/sod`, `/eod`, etc.)
 - `Bash(*)` allowlisted—no permission prompts
 - `.claude/` tracked in git
 
@@ -115,16 +115,15 @@ Check GitHub for:
 
 ## Session Notes
 
-**Last session (Jan 6):**
-- Shipped Claude Code best practices (CLAUDE.md, slash commands)
-- Completed dfg-relay enhancements (#164-168)
-- Config now tracked in git
+**Last session (Jan 7):**
+- Committed handoff system cleanup (commit 8dcd9f7)
+- Added `/sod` and `/eod` slash commands (commit 1448127)
+- 11 slash commands now available
 
 **Next session should:**
-1. Check for `status:ready` + `needs:dev` issues
-2. Apply `status:in-progress` when starting work
-3. Run `/build-all` and `/test-all` before committing
-4. Update this handoff at /EOD
+1. Run `/sod` to test full cycle
+2. Check GitHub for `status:ready` + `needs:dev` issues
+3. Resume Sprint N+8 work if blockers cleared
 
 ---
 
