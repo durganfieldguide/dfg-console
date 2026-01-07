@@ -2,6 +2,6 @@
   "allowedTools": [
     "Edit",
     "Write",
-    "Bash(*)"
+    "Bash"
   ]
 }
