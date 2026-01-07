@@ -1,6 +1,7 @@
 # QA Team Handoff
 
 **Updated:** 2026-01-07
+**Author:** PM Team (for QA Team consumption)
 
 ---
 
@@ -8,15 +9,11 @@
 
 Verify that shipped features work correctly and meet acceptance criteria. Protect data credibility—the thing users trust most.
 
-QA Team uses the Chrome Extension to test the production app and files bugs in GitHub when issues are found.
-
 ---
 
 ## Current State
 
 **App URL:** https://app.durganfieldguide.com/
-
-**Test credentials:** Check with Captain (hardcoded auth, not in docs)
 
 **What's testable:**
 - Dashboard with opportunity counts
@@ -29,20 +26,26 @@ QA Team uses the Chrome Extension to test the production app and files bugs in G
 **Known limitations:**
 - No push notifications (must refresh to see alerts)
 - Sources page linked but doesn't exist yet (404 expected)
+- Auth is hardcoded (credentials provided by Captain)
 
 ---
 
-## Current Focus
+## This Session's Focus
 
-**Sprint N+8** — Awaiting Dev completion
+**Status:** Awaiting Dev completion of Sprint N+8
 
-When issues move to `status:qa` + `needs:qa`:
-1. Test each acceptance criterion
-2. Screenshot evidence for UI-related items
-3. Pass → change to `status:verified`, comment "✅ QA PASS"
-4. Fail → file bug issue, comment "❌ QA FAIL - see #[bug]", add `needs:dev`
+**When issues arrive with `status:qa` + `needs:qa`:**
 
-**QA backlog:** None currently (waiting for Dev)
+1. Open the linked PR or issue
+2. Test each acceptance criterion listed
+3. For each AC:
+   - Pass → note it
+   - Fail → document steps to reproduce, screenshot, expected vs actual
+4. When complete:
+   - All pass → Comment "✅ QA PASS - ready to merge", change label to `status:verified`
+   - Any fail → File bug issue, comment "❌ QA FAIL - see #[bug number]", add `needs:dev`
+
+**Specific items to test:** None currently queued. Check GitHub for `status:qa` label.
 
 ---
 
@@ -58,22 +61,7 @@ When issues move to `status:qa` + `needs:qa`:
 - Use GitHub issue with Bug template
 - Include: steps to reproduce, expected vs actual, screenshot
 - Link to parent story if applicable
-- Add `type:bug`, `status:triage`, `prio:*` labels
-
----
-
-## Lessons Learned
-
-- **Data credibility is the priority** — Conflicting numbers are worse than missing features
-- **"Looks good" isn't QA** — Test each AC specifically, provide evidence
-- **Mobile testing catches real bugs** — Don't skip it
-- **Check the math** — Profit, margin, ROI should all be consistent
-- **Dismissal states persist** — Alert dismissals survive page refresh
-
-**Bugs we've caught:**
-- Margin showing 0% while profit positive (math inconsistency)
-- Filter chips not dismissing properly on mobile
-- Photo gallery not loading (R2 URL issues)
+- Add `type:bug`, `status:triage` labels
 
 ---
 
@@ -87,29 +75,21 @@ When issues move to `status:qa` + `needs:qa`:
 
 ---
 
-## Session Notes
+## Report Back
 
-**Last session:**
-- No active QA work (Sprint N+8 stalled)
+When session ends, report to Captain:
+- Issues tested (pass/fail for each)
+- Bugs filed (issue numbers)
+- Blockers encountered
+- Anything unclear in acceptance criteria
 
-**Next session should:**
-1. Check GitHub for `status:qa` + `needs:qa` labels
-2. When found, test against acceptance criteria in the issue
-3. Provide pass/fail with screenshot evidence
-4. Update this handoff at /EOD
+PM will capture this in the next handoff.
 
 ---
 
-## Session Essentials
+## Quick Reference
 
-| Resource | Value |
-|----------|-------|
-| App URL | `https://app.durganfieldguide.com/` |
-| Repo | `https://github.com/durganfieldguide/dfg-console` |
-| Relay URL | `https://dfg-relay.automation-ab6.workers.dev/directive` |
-| Relay Token | `056b6f9859f5f315c704e9cebfd1bc88f3e1c0a74b904460a2de96ec9bceac2f` |
-
-**QA search in GitHub:**
+**GitHub search for QA work:**
 ```
 is:open label:"status:qa" label:"needs:qa"
 ```
@@ -118,3 +98,7 @@ is:open label:"status:qa" label:"needs:qa"
 ```
 type:bug, status:triage, prio:P1, needs:pm
 ```
+
+**Relay (if needed):**
+- URL: `https://dfg-relay.automation-ab6.workers.dev/directive`
+- Token: `056b6f9859f5f315c704e9cebfd1bc88f3e1c0a74b904460a2de96ec9bceac2f`
