@@ -12,6 +12,32 @@ DFG is an operator tool and subscription SaaS for deal flow generation. Not a ma
 
 ---
 
+## Capabilities
+
+**What PM Team can do directly (no Captain needed):**
+
+| Action | How |
+|--------|-----|
+| Fetch GitHub issues | `curl https://api.github.com/repos/durganfieldguide/dfg-console/issues?state=open` |
+| Get single issue | `curl https://api.github.com/repos/durganfieldguide/dfg-console/issues/{number}` |
+| Create issue | POST to relay: `curl -X POST -H "Authorization: Bearer {token}" -H "Content-Type: application/json" -d '{"title":"...","body":"...","labels":[...]}' {relay_url}` |
+| Comment on issue | POST to relay `/comment` endpoint |
+| Close issue | POST to relay `/close` endpoint |
+| Read/write local files | Filesystem tools on `/Users/scottdurgan/Documents/SMDurgan LLC` |
+| Run bash commands | API calls, data processing, file operations |
+| Search past conversations | `conversation_search` and `recent_chats` tools |
+
+**What requires Captain:**
+
+- Merging PRs
+- Deploying to production
+- Routing work to other teams (copy Agent Brief to their window)
+- Approving significant scope changes
+
+**Rule:** If you think "I can't do X," check this list first. Try before declaring inability.
+
+---
+
 ## Current State
 
 **What's built and working:**
@@ -25,7 +51,7 @@ DFG is an operator tool and subscription SaaS for deal flow generation. Not a ma
 **Infrastructure (consolidated Jan 6):**
 - Google Workspace on smdurgan.com (Business Plus, $18/mo)
 - All 5 domains on single Cloudflare account
-- Claude Code best practices deployed (.claude/ tracked in git, 9 slash commands)
+- Claude Code best practices deployed (.claude/ tracked in git, 11 slash commands)
 
 **Auth status:** Prototype-grade (hardcoded credentials). Clerk + Stripe planned before external users.
 
@@ -33,16 +59,17 @@ DFG is an operator tool and subscription SaaS for deal flow generation. Not a ma
 
 ## Current Focus
 
-**Sprint N+8** — Stalled, needs restart
+**Sprint N+8** — Ready to proceed
 
-Open P0 blockers:
-- #157 (needs triage)
-- #159 (needs triage)
+10 stories labeled `status:ready` + `sprint:n+8`:
+- 5 P0: #145, #146, #152, #153, #154
+- 5 P1: #147, #148, #150, #155, #156
 
-Next priorities after blockers clear:
-- PRE-006: CI Gating
-- CRIT-001: Secure Debug Endpoints
-- Clerk + Stripe integration
+**No blockers.** #157 and #159 are closed.
+
+**Other ready items (not sprint-tagged):**
+- #123: FIX-004 Analyst Endpoints Unauthenticated (P0, security)
+- #131, #130, #129, #128, #143: P1 tech debt and bugs
 
 **Roadmap:**
 - Feb 2026: 3-5 private beta users
@@ -68,7 +95,7 @@ Next priorities after blockers clear:
 - **"Code complete" ≠ "Done"** — QA verification required before marking complete
 - **Never double-count fees** — Listing fees are selling costs only, not acquisition costs
 - **Fee semantics matter** — Acquisition cost = cash to acquire. Net proceeds = cash after sale minus selling costs.
-- **SSO-only services require support intervention** — Can't change email without contacting provider
+- **Try before declaring inability** — Check Capabilities section; attempt the action before saying "I can't"
 
 ---
 
@@ -84,18 +111,15 @@ Next priorities after blockers clear:
 
 ## Session Notes
 
-**Last session (Jan 6):**
-- Shipped Claude Code best practices (CLAUDE.md files, 9 slash commands, Bash(*) allowlist)
-- Completed dfg-relay enhancements (#164-168)
-- Consolidated Google Workspace, Cloudflare, Google Cloud infrastructure
-- Deleted redundant accounts, saving $144/yr
-- Identified 3 blockers (Make.com, Claude Max SSO, GitHub username hold)
+**Last session (Jan 7):**
+- Shipped handoff system (PM.md, DEV.md, QA.md + `/sod` and `/eod` commands)
+- 11 slash commands now available for Dev Team
+- Confirmed #157 and #159 are closed (no P0 blockers)
 
-**Next session should:**
-1. Confirm blockers are resolved or deprioritized
-2. Triage #157 and #159 to restart Sprint N+8
-3. Route cleared issues to Dev Team
-4. Address handoff system cleanup (in progress this session)
+**This session (Jan 7 PM):**
+- Backlog review completed (79 open issues characterized)
+- Added Capabilities section to prevent "I can't" failures
+- Next: Close stale issues, worktrees discussion
 
 ---
 
@@ -107,3 +131,13 @@ Next priorities after blockers clear:
 | Relay Token | `056b6f9859f5f315c704e9cebfd1bc88f3e1c0a74b904460a2de96ec9bceac2f` |
 | Repo | `https://github.com/durganfieldguide/dfg-console` |
 | App | `https://app.durganfieldguide.com/` |
+
+---
+
+## EOD Checklist
+
+Before ending session, verify:
+- [ ] Session Notes updated with what actually happened
+- [ ] Current Focus reflects true state (no stale blockers)
+- [ ] All items discussed are captured (don't write handoff mid-session)
+- [ ] Capabilities section still accurate

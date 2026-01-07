@@ -74,6 +74,17 @@ Check GitHub for:
 - `Bash(*)` allowlisted—no permission prompts
 - `.claude/` tracked in git
 
+**Troubleshooting Claude Code permissions:**
+
+If you're getting permission prompts for bash commands:
+1. Check `.claude/settings.local.json` (untracked file)
+2. If it exists, delete it: `rm .claude/settings.local.json`
+3. Restart Claude Code
+
+**Why this happens:** When you click "Yes, and don't ask again for X", Claude Code adds granular patterns to the local file (e.g., `Bash(wc:*)`). These can override the shared `Bash(*)` wildcard and cause unexpected prompts.
+
+**Solution:** Periodically delete `.claude/settings.local.json` and rely on the shared settings in `.claude/settings.json`.
+
 **Commit discipline:**
 - Small atomic commits
 - Never mix: renaming + logic changes + architecture changes
@@ -89,6 +100,7 @@ Check GitHub for:
 - **"Code complete" ≠ "Done"** — QA must verify before status:done
 - **Debug endpoints need auth** — CRIT-001 exists because they didn't
 - **Type safety in D1 queries** — D1 returns `unknown`, cast carefully
+- **Type duplication kills parallel work** — Same types defined in 4 places (app, API, @dfg/types, workers). Consolidate to shared package before using git worktrees.
 
 **Bugs we've fixed (don't recreate):**
 - Margin showing 0% while profit showed positive number
@@ -104,6 +116,7 @@ Check GitHub for:
 - **Hardcoded auth in dfg-app** — Works but is tech debt
 - **No frontend tests** — Be careful with UI changes
 - **Source HTML changes** — Scrapers are fragile, Sierra especially
+- **`.claude/settings.local.json` overrides** — Untracked file can override shared `Bash(*)` with granular patterns. Delete it if getting permission prompts.
 
 **Worker constraints:**
 - ~1000 subrequest limit
@@ -116,14 +129,30 @@ Check GitHub for:
 ## Session Notes
 
 **Last session (Jan 7):**
-- Committed handoff system cleanup (commit 8dcd9f7)
-- Added `/sod` and `/eod` slash commands (commit 1448127)
-- 11 slash commands now available
+- Ran `/sod` - successfully tested new slash command
+- Evaluated git worktrees for parallel development (#172)
+- Created comprehensive worktrees analysis: `docs/worktrees-analysis.md`
+- **Key finding:** Type consolidation required before worktrees (same types in 4 places)
+- Created #173: Type consolidation task (prerequisite for parallel work)
+- Fixed Claude Code permissions issue in `.claude/settings.local.json`
+- Updated DEV.md with troubleshooting guide for permission prompts
+- Closed 37 stale issues (Sprint N+2 through N+6)
+- Updated PM handoff with capabilities and EOD checklist
+
+**Deliverables:**
+- `docs/worktrees-analysis.md` - Full evaluation with prep checklist
+- Issue #172 - Completed, routed to Dev
+- Issue #173 - Created, ready for implementation
+
+**Status:**
+- 6 P0 issues ready for development (Sprint N+8: #145, #146, #152, #153, #154)
+- 1 P0 security issue (#123 - unauthenticated analyst endpoints)
+- Type consolidation (#173) - prerequisite for worktrees (2-3 hours)
 
 **Next session should:**
-1. Run `/sod` to test full cycle
-2. Check GitHub for `status:ready` + `needs:dev` issues
-3. Resume Sprint N+8 work if blockers cleared
+1. **Option A:** Execute type consolidation (#173) to unblock parallel worktrees
+2. **Option B:** Start Sprint N+8 P0 issues (single-stream work)
+3. **Option C:** Tackle security issue #123 (unauthenticated endpoints)
 
 ---
 
