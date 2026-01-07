@@ -20,20 +20,15 @@ export type OpportunityStatus =
   | 'rejected'    // Explicitly rejected with reason
   | 'archived';   // Removed from active pipeline
 
+// DB-aligned rejection reasons (matches migration 0001 CHECK constraint)
+// NOTE: DB schema is authoritative. New values require migration.
+// See: workers/dfg-api/migrations/0001_opportunities.sql
 export type RejectionReason =
   | 'too_far'
   | 'too_expensive'
   | 'wrong_category'
   | 'poor_condition'
   | 'missing_info'
-  | 'category_mismatch'
-  | 'documentation_risk'
-  | 'condition_critical'
-  | 'low_demand'
-  | 'transport_kills_margin'
-  | 'price_blown'
-  | 'duplicate'
-  | 'hard_gate_failure'
   | 'other';
 
 // Allowed transitions from each status

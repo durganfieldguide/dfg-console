@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils';
-import type { OpportunityStatus } from '@/types';
+import type { OpportunityStatus } from '@dfg/types';
 
 function FiltersContent() {
   const router = useRouter();

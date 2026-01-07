@@ -1,81 +1,78 @@
 /**
  * Core type definitions for DFG API.
  * Based on Technical Specification v1.2
+ *
+ * Shared types imported from @dfg/types package.
+ * Worker-specific types defined here (OpportunityRow, database schemas, etc.).
  */
 
-// =============================================================================
-// OPPORTUNITY STATUS & STATE MACHINE
-// =============================================================================
+import type {
+  OpportunityStatus,
+  RejectionReason,
+  WatchTrigger,
+  WatchThreshold,
+  Alert,
+  AlertType,
+  AlertSeverity,
+  UniversalFacts,
+  TrailerFacts,
+  CategoryFacts,
+  ObservedFacts,
+  VerificationLevel,
+  InputSource,
+  TriState,
+  OperatorField,
+  TitleStatus,
+  LienStatus,
+  TitleInputsV1,
+  OperatorOverrides,
+  OperatorInputs,
+  GateSeverity,
+  GateStatus,
+  Gate,
+  ComputedGates,
+  AnalysisRecommendation,
+} from '@dfg/types';
 
-export type OpportunityStatus =
-  | 'inbox'       // Unprocessed, new from scout
-  | 'qualifying'  // Quick evaluation in progress
-  | 'watch'       // Waiting for trigger condition
-  | 'inspect'     // Worth physical inspection
-  | 'bid'         // Max bid set, countdown active
-  | 'won'         // Auction won
-  | 'lost'        // Auction lost
-  | 'rejected'    // Explicitly rejected with reason
-  | 'archived';   // Removed from active pipeline
+import {
+  STATE_TRANSITIONS,
+  canTransition,
+} from '@dfg/types';
 
-export type RejectionReason =
-  | 'category_mismatch'
-  | 'documentation_risk'
-  | 'condition_critical'
-  | 'low_demand'
-  | 'transport_kills_margin'
-  | 'price_blown'
-  | 'duplicate'
-  | 'hard_gate_failure'  // Auto-rejected due to disqualifying title/condition
-  | 'other';
-
-// Allowed transitions from each status
-export const STATE_TRANSITIONS: Record<OpportunityStatus, OpportunityStatus[]> = {
-  inbox: ['qualifying', 'watch', 'rejected', 'archived'],
-  qualifying: ['watch', 'inspect', 'rejected', 'archived'],
-  watch: ['qualifying', 'inspect', 'rejected', 'archived'],
-  inspect: ['bid', 'rejected', 'archived'],
-  bid: ['won', 'lost', 'rejected', 'archived'],
-  won: ['archived'],
-  lost: ['archived'],
-  rejected: ['archived'],
-  archived: [],
+// Re-export shared types for convenience
+export type {
+  OpportunityStatus,
+  RejectionReason,
+  WatchTrigger,
+  WatchThreshold,
+  Alert,
+  AlertType,
+  AlertSeverity,
+  UniversalFacts,
+  TrailerFacts,
+  CategoryFacts,
+  ObservedFacts,
+  VerificationLevel,
+  InputSource,
+  TriState,
+  OperatorField,
+  TitleStatus,
+  LienStatus,
+  TitleInputsV1,
+  OperatorOverrides,
+  OperatorInputs,
+  GateSeverity,
+  GateStatus,
+  Gate,
+  ComputedGates,
+  AnalysisRecommendation,
 };
 
-export function canTransition(from: OpportunityStatus, to: OpportunityStatus): boolean {
-  return STATE_TRANSITIONS[from]?.includes(to) ?? false;
-}
+export { STATE_TRANSITIONS, canTransition };
 
 // =============================================================================
-// WATCH SYSTEM
+// ALERTS (Worker-specific computed types)
 // =============================================================================
-
-export type WatchTrigger = 'ending_soon' | 'time_window' | 'manual';
-
-export interface WatchThreshold {
-  hours_before?: number;      // For ending_soon (default: 4)
-  remind_at?: string;         // For time_window/manual (ISO datetime)
-  price_ceiling?: number;     // Universal condition (optional)
-}
-
-// =============================================================================
-// ALERTS (Computed, not stored)
-// =============================================================================
-
-export type AlertType = 'watch_fired' | 'ending_soon' | 'stale_qualifying' | 'price_alert';
-
-export type AlertSeverity = 'critical' | 'high' | 'medium' | 'low';
-
-export interface Alert {
-  type: AlertType;
-  key: string;
-  title: string;
-  message: string;
-  severity: AlertSeverity;
-  created_at: string;
-  opportunity_id: string;
-  metadata?: Record<string, unknown>;
-}
 
 export interface ComputedAlert {
   alert_key: string;
@@ -90,35 +87,6 @@ export interface ComputedAlert {
     auction_ends_at: string | null;
     status: string;
   };
-}
-
-// =============================================================================
-// OBSERVED FACTS (Operator augmentation)
-// =============================================================================
-
-export interface UniversalFacts {
-  documentation_status?: 'verified' | 'partial' | 'missing' | 'unknown';
-  condition_grade?: 'excellent' | 'good' | 'fair' | 'poor' | 'parts_only';
-  reserve_status?: 'met' | 'not_met' | 'no_reserve' | 'unknown';
-  buyer_premium_pct?: number;
-  pickup_deadline?: string;
-  operator_notes?: string;
-}
-
-export interface TrailerFacts {
-  axle_count?: number;
-  brake_type?: 'electric' | 'surge' | 'none' | 'unknown';
-  deck_condition?: 'good' | 'fair' | 'poor' | 'unknown';
-  tire_condition?: 'good' | 'fair' | 'replace' | 'unknown';
-}
-
-export interface CategoryFacts {
-  trailer?: TrailerFacts;
-}
-
-export interface ObservedFacts {
-  universal: UniversalFacts;
-  category?: CategoryFacts;
 }
 
 // =============================================================================
@@ -189,6 +157,9 @@ export interface OpportunityRow {
   // Sprint 1.5: Operator inputs & analysis runs
   operator_inputs_json: string | null;
   current_analysis_run_id: string | null;
+  // Migration 0004: Staleness tracking
+  last_operator_review_at: string | null;
+  exit_price: number | null;
 }
 
 export interface OperatorActionRow {
@@ -247,120 +218,8 @@ export interface BatchResult {
 }
 
 // =============================================================================
-// SPRINT 1.5: OPERATOR INPUTS & ANALYSIS RUNS
-// =============================================================================
-
-/**
- * Verification level for operator-captured data.
- * Prevents "checkbox theater" where operators mark verified without evidence.
- */
-export type VerificationLevel =
-  | 'unverified'              // Default; just entered, no confirmation
-  | 'operator_attested'       // Operator asserts this is correct (verbal, visual)
-  | 'documented'              // Photo, screenshot, or document attached
-  | 'third_party_confirmed';  // VIN report, title search, official record
-
-/**
- * How the operator obtained this information.
- */
-export type InputSource =
-  | 'listing'          // Copied from auction listing
-  | 'auctioneer_call'  // Phone/text with auctioneer
-  | 'in_person'        // Physical inspection
-  | 'vin_report'       // Carfax, AutoCheck, NMVTIS
-  | 'seller'           // Direct from seller/consignor
-  | 'other';
-
-/**
- * Tri-state for fields where yes/no/unknown are all meaningful.
- * Never use `boolean | null` for these.
- */
-export type TriState = 'yes' | 'no' | 'unknown';
-
-/**
- * Every operator-captured value is wrapped with metadata for auditability.
- */
-export interface OperatorField<T> {
-  value: T;
-  source: InputSource;
-  verificationLevel: VerificationLevel;
-  capturedAt: string;    // ISO 8601 timestamp
-  notes?: string;        // Optional context
-}
-
-/**
- * Title status categories.
- */
-export type TitleStatus =
-  | 'clean'
-  | 'salvage'
-  | 'rebuilt'
-  | 'bonded'
-  | 'parts_only'
-  | 'unknown';
-
-/**
- * Lien status categories.
- */
-export type LienStatus = 'none' | 'lien_present' | 'unknown';
-
-/**
- * Title inputs v1 - the 5 highest-leverage fields.
- */
-export interface TitleInputsV1 {
-  titleStatus?: OperatorField<TitleStatus>;
-  titleInHand?: OperatorField<TriState>;
-  lienStatus?: OperatorField<LienStatus>;
-  vin?: OperatorField<string>;
-  odometerMiles?: OperatorField<number>;
-}
-
-/**
- * Operator-set overrides that affect deal math.
- */
-export interface OperatorOverrides {
-  maxBidOverride?: OperatorField<number>;
-  confirmedPrice?: OperatorField<number>;
-}
-
-/**
- * Top-level container for all operator inputs.
- * Stored as `operator_inputs_json` on opportunities table.
- */
-export interface OperatorInputs {
-  title?: TitleInputsV1;
-  overrides?: OperatorOverrides;
-}
-
-// =============================================================================
-// GATE TYPES
-// =============================================================================
-
-export type GateSeverity = 'CRITICAL' | 'CONFIDENCE';
-export type GateStatus = 'open' | 'cleared';
-
-export interface Gate {
-  id: string;
-  label: string;
-  severity: GateSeverity;
-  status: GateStatus;
-  clearedBy?: string;
-  blocksAction: boolean;
-}
-
-export interface ComputedGates {
-  gates: Gate[];
-  criticalOpen: number;
-  confidenceOpen: number;
-  allCriticalCleared: boolean;
-  bidActionEnabled: boolean;
-}
-
-// =============================================================================
 // ANALYSIS RUN (Retained Snapshot)
 // =============================================================================
-
-export type AnalysisRecommendation = 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO';
 
 export interface AnalysisRun {
   id: string;

@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { formatDistanceToNow, format, isAfter, isBefore, addHours } from 'date-fns';
-import type { OpportunityStatus, AlertSeverity } from '@/types';
+import type { OpportunityStatus, AlertSeverity } from '@dfg/types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import type { OpportunityStatus } from '@/types';
+import type { OpportunityStatus } from '@dfg/types';
 
 // Generic Badge component with variants
 const badgeVariants = cva(

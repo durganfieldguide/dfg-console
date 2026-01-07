@@ -27,7 +27,7 @@ import {
   type AttentionItem,
   type ReasonChip,
 } from '@/lib/api';
-import type { OpportunityStatus } from '@/types';
+import type { OpportunityStatus } from '@dfg/types';
 
 /**
  * Reason chip configuration for display.

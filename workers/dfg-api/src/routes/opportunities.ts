@@ -1233,12 +1233,12 @@ async function updateOperatorInputs(
     if (!terminalStatuses.includes(current.status as OpportunityStatus)) {
       const rejectionNote = formatAutoRejectMessage(hardGateFailures);
 
-      // Update to rejected status with hard_gate_failure reason
+      // Update to rejected status with 'other' reason (auto-reject due to hard gate failures)
       await env.DB.prepare(`
         UPDATE opportunities
         SET status = 'rejected',
             status_changed_at = ?,
-            rejection_reason = 'hard_gate_failure',
+            rejection_reason = 'other',
             rejection_note = ?,
             operator_inputs_json = ?,
             updated_at = ?
@@ -1265,7 +1265,7 @@ async function updateOperatorInputs(
         signal_data: {
           from_status: current.status,
           to_status: 'rejected',
-          rejection_reason: 'hard_gate_failure',
+          rejection_reason: 'other', // Auto-reject due to hard gate failures
           auto_rejected: true,
           hard_gate_failures: hardGateFailures,
         },

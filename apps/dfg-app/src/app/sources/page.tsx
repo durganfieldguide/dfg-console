@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { listSources, triggerScoutRun } from '@/lib/api';
-import type { Source } from '@/types';
+import type { Source } from '@dfg/types';
 
 export default function SourcesPage() {
   const [sources, setSources] = useState<Source[]>([]);

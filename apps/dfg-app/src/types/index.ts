@@ -1,48 +1,52 @@
 /**
- * Shared types for DFG App frontend.
- * Mirrors the API types from dfg-api worker.
+ * Frontend-specific types for DFG App.
+ * Base types imported from @dfg/types (shared package).
  */
 
-export type OpportunityStatus =
-  | 'inbox'
-  | 'qualifying'
-  | 'watch'
-  | 'inspect'
-  | 'bid'
-  | 'won'
-  | 'lost'
-  | 'rejected'
-  | 'archived';
+import type {
+  OpportunityStatus,
+  RejectionReason,
+  WatchTrigger,
+  WatchThreshold,
+  Alert,
+  AlertType,
+  AlertSeverity,
+  UniversalFacts,
+  TrailerFacts,
+  CategoryFacts,
+  ObservedFacts,
+  Source,
+  SourceDefaults,
+  DashboardStats,
+  ApiResponse,
+  ApiError,
+  ListResponse,
+} from '@dfg/types';
 
-export type RejectionReason =
-  | 'too_far'
-  | 'too_expensive'
-  | 'wrong_category'
-  | 'poor_condition'
-  | 'missing_info'
-  | 'other';
+// Re-export shared types for convenience
+export type {
+  OpportunityStatus,
+  RejectionReason,
+  WatchTrigger,
+  WatchThreshold,
+  Alert,
+  AlertType,
+  AlertSeverity,
+  UniversalFacts,
+  TrailerFacts,
+  CategoryFacts,
+  ObservedFacts,
+  Source,
+  SourceDefaults,
+  DashboardStats,
+  ApiResponse,
+  ApiError,
+  ListResponse,
+};
 
-export type WatchTrigger = 'ending_soon' | 'time_window' | 'manual';
-
-export type AlertType = 'watch_fired' | 'ending_soon' | 'stale_qualifying' | 'price_alert';
-export type AlertSeverity = 'critical' | 'high' | 'medium' | 'low';
-
-export interface WatchThreshold {
-  hours_before?: number;
-  remind_at?: string;
-  price_ceiling?: number;
-}
-
-export interface Alert {
-  type: AlertType;
-  key: string;
-  title: string;
-  message: string;
-  severity: AlertSeverity;
-  created_at: string;
-  opportunity_id: string;
-  metadata?: Record<string, unknown>;
-}
+// =============================================================================
+// FRONTEND-SPECIFIC API RESPONSE TYPES
+// =============================================================================
 
 export interface OpportunitySummary {
   id: string;
@@ -102,11 +106,6 @@ export interface OpportunityDetail extends OpportunitySummary {
   alerts: Alert[];
 }
 
-export interface SourceDefaults {
-  buyer_premium_pct: number;
-  pickup_days: number;
-}
-
 export interface OperatorAction {
   id: string;
   action_type: string;
@@ -115,85 +114,4 @@ export interface OperatorAction {
   alert_key: string | null;
   payload: Record<string, unknown> | null;
   created_at: string;
-}
-
-export interface UniversalFacts {
-  documentation_status?: 'verified' | 'partial' | 'missing' | 'unknown';
-  condition_grade?: 'excellent' | 'good' | 'fair' | 'poor' | 'parts_only';
-  reserve_status?: 'met' | 'not_met' | 'no_reserve' | 'unknown';
-  buyer_premium_pct?: number;
-  pickup_deadline?: string;
-  operator_notes?: string;
-}
-
-export interface TrailerFacts {
-  axle_count?: number;
-  brake_type?: 'electric' | 'surge' | 'none' | 'unknown';
-  deck_condition?: 'good' | 'fair' | 'poor' | 'unknown';
-  tire_condition?: 'good' | 'fair' | 'replace' | 'unknown';
-}
-
-export interface CategoryFacts {
-  trailer?: TrailerFacts;
-}
-
-export interface ObservedFacts {
-  universal: UniversalFacts;
-  category?: CategoryFacts;
-}
-
-export interface Source {
-  id: string;
-  name: string;
-  display_name: string;
-  enabled: boolean;
-  base_url: string;
-  default_buyer_premium_pct: number;
-  default_pickup_days: number;
-  last_run_at: string | null;
-}
-
-export interface DashboardStats {
-  by_status: Record<OpportunityStatus, number>;
-  strike_zone: number;  // Sprint N+3: High-value inbox items ready for action
-  verification_needed: number;  // Sprint N+3: Opportunities with open critical gates
-  ending_soon: {
-    within_24h: number;
-    within_48h: number;
-  };
-  new_today: number;
-  stale_qualifying: {
-    over_24h: number;
-    over_48h: number;
-  };
-  watch_alerts_fired: number;
-  needs_attention: number;
-  active_alerts: number;
-  last_scout_run: string | null;
-  last_ingest: string | null;
-}
-
-// API Response types
-export interface ApiResponse<T> {
-  data: T;
-  meta?: Record<string, unknown>;
-}
-
-export interface ApiError {
-  error: {
-    code: string;
-    message: string;
-  };
-}
-
-export interface ListResponse<T> {
-  data: {
-    opportunities?: T[];
-    sources?: T[];
-    total: number;
-  };
-  meta: {
-    limit: number;
-    offset: number;
-  };
 }

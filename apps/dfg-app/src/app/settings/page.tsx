@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { listSources, updateSource } from '@/lib/api';
-import type { Source } from '@/types';
+import type { Source } from '@dfg/types';
 
 export default function SettingsPage() {
   const [sources, setSources] = useState<Source[]>([]);

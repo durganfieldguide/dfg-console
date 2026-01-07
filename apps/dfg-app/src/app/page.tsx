@@ -20,7 +20,7 @@ import { AttentionRequiredList } from '@/components/features/attention-required-
 import { EndingSoonList } from '@/components/features/ending-soon-list';
 import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
 import { getStats } from '@/lib/api';
-import type { DashboardStats, OpportunityStatus } from '@/types';
+import type { DashboardStats, OpportunityStatus } from '@dfg/types';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);

@@ -2,6 +2,7 @@
   "name": "dfg",
   "private": true,
   "workspaces": [
+    "apps/*",
     "packages/*",
     "workers/*"
   ]
