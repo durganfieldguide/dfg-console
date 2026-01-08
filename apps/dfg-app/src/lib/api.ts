@@ -466,6 +466,24 @@ export interface AnalysisResult {
     note?: string;
   }>;
 
+  // Market demand assessment (#147)
+  market_demand?: {
+    level: 'high' | 'moderate' | 'low' | 'niche';
+    confidence: 'high' | 'medium' | 'low';
+    is_heuristic: boolean;
+    basis?: {
+      method: string;
+      factors: string[];
+    };
+    missing_inputs?: string[];
+    implications: {
+      expected_days_to_sell: string;
+      pricing_advice: string;
+      risk_note: string | null;
+    };
+    summary: string;
+  };
+
   // Investor lens
   investor_lens?: {
     verdict: string;
@@ -533,12 +551,6 @@ export interface AnalysisResult {
     next_steps: string[];
     inspection_checklist: string[];
     exit_strategy: string;
-  };
-
-  // Market demand
-  market_demand?: {
-    level: string;
-    reasoning: string;
   };
 
   // Metadata

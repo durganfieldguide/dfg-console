@@ -446,16 +446,20 @@ export interface DualLensReport {
   condition: ConditionAssessment;
   buyer_lens: BuyerLensOutput;
   investor_lens: InvestorLensOutput;
+
+  // Market demand assessment (#147) - liquidity narrative for holding period decisions
+  market_demand: MarketDemandAssessment;
+
   arbitrage: {
     perception_gap: number;
     objection_cost: number;
     marketing_leverage: string[];
   };
-  
+
   // NEW: Justification narratives
   investor_lens_justification: string;
   buyer_lens_justification: string;
-  
+
   next_steps: {
     if_bidding: string[];
     if_won: string[];

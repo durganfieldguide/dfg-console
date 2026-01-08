@@ -95,6 +95,19 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
   // Photo pipeline metrics from condition assessment
   const photoMetrics = (analysis as any).condition?.photo_metrics as PhotoMetrics | undefined;
 
+  // Extract market demand assessment (#147) - liquidity narrative
+  const marketDemand = (analysis as any).market_demand as {
+    level: 'high' | 'moderate' | 'low' | 'niche';
+    confidence: 'high' | 'medium' | 'low';
+    is_heuristic: boolean;
+    implications: {
+      expected_days_to_sell: string;
+      pricing_advice: string;
+      risk_note: string | null;
+    };
+    summary: string;
+  } | undefined;
+
   // Check for V2.7 format (observed_issues) or V2.6 format (confirmed_issues)
   const hasRiskData = riskAssessment && (
     (riskAssessment as any).observed_issues?.length > 0 ||
@@ -194,6 +207,57 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Liquidity Overview (#147) - Time to sell and demand level */}
+      {marketDemand && (
+        <div className="p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Expected Time to Sell
+            </h3>
+            {marketDemand.is_heuristic && (
+              <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400">
+                Heuristic
+              </span>
+            )}
+          </div>
+
+          {/* Large time display */}
+          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            {marketDemand.implications.expected_days_to_sell}
+          </div>
+
+          {/* Demand level badge */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className={cn(
+              "px-2 py-1 rounded text-xs font-medium",
+              marketDemand.level === 'high' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+              marketDemand.level === 'moderate' && "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
+              marketDemand.level === 'low' && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+              marketDemand.level === 'niche' && "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+            )}>
+              {marketDemand.level.toUpperCase()} demand
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {marketDemand.confidence} confidence
+            </span>
+          </div>
+
+          {/* Pricing advice */}
+          {marketDemand.implications.pricing_advice && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              {marketDemand.implications.pricing_advice}
+            </p>
+          )}
+
+          {/* Risk note */}
+          {marketDemand.implications.risk_note && (
+            <p className="text-sm text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+              ⚠️ {marketDemand.implications.risk_note}
+            </p>
+          )}
         </div>
       )}
 
