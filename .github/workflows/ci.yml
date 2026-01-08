@@ -34,6 +34,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Build shared types
+        run: cd ../../packages/dfg-types && npm install && npx tsup src/index.ts --format cjs,esm --dts
+
       - name: Type check
         run: npm run type-check
 
