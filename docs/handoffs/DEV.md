@@ -31,6 +31,7 @@ dfg-app (Vercel/Next.js) → dfg-api (Worker) → dfg-scout (Worker) + dfg-analy
 
 **Packages:**
 - `@dfg/money-math` — Canonical financial calculations
+- `@dfg/types` — Shared TypeScript types (consolidated Jan 7)
 
 **Current capabilities:**
 - Sierra + IronPlanet adapters operational
@@ -43,19 +44,18 @@ dfg-app (Vercel/Next.js) → dfg-api (Worker) → dfg-scout (Worker) + dfg-analy
 
 ## Current Focus
 
-**Sprint N+8** — Stalled on P0 blockers
+**Sprint N+8** — Ready to proceed (blockers cleared)
 
 Check GitHub for:
 - `status:ready` + `needs:dev` — Ready for development
 - `status:in-progress` — Should have your label if you're working it
 - `prio:P0` — Drop everything
 
-**Key issues:**
-- #157, #159 — P0 blockers (need triage from PM)
+**Ready for development:**
+- 5 P0 stories: #145, #146, #152, #153, #154
+- 1 P0 security: #123 (unauthenticated analyst endpoints)
 
-**When blockers clear:**
-- PRE-006: CI Gating
-- CRIT-001: Secure Debug Endpoints
+**Worktrees available:** Type consolidation complete, parallel development now feasible
 
 ---
 
@@ -100,12 +100,14 @@ If you're getting permission prompts for bash commands:
 - **"Code complete" ≠ "Done"** — QA must verify before status:done
 - **Debug endpoints need auth** — CRIT-001 exists because they didn't
 - **Type safety in D1 queries** — D1 returns `unknown`, cast carefully
-- **Type duplication kills parallel work** — Same types defined in 4 places (app, API, @dfg/types, workers). Consolidate to shared package before using git worktrees.
+- **Type duplication kills parallel work** — Resolved: Shared types now in @dfg/types package
+- **DB schema is authoritative** — TypeScript types must align with DB CHECK constraints, not vice versa
 
 **Bugs we've fixed (don't recreate):**
 - Margin showing 0% while profit showed positive number
 - Listing fees counted in both acquisition and selling costs
 - Photos not hydrating due to per-lot queries hitting subrequest limit
+- Code writing 'hard_gate_failure' violates DB CHECK constraint (fixed: use 'other')
 
 ---
 
@@ -128,43 +130,39 @@ If you're getting permission prompts for bash commands:
 
 ## Session Notes
 
-**Last session (Jan 7 AM):**
-- Ran `/sod` - successfully tested new slash command
-- Evaluated git worktrees for parallel development (#172)
-- Created comprehensive worktrees analysis: `docs/worktrees-analysis.md`
-- **Key finding:** Type consolidation required before worktrees (same types in 4 places)
-- Created #173: Type consolidation task (prerequisite for parallel work)
-- Fixed Claude Code permissions issue in `.claude/settings.local.json`
-- Updated DEV.md with troubleshooting guide for permission prompts
-- Closed 37 stale issues (Sprint N+2 through N+6)
-- Updated PM handoff with capabilities and EOD checklist
-
-**This session (Jan 7 PM):**
-- **MAJOR:** Completed #173 - Type consolidation (unblocks worktrees)
-  - Discovered and fixed production bug: hard_gate_failure → 'other' (DB constraint)
-  - Consolidated shared types into @dfg/types package
+**Last session (Jan 7 PM):**
+- **MAJOR:** Completed #173 - Type consolidation (P0 tech debt)
+  - Audited type differences across app/API/types packages
+  - Discovered production bug: code writing 'hard_gate_failure' violates DB CHECK constraint
+  - Fixed bug: changed auto-reject to use 'other' (DB-compliant value)
+  - Consolidated shared types into `packages/dfg-types/src/index.ts`
   - Updated dfg-app to import shared types from @dfg/types
-  - Updated dfg-api to import shared types via TypeScript path mapping
+  - Updated dfg-api to import shared types from @dfg/types via path mapping
   - All typechecks pass (app + API + types package)
 - Created #175: Schema evolution for rejection reasons (P2 follow-up)
-- Commit 3ad0ff7: Type consolidation (18 files changed)
+- Closed #173 after successful completion
 
 **Deliverables:**
-- `docs/worktrees-analysis.md` - Full evaluation with prep checklist
-- Issue #172 - Completed, routed to Dev ✅
-- Issue #173 - Completed ✅
-- Issue #175 - Created (P2 follow-up)
-- Commit 3ad0ff7 - Type consolidation
+- Commit 3ad0ff7: Type consolidation (18 files changed, 6698 insertions, 1038 deletions)
+- Issue #173: Completed and closed
+- Issue #175: Filed as P2 follow-up
+- Production bug fixed: workers/dfg-api/src/routes/opportunities.ts:1241
+
+**Key decisions:**
+- DB schema is authoritative for RejectionReason type (not TypeScript)
+- App-specific types remain in apps/dfg-app/src/types
+- Worker-specific types remain in workers/*/src/core/types
+- Shared types consolidated in @dfg/types package
 
 **Status:**
-- **Worktrees: UNBLOCKED** ✅ — Type consolidation complete, ready for parallel dev
-- **Sprint N+8: READY** — 5 P0 stories ready (#145, #146, #152, #153, #154)
-- 1 P0 security issue (#123 - unauthenticated analyst endpoints)
+- **Worktrees: UNBLOCKED** ✅ — Type consolidation complete
+- **Sprint N+8: READY** ✅ — 5 P0 stories ready for dev
+- No active blockers
 
 **Next session should:**
-1. Start Sprint N+8 P0 stories (worktrees no longer blocked)
-2. Optionally set up worktrees for parallel development
-3. Consider #123 (unauthenticated endpoints - security P0)
+1. Start Sprint N+8 P0 stories: #145, #146, #152, #153, #154
+2. Consider #123 (P0 security - unauthenticated analyst endpoints)
+3. Optionally set up worktrees for parallel development
 
 ---
 
