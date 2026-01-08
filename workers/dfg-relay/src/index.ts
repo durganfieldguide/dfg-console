@@ -30,6 +30,12 @@ interface ClosePayload {
   comment?: string;
 }
 
+interface LabelsPayload {
+  issue: number;
+  add?: string[];
+  remove?: string[];
+}
+
 interface GitHubIssueResponse {
   number: number;
   html_url: string;
@@ -83,6 +89,9 @@ export default {
 
       case '/close':
         return handleClose(request, env);
+
+      case '/labels':
+        return handleLabels(request, env);
 
       default:
         return jsonResponse({ error: 'Not found' }, 404);
@@ -332,6 +341,76 @@ async function handleClose(request: Request, env: Env): Promise<Response> {
 }
 
 /**
+ * Update labels on GitHub issue (#179)
+ */
+async function handleLabels(request: Request, env: Env): Promise<Response> {
+  // Method check
+  if (request.method !== 'POST') {
+    return jsonResponse({ success: false, error: 'Method not allowed' }, 405);
+  }
+
+  // Auth check
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || authHeader !== `Bearer ${env.RELAY_TOKEN}`) {
+    return jsonResponse({ success: false, error: 'Unauthorized' }, 401);
+  }
+
+  // Parse payload
+  let payload: LabelsPayload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse({ success: false, error: 'Invalid JSON' }, 400);
+  }
+
+  // Validate required fields
+  if (!payload.issue) {
+    return jsonResponse({
+      success: false,
+      error: 'Missing required field: issue'
+    }, 400);
+  }
+
+  // At least one operation required
+  if (!payload.add && !payload.remove) {
+    return jsonResponse({
+      success: false,
+      error: 'Must specify at least one of: add, remove'
+    }, 400);
+  }
+
+  // Update labels on GitHub issue
+  try {
+    // Remove labels first (if specified)
+    if (payload.remove && payload.remove.length > 0) {
+      for (const label of payload.remove) {
+        await removeGitHubLabel(env, payload.issue, label);
+      }
+    }
+
+    // Add labels (if specified)
+    if (payload.add && payload.add.length > 0) {
+      await addGitHubLabels(env, payload.issue, payload.add);
+    }
+
+    // Fetch updated labels
+    const labels = await getGitHubLabels(env, payload.issue);
+
+    return jsonResponse({
+      success: true,
+      issue: payload.issue,
+      labels,
+    });
+  } catch (error) {
+    console.error('GitHub API error:', error);
+    return jsonResponse({
+      success: false,
+      error: error instanceof Error ? error.message : 'GitHub API failed',
+    }, 500);
+  }
+}
+
+/**
  * Create issue via GitHub REST API
  */
 async function createGitHubIssue(
@@ -420,6 +499,85 @@ async function closeGitHubIssue(
     const errorBody = await response.text();
     throw new Error(`GitHub API ${response.status}: ${errorBody}`);
   }
+}
+
+/**
+ * Add labels to GitHub issue via REST API (#179)
+ */
+async function addGitHubLabels(
+  env: Env,
+  issueNumber: number,
+  labels: string[]
+): Promise<void> {
+  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}/labels`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `token ${env.GITHUB_TOKEN}`,
+      'Content-Type': 'application/json',
+      'User-Agent': 'dfg-relay-worker',
+      'Accept': 'application/vnd.github.v3+json',
+    },
+    body: JSON.stringify({ labels }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`GitHub API ${response.status}: ${errorBody}`);
+  }
+}
+
+/**
+ * Remove label from GitHub issue via REST API (#179)
+ */
+async function removeGitHubLabel(
+  env: Env,
+  issueNumber: number,
+  label: string
+): Promise<void> {
+  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}/labels/${encodeURIComponent(label)}`;
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `token ${env.GITHUB_TOKEN}`,
+      'User-Agent': 'dfg-relay-worker',
+      'Accept': 'application/vnd.github.v3+json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`GitHub API ${response.status}: ${errorBody}`);
+  }
+}
+
+/**
+ * Get labels for GitHub issue via REST API (#179)
+ */
+async function getGitHubLabels(
+  env: Env,
+  issueNumber: number
+): Promise<string[]> {
+  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `token ${env.GITHUB_TOKEN}`,
+      'User-Agent': 'dfg-relay-worker',
+      'Accept': 'application/vnd.github.v3+json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`GitHub API ${response.status}: ${errorBody}`);
+  }
+
+  const issue = await response.json() as { labels: Array<{ name: string }> };
+  return issue.labels.map(l => l.name);
 }
 
 /**
