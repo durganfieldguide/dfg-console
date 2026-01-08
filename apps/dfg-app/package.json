@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "cd ../../packages/dfg-types && npm install && npm run build",
+    "prebuild": "cd ../../packages/dfg-types && npx tsup src/index.ts --format cjs,esm --dts",
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
