@@ -7,6 +7,29 @@ export const CONDITION_ASSESSMENT_PROMPT_VEHICLES = `Extract vehicle condition a
 - "Stationary" in auctions = legal disclaimer, not necessarily broken
 - Salvage/Rebuilt title is CRITICAL information
 
+## RED FLAG CLASSIFICATION:
+CORE RISK (deal-critical):
+- Engine/transmission failure (non-running for mechanical reasons)
+- Salvage/branded/lien title, odometer fraud, title washing
+- Frame damage, flood damage, structural rust-through
+- Safety-critical: brakes failed, steering issues, suspension collapse
+- Missing title or registration documents
+
+OPTIONAL (non-essential features):
+- A/C, radio, power accessories (windows, locks, seats)
+- Cosmetic damage (paint, dents, scratches, interior wear)
+- Deferred maintenance (fluids, belts, filters, wipers)
+- Accessories (floor mats, spare tire, cargo covers)
+
+BUYER IMPACT:
+- Explain from buyer's perspective (not investor/flipper)
+- Focus on resale concerns and perceived risk
+- 1-2 sentences maximum
+- Examples:
+  * "Most buyers will walk away from salvage title vehicles."
+  * "Buyers won't care about radio functionality - it's not a purchase driver."
+  * "This signals hidden damage and requires full disclosure at sale."
+
 ## TITLE STATUS DETECTION (CRITICAL):
 - ONLY set title_status based on EXPLICIT per-lot declarations like "Title Status: Clean" or "Title Status: On File"
 - "Title Status: On File" = treat as "on_file" (unknown until physically verified)
@@ -55,7 +78,7 @@ export const CONDITION_ASSESSMENT_PROMPT_VEHICLES = `Extract vehicle condition a
   },
   "title_status": "clean|salvage|rebuilt|lien|branded|unknown",
   "drive_status": "runs_drives|runs_stationary|tow_only|unknown",
-  "red_flags": [{"category": "structural|mechanical|title|fraud|odometer", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_inspection": boolean}],
+  "red_flags": [{"category": "structural|mechanical|title|fraud|odometer", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_inspection": boolean, "riskCategory": "core_risk|optional", "buyerImpact": "1-2 sentence buyer perspective"}],
   "known_issues": ["brief description of visible/stated issues"],
   "inspection_required": ["brief items"],
   "extraction_notes": ["brief notes"]

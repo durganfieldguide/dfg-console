@@ -7,6 +7,29 @@ export const CONDITION_ASSESSMENT_PROMPT = `Extract trailer condition as JSON. F
 - "Stationary" in auctions = legal disclaimer, not broken
 - "Engine Issues" on generator = status "non-functional"
 
+## RED FLAG CLASSIFICATION:
+CORE RISK (deal-critical):
+- Frame/axle structural damage (rust-through, cracks, bends)
+- Title issues (salvage, lien, VIN mismatch, missing)
+- Transport-critical: brakes locked, tires flat/missing (cannot tow safely)
+- Water intrusion with structural impact (floor rot, wall delamination)
+- Fraud indicators (misrepresentation, stolen, title washing)
+
+OPTIONAL (non-essential features):
+- Generators, A/C, entertainment systems, auxiliary equipment
+- Cosmetic damage (paint, dents, surface rust)
+- Minor electrical (lights, outlets, accessories)
+- Accessories (toolboxes, spare parts, ramps)
+
+BUYER IMPACT:
+- Write from buyer's perspective (not investor/flipper)
+- Answer: "Why would a buyer care?" or "How does this affect resale?"
+- 1-2 sentences maximum
+- Examples:
+  * "Buyers will demand receipts showing the frame was professionally inspected."
+  * "Most contractors view generators as a bonus - won't affect price."
+  * "This raises red flags and will require 30-40% discount to sell."
+
 ## TITLE STATUS DETECTION (CRITICAL):
 - ONLY set title_status based on EXPLICIT per-lot declarations like "Title Status: Clean" or "Title Status: On File"
 - "Title Status: On File" = treat as "on_file" (unknown until physically verified)
@@ -34,7 +57,7 @@ export const CONDITION_ASSESSMENT_PROMPT = `Extract trailer condition as JSON. F
   "auxiliary_equipment": [{"type": "string", "brand_model": "string"|null, "status": "functional|issues|non-functional|unknown", "notes": "brief"}],
   "title_status": "clean|salvage|rebuilt|on_file|unknown",
   "drive_status": "roadworthy|stationary|unknown",
-  "red_flags": [{"category": "structural|mechanical|documentation|fraud", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_inspection": boolean}],
+  "red_flags": [{"category": "structural|mechanical|documentation|fraud", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_inspection": boolean, "riskCategory": "core_risk|optional", "buyerImpact": "1-2 sentence buyer perspective"}],
   "inspection_required": ["brief items"],
   "extraction_notes": ["brief notes"]
 }`;

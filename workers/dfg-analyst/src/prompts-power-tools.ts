@@ -7,6 +7,28 @@ export const CONDITION_ASSESSMENT_PROMPT_POWER_TOOLS = `Extract power tool condi
 - "Tested" means turned on, not necessarily fully functional
 - Battery condition is CRITICAL - note date codes if visible
 
+## RED FLAG CLASSIFICATION:
+CORE RISK (deal-critical):
+- Motor completely dead (burned out, smoking, no response)
+- Counterfeit tool branded as authentic (fake Milwaukee, DeWalt, etc.)
+- Battery system proprietary/discontinued (cannot replace or find compatible)
+- Safety hazards (exposed wiring, cracked housing on high-voltage tools, blade guard missing)
+
+OPTIONAL (non-essential features):
+- Cosmetic damage (scratches, paint chips, tool wear)
+- Missing accessories (case, extra bits, manuals, depth guides)
+- Battery at 50-75% capacity (still functional, just reduced runtime)
+- Minor switch/trigger issues (sticky but works, intermittent)
+
+BUYER IMPACT:
+- Explain buyer's resale concerns from contractor/DIY perspective
+- Reference brand reputation and contractor expectations
+- 1-2 sentences maximum
+- Examples:
+  * "Contractors expect tools to perform - a dead motor is a non-starter."
+  * "Most buyers don't care about cosmetic wear on job site tools."
+  * "Battery compatibility is critical - discontinued systems kill resale value."
+
 ## RETURN JSON:
 {
   "assessment_confidence": "high|medium|low",
@@ -27,7 +49,7 @@ export const CONDITION_ASSESSMENT_PROMPT_POWER_TOOLS = `Extract power tool condi
   },
   "included_accessories": [{"item": "string", "condition": "good|fair|poor|unknown"}],
   "case_or_bag": "hard_case|soft_bag|none|unknown",
-  "red_flags": [{"category": "mechanical|electrical|battery|counterfeit", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_testing": boolean}],
+  "red_flags": [{"category": "mechanical|electrical|battery|counterfeit", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_testing": boolean, "riskCategory": "core_risk|optional", "buyerImpact": "1-2 sentence buyer perspective"}],
   "inspection_required": ["brief items"],
   "extraction_notes": ["brief notes"]
 }`;

@@ -382,6 +382,9 @@ export interface AnalysisResult {
       category: string;
       severity: string;
       description: string;
+      requires_inspection?: boolean;
+      riskCategory: "core_risk" | "optional";  // Distinguishes deal-breaking issues from amenity failures
+      buyerImpact: string;                      // Buyer-perspective context (1-2 sentences)
     }>;
     tires?: {
       condition: string;

@@ -117,10 +117,12 @@ export interface AuxiliaryEquipment {
 }
 
 export interface RedFlag {
-  category: "structural" | "mechanical" | "documentation" | "fraud";
+  category: "structural" | "mechanical" | "documentation" | "fraud" | "title" | "odometer" | "battery" | "electrical" | "counterfeit";
   severity: "minor" | "moderate" | "major" | "dealbreaker";
   description: string;
   requires_inspection: boolean;
+  riskCategory: "core_risk" | "optional";  // Distinguishes deal-breaking issues from amenity failures
+  buyerImpact: string;                      // Buyer-perspective context (1-2 sentences)
 }
 
 // ============================================
