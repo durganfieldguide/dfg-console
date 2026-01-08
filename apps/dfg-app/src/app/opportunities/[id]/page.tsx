@@ -418,10 +418,6 @@ export default function OpportunityDetailPage() {
                   {formatSourceLabel(opportunity.source)}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Score:</span>
-                <ScoreBadge score={opportunity.buy_box_score} />
-              </div>
             </CardContent>
           </Card>
 
