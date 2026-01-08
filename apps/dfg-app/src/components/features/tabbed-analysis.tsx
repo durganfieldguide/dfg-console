@@ -13,34 +13,43 @@ import { BuyerInsights, parseBuyerLensData } from './buyer-insights';
 import type { AnalysisResult } from '@/lib/api';
 
 interface TabbedAnalysisProps {
-  analysis: AnalysisResult;
+  analysis: AnalysisResult | null;
   currentBid: number | null;
   sourceUrl?: string;
   className?: string;
 }
 
 export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: TabbedAnalysisProps) {
-  const fields = analysis.report_fields || {};
+  const fields = analysis?.report_fields || {
+    verdict: 'PASS' as const,
+    max_bid_mid: 0,
+    max_bid_worst: 0,
+    max_bid_best: 0,
+    retail_est: 0,
+    expected_profit: 0,
+    expected_margin: 0,
+    confidence: 0,
+  };
 
   // Parse condition data
-  const conditionAreas = parseConditionData(analysis.condition || {});
+  const conditionAreas = parseConditionData(analysis?.condition || {});
 
   // Parse repair plan from investor lens
   const repairItems = parseRepairPlan(
-    Array.isArray(analysis.investor_lens?.repair_plan)
+    Array.isArray(analysis?.investor_lens?.repair_plan)
       ? analysis.investor_lens.repair_plan.map((r: any) => `${r.item || r.name} $${r.cost || 0}`).join(', ')
       : ''
   );
-  const repairTotal = Array.isArray(analysis.investor_lens?.repair_plan)
+  const repairTotal = Array.isArray(analysis?.investor_lens?.repair_plan)
     ? analysis.investor_lens.repair_plan.reduce((sum: number, r: any) => sum + (r.cost || 0), 0)
     : 0;
 
   // Parse buyer lens data
-  const buyerData = parseBuyerLensData(analysis.buyer_lens || {});
+  const buyerData = parseBuyerLensData(analysis?.buyer_lens || {});
 
   // Single source of truth for exit pricing: investor_lens.phoenix_resale_range
   // This ensures Buyer tab and Investor tab show matching numbers
-  const priceRange = analysis.investor_lens?.phoenix_resale_range
+  const priceRange = analysis?.investor_lens?.phoenix_resale_range
     ? {
         low: analysis.investor_lens.phoenix_resale_range.quick_sale,
         mid: analysis.investor_lens.phoenix_resale_range.market_rate,
@@ -124,21 +133,21 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
               </div>
             </div>
 
-            <AnalysisSummary analysis={analysis} />
+            {analysis && <AnalysisSummary analysis={analysis} />}
           </div>
         </TabsContent>
 
         {/* Condition Tab */}
         <TabsContent value="condition" className="pt-4">
           <ConditionAssessment
-            overallCondition={analysis.condition?.overall_grade}
+            overallCondition={analysis?.condition?.overall_grade}
             areas={conditionAreas}
-            summary={analysis.condition?.summary}
-            evidenceLedger={(analysis as any).condition?.evidence_ledger}
+            summary={analysis?.condition?.summary}
+            evidenceLedger={(analysis as any)?.condition?.evidence_ledger}
           />
 
           {/* Red Flags section */}
-          {analysis.condition?.red_flags && analysis.condition.red_flags.length > 0 && (
+          {analysis?.condition?.red_flags && analysis.condition.red_flags.length > 0 && (
             <div className="mt-6 p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
               <h4 className="text-sm font-medium text-red-700 dark:text-red-300 mb-3">
                 Red Flags ({analysis.condition.red_flags.length})
@@ -179,7 +188,7 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             )}
 
             {/* Verdict Reasoning */}
-            {analysis.investor_lens?.verdict_reasoning && (
+            {analysis?.investor_lens?.verdict_reasoning && (
               <div className="space-y-3">
                 <h3 className="text-sm font-medium">Verdict Reasoning</h3>
                 <VerdictReasoning
@@ -191,7 +200,7 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             )}
 
             {/* Deal Killers */}
-            {analysis.investor_lens?.deal_killers && analysis.investor_lens.deal_killers.length > 0 && (
+            {analysis?.investor_lens?.deal_killers && analysis.investor_lens.deal_killers.length > 0 && (
               <div className="p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
                 <h4 className="text-sm font-medium text-red-700 dark:text-red-300 mb-3">
                   Deal Killers
@@ -208,7 +217,7 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             )}
 
             {/* Inspection Priorities */}
-            {analysis.investor_lens?.inspection_priorities && analysis.investor_lens.inspection_priorities.length > 0 && (
+            {analysis?.investor_lens?.inspection_priorities && analysis.investor_lens.inspection_priorities.length > 0 && (
               <div className="p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
                 <h4 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-3">
                   Inspection Priorities
@@ -231,7 +240,7 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
           <BuyerInsights
             targetBuyers={buyerData.targetBuyers}
             demandLevel={buyerData.demandLevel}
-            marketDemand={(analysis as any).market_demand}
+            marketDemand={(analysis as any)?.market_demand}
             expectedTimeToSell={buyerData.daysOnMarket ? 'average' : 'unknown'}
             daysOnMarket={buyerData.daysOnMarket}
             bestSellingPoints={buyerData.bestSellingPoints}
@@ -263,7 +272,7 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             )}
           </div>
 
-          {analysis.report_markdown ? (
+          {analysis?.report_markdown ? (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto border">
                 {analysis.report_markdown}
@@ -271,12 +280,13 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No report available</p>
+              <p className="font-medium mb-2">No analysis available yet</p>
+              <p className="text-sm">Click the &ldquo;Analyze&rdquo; button above to generate a Dual Lens analysis with Max Bid and Inspection Priorities.</p>
             </div>
           )}
 
           {/* Metadata */}
-          {analysis.metadata?.analysis_duration_ms && (
+          {analysis?.metadata?.analysis_duration_ms && (
             <p className="text-xs text-muted-foreground text-center mt-4">
               Analysis completed in {(analysis.metadata.analysis_duration_ms / 1000).toFixed(1)}s
               {analysis.metadata?.total_tokens && ` • ${analysis.metadata.total_tokens.toLocaleString()} tokens`}

@@ -381,13 +381,11 @@ export default function OpportunityDetailPage() {
           )}
 
           {/* Analysis Results - Tabbed Interface */}
-          {analysisResult && (
-            <TabbedAnalysis
-              analysis={analysisResult}
-              currentBid={opportunity.current_bid}
-              sourceUrl={opportunity.source_url}
-            />
-          )}
+          <TabbedAnalysis
+            analysis={analysisResult}
+            currentBid={opportunity.current_bid}
+            sourceUrl={opportunity.source_url}
+          />
 
           {/* Photos - using regular img to avoid Next.js image optimization issues with external CDNs */}
           {photos.length > 0 && (
