@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "cd ../../packages/dfg-types && npm install && npm run build",
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
