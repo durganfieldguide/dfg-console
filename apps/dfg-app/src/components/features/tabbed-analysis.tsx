@@ -38,6 +38,16 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
   // Parse buyer lens data
   const buyerData = parseBuyerLensData(analysis.buyer_lens || {});
 
+  // Single source of truth for exit pricing: investor_lens.phoenix_resale_range
+  // This ensures Buyer tab and Investor tab show matching numbers
+  const priceRange = analysis.investor_lens?.phoenix_resale_range
+    ? {
+        low: analysis.investor_lens.phoenix_resale_range.quick_sale,
+        mid: analysis.investor_lens.phoenix_resale_range.market_rate,
+        high: analysis.investor_lens.phoenix_resale_range.premium,
+      }
+    : undefined;
+
   return (
     <div className={cn('space-y-4 overflow-x-hidden', className)}>
       <Tabs defaultValue="summary">
@@ -172,7 +182,11 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             {analysis.investor_lens?.verdict_reasoning && (
               <div className="space-y-3">
                 <h3 className="text-sm font-medium">Verdict Reasoning</h3>
-                <VerdictReasoning reasoning={analysis.investor_lens.verdict_reasoning} />
+                <VerdictReasoning
+                  reasoning={analysis.investor_lens.verdict_reasoning}
+                  priceRange={analysis.investor_lens.phoenix_resale_range}
+                  scenarios={analysis.investor_lens.scenarios}
+                />
               </div>
             )}
 
@@ -221,11 +235,7 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             expectedTimeToSell={buyerData.daysOnMarket ? 'average' : 'unknown'}
             daysOnMarket={buyerData.daysOnMarket}
             bestSellingPoints={buyerData.bestSellingPoints}
-            priceRange={buyerData.priceRange || (fields.retail_est > 0 ? {
-              low: Math.round(fields.retail_est * 0.85),
-              mid: fields.retail_est,
-              high: Math.round(fields.retail_est * 1.1),
-            } : undefined)}
+            priceRange={priceRange}
             seasonalFactors={buyerData.seasonalFactors}
             localMarketNotes={buyerData.localMarketNotes}
           />

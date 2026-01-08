@@ -471,8 +471,30 @@ export interface AnalysisResult {
     profit_at_max: number | null;
     repair_estimate: number | null;
     phoenix_resale_range: {
-      low: number;
-      high: number;
+      quick_sale: number;
+      market_rate: number;
+      premium: number;
+      scarcity?: string;
+    };
+    scenarios?: {
+      quick_sale?: {
+        sale_price: number;
+        gross_profit: number;
+        margin: number;
+        days_to_sell?: number;
+      };
+      expected?: {
+        sale_price: number;
+        gross_profit: number;
+        margin: number;
+        days_to_sell?: number;
+      };
+      premium?: {
+        sale_price: number;
+        gross_profit: number;
+        margin: number;
+        days_to_sell?: number;
+      };
     };
     repair_plan: Array<{
       item: string;

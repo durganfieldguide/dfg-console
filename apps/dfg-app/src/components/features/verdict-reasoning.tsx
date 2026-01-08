@@ -156,13 +156,58 @@ function getGateInfo(gate: string): { title: string; description: string; severi
   };
 }
 
+interface PriceRange {
+  quick_sale: number;
+  market_rate: number;
+  premium: number;
+}
+
+interface ProfitScenario {
+  sale_price: number;
+  gross_profit: number;
+  margin: number;
+}
+
+interface Scenarios {
+  quick_sale?: ProfitScenario;
+  expected?: ProfitScenario;
+  premium?: ProfitScenario;
+}
+
 interface VerdictReasoningProps {
   reasoning: string;
+  priceRange?: PriceRange;
+  scenarios?: Scenarios;
   className?: string;
 }
 
-export function VerdictReasoning({ reasoning, className }: VerdictReasoningProps) {
-  const parsed = parseVerdictReasoning(reasoning);
+export function VerdictReasoning({ reasoning, priceRange, scenarios, className }: VerdictReasoningProps) {
+  // Use structured data if available, otherwise fall back to parsing text
+  let parsed = parseVerdictReasoning(reasoning);
+
+  // If we have structured pricing data, override parsed scenarios with real data
+  if (priceRange && scenarios && parsed) {
+    parsed.scenarios = [
+      scenarios.quick_sale && {
+        label: 'Quick Sale',
+        salePrice: scenarios.quick_sale.sale_price,
+        profit: scenarios.quick_sale.gross_profit,
+        margin: scenarios.quick_sale.margin,
+      },
+      scenarios.expected && {
+        label: 'Expected',
+        salePrice: scenarios.expected.sale_price,
+        profit: scenarios.expected.gross_profit,
+        margin: scenarios.expected.margin,
+      },
+      scenarios.premium && {
+        label: 'Premium',
+        salePrice: scenarios.premium.sale_price,
+        profit: scenarios.premium.gross_profit,
+        margin: scenarios.premium.margin,
+      },
+    ].filter(Boolean) as EconomicScenario[];
+  }
 
   if (!parsed) {
     // Fallback: just show the raw text in a nicer format
