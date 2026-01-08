@@ -133,10 +133,10 @@ async function handleDirective(request: Request, env: Env): Promise<Response> {
   }
 
   // Validate required fields
-  if (!payload.title || !payload.body) {
-    return jsonResponse({ 
-      success: false, 
-      error: 'Missing required fields: title, body' 
+  if (!payload.title || !payload.body || !payload.to) {
+    return jsonResponse({
+      success: false,
+      error: 'Missing required fields: title, body, to'
     }, 400);
   }
 
