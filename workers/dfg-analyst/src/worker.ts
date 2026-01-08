@@ -2184,7 +2184,8 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
   const buyerLensNormalized = normalizeBuyerLensRange(buyerLensRaw);
   const buyerLensClamped = clampBuyerRange(buyerLensNormalized, phoenixRangeObj, condition);
   const buyerLens = finalizeBuyerLens(buyerLensClamped, phoenixRangeObj, condition);
-  investorLens.phoenix_resale_range = phoenixRangeDisplay as any;
+  // Fix #180: Store the PriceRange object, not the formatted string
+  investorLens.phoenix_resale_range = phoenixRangeObj;
   
   console.log(`[PHASE 2] Complete: ${investorLens.verdict}`);
 
