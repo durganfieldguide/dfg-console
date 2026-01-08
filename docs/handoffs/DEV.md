@@ -1,6 +1,6 @@
 # Dev Team Handoff
 
-**Updated:** 2026-01-07
+**Updated:** 2026-01-08
 
 ---
 
@@ -51,11 +51,15 @@ Check GitHub for:
 - `status:in-progress` — Should have your label if you're working it
 - `prio:P0` — Drop everything
 
-**Ready for development:**
-- 5 P0 stories: #145, #146, #152, #153, #154
-- 1 P0 security: #123 (unauthenticated analyst endpoints)
+**Sprint N+8 Progress:**
+- ✅ #152 - Single Source of Truth for Exit Pricing (awaiting QA retry)
+- ✅ #153 - Remove Score Vanity Metric (merged)
+- ✅ #179 - Label update support for dfg-relay (P2, merged)
+- ✅ #180 - Fixed Buyer tab $0 pricing regression
+- 🔄 Remaining P0: #145, #146, #154
+- 🔒 #123 - P0 security (unauthenticated analyst endpoints)
 
-**Worktrees available:** Type consolidation complete, parallel development now feasible
+**Branch protection:** Active on main - all changes require PR + green CI
 
 ---
 
@@ -90,6 +94,13 @@ If you're getting permission prompts for bash commands:
 - Never mix: renaming + logic changes + architecture changes
 - Format: `type(scope): description` (e.g., `feat(scout): add GovPlanet adapter`)
 
+**PR workflow (branch protection enabled):**
+- Create feature branch: `git checkout -b feature/issue-123`
+- Push and create PR via `gh pr create`
+- Wait for CI checks (DFG App, Scout, API must pass)
+- Merge with `gh pr merge --squash --auto`
+- Update issue labels via dfg-relay `/labels` endpoint
+
 ---
 
 ## Lessons Learned
@@ -108,6 +119,9 @@ If you're getting permission prompts for bash commands:
 - Listing fees counted in both acquisition and selling costs
 - Photos not hydrating due to per-lot queries hitting subrequest limit
 - Code writing 'hard_gate_failure' violates DB CHECK constraint (fixed: use 'other')
+- Analyst storing formatted string instead of PriceRange object (#180)
+- Vercel build failing due to gitignored @dfg/types dist folder
+- CI failing due to @dfg/types not built before app typecheck
 
 ---
 
@@ -126,43 +140,80 @@ If you're getting permission prompts for bash commands:
 - 30s CPU time limit (50ms wall clock for cron)
 - No persistent state between invocations
 
+**New capability - dfg-relay `/labels` endpoint:**
+- Programmatically update issue labels via POST
+- Enables workflow transitions without GitHub UI
+- Example: `{"issue": 152, "add": ["status:qa"], "remove": ["status:in-progress"]}`
+- Auth via RELAY_TOKEN (same as other endpoints)
+
 ---
 
 ## Session Notes
 
-**Last session (Jan 7 PM):**
-- **MAJOR:** Completed #173 - Type consolidation (P0 tech debt)
-  - Audited type differences across app/API/types packages
-  - Discovered production bug: code writing 'hard_gate_failure' violates DB CHECK constraint
-  - Fixed bug: changed auto-reject to use 'other' (DB-compliant value)
-  - Consolidated shared types into `packages/dfg-types/src/index.ts`
-  - Updated dfg-app to import shared types from @dfg/types
-  - Updated dfg-api to import shared types from @dfg/types via path mapping
-  - All typechecks pass (app + API + types package)
-- Created #175: Schema evolution for rejection reasons (P2 follow-up)
-- Closed #173 after successful completion
+**Last session (Jan 8):**
+- **P0 OUTAGE RECOVERY:** Fixed production build broken by type consolidation
+  - Added prebuild step to build @dfg/types before Next.js build
+  - Fixed CI workflow to build types before app typecheck
+  - Commits: 4c66824, 5dc1c44, f61e734
+  - Production restored in ~30 minutes
+
+- **Sprint N+8 Stories (3/5 P0 completed):**
+  - ✅ #152 - Single Source of Truth for Exit Pricing
+    - Frontend now uses phoenix_resale_range as single pricing source
+    - Removed fallback heuristics (retail_est * 0.85/1.0/1.1)
+    - Buyer and Investor tabs use identical data
+    - Commit: 65cd802
+    - Status: Awaiting QA retry (needs re-analysis for corrected data)
+
+  - ✅ #180 - Fixed Buyer tab $0 regression (blocker for #152)
+    - Root cause: Analyst storing formatted string "$2,300-$4,400" instead of PriceRange object
+    - Fixed: Changed line 2187 to store phoenixRangeObj instead of phoenixRangeDisplay
+    - Deployed dfg-analyst worker
+    - Commit: 7f72dc9
+    - Unblocks #152 QA verification
+
+  - ✅ #153 - Remove Score Vanity Metric
+    - Removed score badges from OpportunityCard, detail page, attention list
+    - Verdict is now only decision metric (no cognitive dissonance)
+    - PR #181 merged via squash (branch protection working)
+    - Commit: aa6733e
+
+- **Infrastructure (P2):**
+  - ✅ #179 - Label update support for dfg-relay
+    - New POST /labels endpoint for programmatic label management
+    - Enables workflow state transitions via API
+    - Successfully tested on #152, #179, #180
+    - Commit: 08da297
 
 **Deliverables:**
-- Commit 3ad0ff7: Type consolidation (18 files changed, 6698 insertions, 1038 deletions)
-- Issue #173: Completed and closed
-- Issue #175: Filed as P2 follow-up
-- Production bug fixed: workers/dfg-api/src/routes/opportunities.ts:1241
+- 4 issues completed: #152 (QA pending), #153, #179, #180
+- 7 commits pushed to main
+- 1 PR merged (#181)
+- 2 workers deployed (dfg-analyst, dfg-relay)
+- CI pipeline fixed and verified working
+- Branch protection validated
 
 **Key decisions:**
-- DB schema is authoritative for RejectionReason type (not TypeScript)
-- App-specific types remain in apps/dfg-app/src/types
-- Worker-specific types remain in workers/*/src/core/types
-- Shared types consolidated in @dfg/types package
+- Use phoenix_resale_range object as single source for all exit pricing (#152)
+- Remove all score displays from operator UI (#153)
+- Branch protection workflow: feature branch → PR → CI → squash merge
+- Existing opportunities need re-analysis to get corrected pricing data
+
+**Gotchas discovered:**
+- Analyst was storing formatted string instead of PriceRange object (line 2187)
+- Vercel needs prebuild step to compile @dfg/types (gitignored dist folder)
+- CI needs explicit type build step before app typecheck
 
 **Status:**
-- **Worktrees: UNBLOCKED** ✅ — Type consolidation complete
-- **Sprint N+8: READY** ✅ — 5 P0 stories ready for dev
-- No active blockers
+- **Sprint N+8: 3/5 P0 complete** ✅
+- **Remaining P0:** #145, #146, #154
+- **Blockers:** None
+- **CI/CD:** All green, branch protection working
 
 **Next session should:**
-1. Start Sprint N+8 P0 stories: #145, #146, #152, #153, #154
-2. Consider #123 (P0 security - unauthenticated analyst endpoints)
-3. Optionally set up worktrees for parallel development
+1. Verify #152 QA passes (operator needs to re-analyze to get corrected data)
+2. Continue Sprint N+8: #145 (Core Risk tagging), #146 (Buyer Impact), #154 (Default view)
+3. Consider #123 (P0 security - unauthenticated analyst endpoints)
 
 ---
 
