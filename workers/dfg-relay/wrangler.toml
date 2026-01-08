@@ -8,8 +8,8 @@ GITHUB_OWNER = "durganfieldguide"
 GITHUB_REPO = "dfg-console"
 
 # V2 vars
-GH_APP_ID = "2619118"
-GH_INSTALLATION_ID = "103259640"
+GH_APP_ID = "2619905"
+GH_INSTALLATION_ID = "103277966"
 LABEL_RULES_JSON = '{"qa.result_submitted":{"PASS":{"add":["status:verified"],"remove":["status:qa","needs:qa"]},"PASS_UNVERIFIED":{"add":[],"remove":[]},"FAIL":{"add":["needs:dev"],"remove":["needs:qa"]},"FAIL_UNCONFIRMED":{"add":[],"remove":[]},"BLOCKED":{"add":["status:blocked"],"remove":["status:qa","needs:qa"]}},"dev.update":{"_":{"add":["status:qa","needs:qa"],"remove":["status:in-progress","needs:dev"]}}}'
 
 # Secrets (set via `wrangler secret put`):
