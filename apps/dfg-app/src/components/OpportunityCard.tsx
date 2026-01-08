@@ -61,21 +61,6 @@ export function OpportunityCard({ opportunity, selected, onSelect }: Opportunity
     >
       <CardContent className={cn('p-0', scoreTint)}>
         <div className="flex">
-          {/* Score indicator - vertical bar with large score */}
-          <div className={cn(
-            'flex flex-col items-center justify-center w-14 shrink-0 py-2',
-            isHighScore
-              ? 'bg-green-500 text-white'
-              : opportunity.buy_box_score >= 40
-                ? 'bg-amber-400 text-gray-900'
-                : 'bg-gray-300 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
-          )}>
-            <span className="text-lg font-bold">{opportunity.buy_box_score}</span>
-            <span className="text-[10px] font-medium uppercase tracking-wide opacity-80">
-              {isHighScore ? 'Hot' : opportunity.buy_box_score >= 40 ? 'Fair' : 'Low'}
-            </span>
-          </div>
-
           {/* Image - smaller, as thumbnail only */}
           <div className="relative w-16 h-16 flex-shrink-0 bg-gray-100 dark:bg-gray-700 m-2 rounded overflow-hidden">
             {opportunity.primary_image_url ? (
