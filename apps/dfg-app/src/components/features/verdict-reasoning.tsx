@@ -261,35 +261,37 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
           )}
         </p>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          {parsed.scenarios.map((scenario) => (
-            <div
-              key={scenario.label}
-              className="p-4 rounded-lg border"
-              style={{ borderColor: 'var(--border)', backgroundColor: 'var(--background)' }}
-            >
-              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>
-                {scenario.label}
-              </p>
-              <p className="text-lg font-bold font-mono mt-1">
-                {formatCurrency(scenario.profit)}
-              </p>
-              <div className="flex items-center justify-between mt-2 text-sm">
-                <span style={{ color: 'var(--muted-foreground)' }}>
-                  Sell @ {formatCurrency(scenario.salePrice)}
-                </span>
-                <span className={cn(
-                  'font-medium',
-                  scenario.margin >= 0.25 ? 'text-green-600 dark:text-green-400' :
-                  scenario.margin >= 0.15 ? 'text-yellow-600 dark:text-yellow-400' :
-                  'text-red-600 dark:text-red-400'
-                )}>
-                  {formatPercent(scenario.margin)}
-                </span>
+        {parsed.scenarios.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {parsed.scenarios.map((scenario) => (
+              <div
+                key={scenario.label}
+                className="p-4 rounded-lg border"
+                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--background)' }}
+              >
+                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>
+                  {scenario.label}
+                </p>
+                <p className="text-lg font-bold font-mono mt-1">
+                  {formatCurrency(scenario.profit)}
+                </p>
+                <div className="flex items-center justify-between mt-2 text-sm">
+                  <span style={{ color: 'var(--muted-foreground)' }}>
+                    Sell @ {formatCurrency(scenario.salePrice)}
+                  </span>
+                  <span className={cn(
+                    'font-medium',
+                    scenario.margin >= 0.25 ? 'text-green-600 dark:text-green-400' :
+                    scenario.margin >= 0.15 ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-red-600 dark:text-red-400'
+                  )}>
+                    {formatPercent(scenario.margin)}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Margin Guide */}
         <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: 'var(--muted-foreground)' }}>

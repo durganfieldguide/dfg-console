@@ -146,6 +146,15 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
             evidenceLedger={(analysis as any)?.condition?.evidence_ledger}
           />
 
+          {/* Empty state when no condition data */}
+          {!analysis?.condition?.red_flags?.length &&
+           !analysis?.condition?.overall_grade &&
+           conditionAreas.length === 0 && (
+            <div className="mt-6 p-6 text-center border border-gray-200 rounded-lg bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+              <p className="text-sm text-gray-600 dark:text-gray-400">No condition assessment available</p>
+            </div>
+          )}
+
           {/* Red Flags section - grouped by risk category */}
           {analysis?.condition?.red_flags && analysis.condition.red_flags.length > 0 && (
             <div className="mt-6 space-y-4">
@@ -269,6 +278,16 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
               maxBid={fields.max_bid_mid || undefined}
               estimatedRepairs={repairTotal}
             />
+
+            {/* Empty state when no investor analysis data */}
+            {!repairItems?.length &&
+             !analysis?.investor_lens?.deal_killers?.length &&
+             !analysis?.investor_lens?.inspection_priorities?.length &&
+             !analysis?.investor_lens?.verdict_reasoning && (
+              <div className="p-6 text-center border border-gray-200 rounded-lg bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                <p className="text-sm text-gray-600 dark:text-gray-400">No investor analysis available</p>
+              </div>
+            )}
 
             {/* Repair Plan */}
             {repairItems.length > 0 && (
