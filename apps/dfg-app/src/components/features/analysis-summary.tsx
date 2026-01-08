@@ -179,6 +179,24 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
         </div>
       </div>
 
+      {/* Verdict Adjustments (#156) - Show specific reasons for verdict downgrades/gates */}
+      {(analysis as any)?.investor_lens?.verdict_reasons &&
+       (analysis as any).investor_lens.verdict_reasons.length > 0 && (
+        <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700">
+          <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Verdict Adjustments:
+          </p>
+          <ul className="space-y-1">
+            {(analysis as any).investor_lens.verdict_reasons.map((reason: string, i: number) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <span className="shrink-0 mt-0.5">•</span>
+                <span>{reason}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Numbers are shown above the fold - Summary focuses on decision + gates */}
 
       {/* Photo Pipeline Metrics - answers two key questions:

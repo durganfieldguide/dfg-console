@@ -470,6 +470,7 @@ export interface AnalysisResult {
   investor_lens?: {
     verdict: string;
     verdict_reasoning: string;
+    verdict_reasons?: string[];  // #156: Tracks specific verdict adjustments/downgrades
     max_bid: number | null;
     profit_at_max: number | null;
     repair_estimate: number | null;

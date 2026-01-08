@@ -2223,10 +2223,13 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
 
   // Build final report components using category-aware templates
   const assetSummary = buildAssetSummaryForType(listingData, condition, assetType);
-  investorLens.verdict = applyVerdictGates(investorLens.verdict, condition, assetSummary);
+  const verdictResult = applyVerdictGates(investorLens.verdict, condition, assetSummary, { scenarios, listing: listingData });
+  investorLens.verdict = verdictResult.verdict;
+  investorLens.verdict_reasons = verdictResult.reasons;
 
   // Engine 1 hard gate: if it's only MARGINAL, require downside safety in quick-sale.
   // If quick_sale profit < $300 AND quick_sale margin < 15%, downgrade to PASS.
+  // NOTE: This is now handled inside applyVerdictGates, but kept for backwards compatibility
   let engine1DownsideFail = false;
   const qs = investorLens.scenarios?.quick_sale;
   if (

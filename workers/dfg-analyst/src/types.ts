@@ -414,8 +414,9 @@ export interface InvestorLensOutput {
   
   verdict: "STRONG_BUY" | "BUY" | "MARGINAL" | "PASS";
   verdict_reasoning: string;
+  verdict_reasons?: string[];  // #156: Tracks specific verdict adjustments/downgrades
   max_bid: number;
-  
+
   inspection_priorities: string[];
   deal_killers: string[];
 }

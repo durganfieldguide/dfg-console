@@ -328,7 +328,20 @@ export function applyVerdictGates(
   condition: ConditionAssessment,
   _assetSummary?: AssetSummary,
   _meta?: Record<string, unknown> & { scenarios?: ReturnType<typeof calculateProfitScenarios> }
-): Verdict {
+): { verdict: Verdict; reasons: string[] } {
+  const reasons: string[] = [];
+
+  // Extract data for new gates (#156)
+  const identityConfidence = condition.assessment_confidence || condition.identity_confidence;
+  const hasFrameDamage = condition.structural_damage === true;
+  const hasSevereRust = condition.frame_integrity === "compromised" ||
+                         condition.frame_integrity === "structural_rust";
+  const vinConfirmed = Boolean(condition.vin_visible);
+  const photoCount = condition.photos_analyzed ?? 0;
+  const distance = (_meta?.listing as any)?.location?.distance_miles;
+  const currentBid = (_meta?.listing as any)?.current_bid ?? 0;
+  const expectedMargin = (_meta?.scenarios as any)?.expected?.margin ?? 0;
+
   // Lower index = better verdict; higher index = worse verdict.
   const order: Verdict[] = ["STRONG_BUY", "BUY", "MARGINAL", "PASS"];
   const rank = (v: Verdict) => order.indexOf(v);
@@ -339,14 +352,37 @@ export function applyVerdictGates(
     verdict = order[r] ?? verdict;
   };
 
-  // Thin evidence: cap at MARGINAL
-  if (condition.photos_analyzed != null && condition.photos_analyzed < 4) {
-    downgradeToAtLeast("MARGINAL");
+  // Thin evidence: fewer than 6 photos => downgrade (#156)
+  if (photoCount < 6) {
+    if (photoCount < 3) {
+      // Very thin evidence: cap at MARGINAL
+      downgradeToAtLeast("MARGINAL");
+      reasons.push(`Only ${photoCount} photos - insufficient evidence`);
+    } else {
+      // Downgrade one level (BUY→MARGINAL, MARGINAL→PASS)
+      if (verdict === "STRONG_BUY") {
+        verdict = "BUY";
+        reasons.push(`Limited photos (${photoCount}) - downgraded one level`);
+      } else if (verdict === "BUY") {
+        verdict = "MARGINAL";
+        reasons.push(`Limited photos (${photoCount}) - downgraded one level`);
+      } else if (verdict === "MARGINAL") {
+        verdict = "PASS";
+        reasons.push(`Limited photos (${photoCount}) - downgraded one level`);
+      }
+    }
   }
 
   // Identity conflict: cap at MARGINAL
   if (condition.identity_conflict) {
     downgradeToAtLeast("MARGINAL");
+    reasons.push("Identity conflict - not confident in asset identification");
+  }
+
+  // Low identity confidence: PASS (#156)
+  if (identityConfidence === "low") {
+    downgradeToAtLeast("PASS");
+    reasons.push("Auto-PASS: Low identity confidence");
   }
 
   // Storage constraint: single-car garage reality (unless explicitly overridden)
@@ -354,19 +390,71 @@ export function applyVerdictGates(
   const lengthFt = condition.dimensions?.length_ft;
   if (!storageOverride && typeof lengthFt === "number" && Number.isFinite(lengthFt) && lengthFt > 18) {
     downgradeToAtLeast("MARGINAL");
+    reasons.push(`Storage constraint: ${lengthFt}ft length exceeds garage capacity`);
   }
 
   // Unknown brakes (especially tandem): cap at MARGINAL
   if (condition.axle_status === "tandem" && condition.brakes === "unknown") {
     downgradeToAtLeast("MARGINAL");
+    reasons.push("Unknown brakes on tandem axle - safety risk");
   }
 
-  // Title issues: salvage/missing => PASS; otherwise cap at MARGINAL
+  // Title issues: salvage/missing/BOS => PASS (if over $5k); otherwise cap at MARGINAL (#156)
   if (condition.title_status && condition.title_status !== "clean") {
-    if (condition.title_status === "salvage" || condition.title_status === "missing") {
-      downgradeToAtLeast("PASS");
-    } else {
-      downgradeToAtLeast("MARGINAL");
+    const titleProblematic = !["clean", "on_file", "unknown"].includes(condition.title_status);
+
+    if (titleProblematic) {
+      const isCriticalTitle = ["salvage", "missing", "bos", "bill_of_sale"].includes(condition.title_status);
+      const isHighValue = currentBid > 5000;
+
+      if (isCriticalTitle && isHighValue) {
+        downgradeToAtLeast("PASS");
+        reasons.push(`Auto-PASS: ${condition.title_status} title over $5k`);
+      } else if (isCriticalTitle) {
+        downgradeToAtLeast("MARGINAL");
+        reasons.push(`Title issue: ${condition.title_status}`);
+      } else {
+        downgradeToAtLeast("MARGINAL");
+        reasons.push(`Title status: ${condition.title_status}`);
+      }
+    }
+  }
+
+  // Frame damage visible: PASS (#156)
+  if (hasFrameDamage) {
+    downgradeToAtLeast("PASS");
+    reasons.push("Auto-PASS: Frame damage visible");
+  }
+
+  // Severe structural rust: PASS (#156)
+  if (hasSevereRust) {
+    downgradeToAtLeast("PASS");
+    reasons.push("Auto-PASS: Severe structural rust");
+  }
+
+  // VIN not confirmed: downgrade one level (#156)
+  if (!vinConfirmed && condition.vin_visible === null) {
+    if (verdict === "STRONG_BUY") {
+      verdict = "BUY";
+      reasons.push("VIN not confirmed - downgraded one level");
+    } else if (verdict === "BUY") {
+      verdict = "MARGINAL";
+      reasons.push("VIN not confirmed - downgraded one level");
+    }
+  }
+
+  // Over 300mi: downgrade unless margin > 35% (#156)
+  if (distance && distance > 300) {
+    const marginExceptionMet = expectedMargin >= 0.35;
+
+    if (!marginExceptionMet) {
+      if (verdict === "STRONG_BUY") {
+        verdict = "BUY";
+        reasons.push(`Transport distance ${Math.round(distance)}mi - downgraded one level`);
+      } else if (verdict === "BUY") {
+        verdict = "MARGINAL";
+        reasons.push(`Transport distance ${Math.round(distance)}mi - downgraded one level`);
+      }
     }
   }
 
@@ -376,10 +464,11 @@ export function applyVerdictGates(
     const hasOverride = _meta?.quick_flip_override === true;
     if (!hasOverride && qs.gross_profit < 300 && qs.margin < 0.15) {
       downgradeToAtLeast("PASS");
+      reasons.push("Quick-sale margin too thin (<15% and <$300 profit)");
     }
   }
 
-  return verdict;
+  return { verdict, reasons };
 }
 
 // ============================================
