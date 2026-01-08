@@ -111,13 +111,13 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Retail Est.</p>
-                <p className="text-xl font-bold text-blue-600 font-mono">
+                <p className="text-xl font-bold text-gray-600 font-mono">
                   {fields.retail_est > 0 ? formatCurrency(fields.retail_est) : 'N/A'}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Expected Profit</p>
-                <p className="text-xl font-bold text-purple-600 font-mono">
+                <p className="text-xl font-bold text-green-600 font-mono">
                   {fields.expected_profit > 0 ? formatCurrency(fields.expected_profit) : 'N/A'}
                 </p>
               </div>
@@ -222,19 +222,19 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
 
                     {/* Optional Issues Section */}
                     {optionalIssues.length > 0 && (
-                      <div className="p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+                      <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/20">
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="text-blue-600 dark:text-blue-400 text-lg">ℹ️</span>
-                          <h4 className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                          <span className="text-gray-600 dark:text-gray-400 text-lg">ℹ️</span>
+                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                             Optional Issues ({optionalIssues.length})
                           </h4>
                         </div>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mb-4">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
                           Non-essential features - price accordingly
                         </p>
                         <ul className="space-y-3">
                           {optionalIssues.map((flag, i) => (
-                            <li key={i} className="pl-3 border-l-2 border-blue-300 dark:border-blue-700">
+                            <li key={i} className="pl-3 border-l-2 border-gray-300 dark:border-gray-700">
                               <div className="flex items-start gap-2 mb-1">
                                 <span className={cn(
                                   'px-1.5 py-0.5 rounded text-xs font-medium shrink-0 uppercase',
@@ -251,9 +251,9 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
                               <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                                 {flag.description}
                               </p>
-                              <div className="flex items-start gap-2 mt-2 p-2 rounded bg-blue-100 dark:bg-blue-900/30">
+                              <div className="flex items-start gap-2 mt-2 p-2 rounded bg-gray-100 dark:bg-gray-900/30">
                                 <span className="text-sm shrink-0">👤</span>
-                                <p className="text-xs text-blue-800 dark:text-blue-200 italic">
+                                <p className="text-xs text-gray-800 dark:text-gray-200 italic">
                                   {flag.buyerImpact || "Impact assessment pending - requires manual review"}
                                 </p>
                               </div>
@@ -325,13 +325,13 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
 
             {/* Inspection Priorities */}
             {analysis?.investor_lens?.inspection_priorities && analysis.investor_lens.inspection_priorities.length > 0 && (
-              <div className="p-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
-                <h4 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-3">
+              <div className="p-4 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+                <h4 className="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-3">
                   Inspection Priorities
                 </h4>
                 <ul className="space-y-2">
                   {analysis.investor_lens.inspection_priorities.map((priority, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400">
+                    <li key={i} className="flex items-start gap-2 text-sm text-yellow-600 dark:text-yellow-400">
                       <span className="shrink-0">👁️</span>
                       {priority}
                     </li>
@@ -360,7 +360,7 @@ export function TabbedAnalysis({ analysis, currentBid, sourceUrl, className }: T
         {/* Full Report Tab */}
         <TabsContent value="report" className="pt-4">
           {/* Original Listing Link */}
-          <div className="mb-4 p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+          <div className="mb-4 p-3 rounded-lg border bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800">
             {sourceUrl ? (
               <a
                 href={sourceUrl}

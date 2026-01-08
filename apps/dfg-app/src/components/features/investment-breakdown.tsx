@@ -113,7 +113,7 @@ export function InvestmentBreakdown({
         className="p-4 rounded-lg border-2"
         style={{
           borderColor: 'var(--primary)',
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.1) 100%)',
+          background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.05) 0%, rgba(107, 114, 128, 0.1) 100%)',
         }}
       >
         <div className="flex items-center justify-between">
@@ -127,9 +127,9 @@ export function InvestmentBreakdown({
           </div>
           <div
             className="h-12 w-12 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)' }}
+            style={{ backgroundColor: 'rgba(107, 114, 128, 0.15)' }}
           >
-            <Calculator className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <Calculator className="h-6 w-6 text-gray-600 dark:text-gray-400" />
           </div>
         </div>
         {maxBid && currentBid !== null && currentBid < maxBid && (

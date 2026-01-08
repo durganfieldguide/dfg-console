@@ -72,14 +72,14 @@ const demandConfig: Record<DemandLevel, { label: string; color: string; bgColor:
   },
   moderate: {
     label: 'Moderate Demand',
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'rgba(59, 130, 246, 0.1)',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'rgba(107, 114, 128, 0.1)',
     description: 'Steady interest expected. Price competitively for reasonable sale time.',
   },
   medium: {
     label: 'Moderate Demand',
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'rgba(59, 130, 246, 0.1)',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'rgba(107, 114, 128, 0.1)',
     description: 'Steady interest expected. Price competitively for reasonable sale time.',
   },
   low: {
@@ -104,7 +104,7 @@ const demandConfig: Record<DemandLevel, { label: string; color: string; bgColor:
 
 const timeToSellConfig: Record<TimeToSell, { label: string; days: string; color: string }> = {
   fast: { label: 'Quick Sale', days: '< 14 days', color: 'text-green-600 dark:text-green-400' },
-  average: { label: 'Average', days: '14-30 days', color: 'text-blue-600 dark:text-blue-400' },
+  average: { label: 'Average', days: '14-30 days', color: 'text-gray-600 dark:text-gray-400' },
   slow: { label: 'Slow', days: '30+ days', color: 'text-yellow-600 dark:text-yellow-400' },
   unknown: { label: 'Unknown', days: 'N/A', color: 'text-gray-600 dark:text-gray-400' },
 };
@@ -242,7 +242,7 @@ export function BuyerInsights({
                   ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'  // Heuristic = amber
                   : marketDemand.confidence === 'high'
                     ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                    : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
               )}>
                 {marketDemand.is_heuristic ? 'Heuristic' : marketDemand.confidence}
               </span>
@@ -370,7 +370,7 @@ export function BuyerInsights({
                   )}
                 </div>
                 {buyer.percentage && (
-                  <span className="text-sm font-mono font-medium text-blue-600 dark:text-blue-400">
+                  <span className="text-sm font-mono font-medium text-gray-600 dark:text-gray-400">
                     {buyer.percentage}%
                   </span>
                 )}

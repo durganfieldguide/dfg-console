@@ -108,7 +108,7 @@ export function OpportunityCard({ opportunity, selected, onSelect }: Opportunity
                 </span>
               )}
               {opportunity.is_analysis_stale && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
                   <FlaskConical className="h-3 w-3" />
                   Re-analyze
                 </span>

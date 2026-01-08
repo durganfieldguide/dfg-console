@@ -203,11 +203,11 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
       {/* Quick Action Guidance - what to do next */}
       <div
         className="flex items-start gap-3 p-4 rounded-lg"
-        style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+        style={{ backgroundColor: 'rgba(107, 114, 128, 0.1)' }}
       >
-        <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+        <Info className="h-5 w-5 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Next Steps</p>
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Next Steps</p>
           <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
             {verdict === 'BUY'
               ? 'Review the Condition and Investor Lens tabs for inspection priorities, then proceed to bid.'

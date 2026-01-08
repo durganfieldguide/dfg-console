@@ -188,9 +188,9 @@ function RiskItemDisplay({ item, showEvidence = true }: { item: RiskItem; showEv
     },
     minor_issue: {
       icon: Info,
-      bgColor: 'rgba(59, 130, 246, 0.1)',
-      borderColor: 'rgba(59, 130, 246, 0.3)',
-      textColor: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'rgba(107, 114, 128, 0.1)',
+      borderColor: 'rgba(107, 114, 128, 0.3)',
+      textColor: 'text-gray-600 dark:text-gray-400',
     },
     info_gap: {
       icon: HelpCircle,
