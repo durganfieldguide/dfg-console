@@ -265,3 +265,58 @@ export interface DashboardStats {
   last_scout_run: string | null;
   last_ingest: string | null;
 }
+
+// =============================================================================
+// MVC EVENTS (#187)
+// =============================================================================
+
+export type MvcEventType =
+  | 'decision_made'
+  | 'bid_submitted'
+  | 'bid_result'
+  | 'sale_result';
+
+export interface MvcEvent {
+  id: string;
+  opportunity_id: string;
+  event_type: MvcEventType;
+  idempotency_key: string;
+  sequence_number: number;
+  payload: MvcEventPayload;
+  schema_version: string;
+  emitted_at: string;
+  created_at: string;
+}
+
+export interface DecisionMadePayload {
+  decision: 'PASS' | 'BID';
+  decision_reason?: string;
+  operator_context?: {
+    current_status?: OpportunityStatus;
+    buy_box_score?: number;
+    max_bid_high?: number;
+  };
+}
+
+export interface BidSubmittedPayload {
+  bid_amount: number;
+  bid_strategy?: string;
+  auction_platform: string;
+}
+
+export interface BidResultPayload {
+  result: 'won' | 'lost' | 'outbid';
+  final_price?: number;
+}
+
+export interface SaleResultPayload {
+  sale_price: number;
+  sale_date: string;
+  buyer_type?: string;
+}
+
+export type MvcEventPayload =
+  | DecisionMadePayload
+  | BidSubmittedPayload
+  | BidResultPayload
+  | SaleResultPayload;

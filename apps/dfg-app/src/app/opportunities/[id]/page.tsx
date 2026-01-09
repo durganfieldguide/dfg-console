@@ -46,10 +46,13 @@ import {
   triggerAnalysis,
   updateOperatorInputs,
   checkStaleness,
+  createEvent,
+  getEvents,
   type AnalysisResult,
   type OpportunityWithAnalysis,
 } from '@/lib/api';
 import type { OpportunityDetail, OpportunityStatus, RejectionReason } from '@/types';
+import type { MvcEvent } from '@dfg/types';
 
 export default function OpportunityDetailPage() {
   const params = useParams();
@@ -73,6 +76,12 @@ export default function OpportunityDetailPage() {
   const [stalenessReasons, setStalenessReasons] = useState<StalenessReason[]>([]);
   const [reAnalyzing, setReAnalyzing] = useState(false);
   const [analysisTimestamp, setAnalysisTimestamp] = useState<string | null>(null);
+
+  // #187: MVC event logging state
+  const [emittingEvent, setEmittingEvent] = useState(false);
+  const [eventError, setEventError] = useState<string | null>(null);
+  const [events, setEvents] = useState<MvcEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
@@ -111,8 +120,64 @@ export default function OpportunityDetailPage() {
     fetchData();
   }, [id]);
 
+  // #187: Load MVC events
+  useEffect(() => {
+    async function loadEvents() {
+      setEventsLoading(true);
+      try {
+        const fetchedEvents = await getEvents(id);
+        setEvents(fetchedEvents);
+      } catch (err) {
+        console.error('Failed to load events:', err);
+        // Don't show error UI - events are non-critical
+      } finally {
+        setEventsLoading(false);
+      }
+    }
+    loadEvents();
+  }, [id]);
+
+  // #187: Emit decision event before status transition
+  async function emitDecisionEvent(decision: 'PASS' | 'BID'): Promise<boolean> {
+    setEmittingEvent(true);
+    setEventError(null);
+
+    try {
+      await createEvent({
+        opportunity_id: id,
+        event_type: 'decision_made',
+        payload: {
+          decision,
+          operator_context: {
+            current_status: opportunity?.status,
+            buy_box_score: opportunity?.buy_box_score ?? undefined,
+            max_bid_high: opportunity?.max_bid_high ?? undefined,
+          },
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to emit decision event:', error);
+      setEventError(error instanceof Error ? error.message : 'Failed to log decision');
+      return false;
+    } finally {
+      setEmittingEvent(false);
+    }
+  }
+
   const handleStatusChange = async (newStatus: OpportunityStatus, extra?: Record<string, unknown>) => {
     if (!opportunity) return;
+
+    // #187: Emit decision event before state change
+    if (newStatus === 'bid') {
+      const eventEmitted = await emitDecisionEvent('BID');
+      if (!eventEmitted) return; // Block transition if event emission fails
+    }
+
+    if (newStatus === 'rejected') {
+      const eventEmitted = await emitDecisionEvent('PASS');
+      if (!eventEmitted) return; // Block transition if event emission fails
+    }
 
     setUpdating(true);
     try {
@@ -562,7 +627,85 @@ export default function OpportunityDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Decision History - MVC audit trail (#187) */}
+          {!eventsLoading && events.length > 0 && (
+            <Card>
+              <CardHeader>
+                <h2 className="font-medium text-gray-900 dark:text-white">Decision History</h2>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {events.map((event) => {
+                    const payload = event.payload as any;
+                    let eventLabel = '';
+                    let eventDetail = '';
+                    let icon = '';
+
+                    if (event.event_type === 'decision_made') {
+                      if (payload.decision === 'BID') {
+                        eventLabel = 'BID Decision';
+                        icon = '🎯';
+                      } else {
+                        eventLabel = 'PASS Decision';
+                        icon = '⛔';
+                      }
+                      const score = payload.operator_context?.buy_box_score;
+                      eventDetail = score !== undefined ? `Score: ${score}` : '';
+                    }
+
+                    return (
+                      <div
+                        key={event.id}
+                        className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
+                      >
+                        <span className="text-lg" role="img" aria-label={eventLabel}>
+                          {icon}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {eventLabel}
+                          </p>
+                          {eventDetail && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {eventDetail}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                          {formatRelativeTime(event.emitted_at)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
+
+        {/* Event logging error banner (#187) */}
+        {eventError && (
+          <div className="fixed bottom-20 left-0 right-0 md:left-64 px-3 sm:px-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 max-w-lg mx-auto">
+              <div className="flex items-start gap-2">
+                <span className="text-red-600 dark:text-red-400">⚠</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                    Event logging failed
+                  </p>
+                  <p className="text-xs text-red-700 dark:text-red-300 mt-1">{eventError}</p>
+                  <button
+                    onClick={() => setEventError(null)}
+                    className="text-xs text-red-600 dark:text-red-400 underline mt-1"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Action buttons - Fixed at bottom (#82: no bottom nav on mobile anymore) */}
         <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3 sm:p-4 overflow-x-hidden pb-safe">
@@ -572,7 +715,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="primary"
                   onClick={() => handleStatusChange('qualifying')}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   Qualify
@@ -580,7 +723,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="secondary"
                   onClick={() => setShowWatchModal(true)}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Clock className="h-4 w-4 mr-1" />
                   Watch
@@ -588,7 +731,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="danger"
                   onClick={() => setShowRejectModal(true)}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Ban className="h-4 w-4 mr-1" />
                   Reject
@@ -601,7 +744,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="primary"
                   onClick={() => handleStatusChange('inspect')}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Inspect
@@ -609,7 +752,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="secondary"
                   onClick={() => setShowWatchModal(true)}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Clock className="h-4 w-4 mr-1" />
                   Watch
@@ -617,7 +760,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="danger"
                   onClick={() => setShowRejectModal(true)}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Ban className="h-4 w-4 mr-1" />
                   Reject
@@ -630,7 +773,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="primary"
                   onClick={() => handleStatusChange('inspect')}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Inspect
@@ -638,7 +781,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="secondary"
                   onClick={() => handleStatusChange('qualifying')}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   Qualify
@@ -646,7 +789,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="danger"
                   onClick={() => setShowRejectModal(true)}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Ban className="h-4 w-4 mr-1" />
                   Reject
@@ -664,7 +807,7 @@ export default function OpportunityDetailPage() {
                       handleStatusChange('bid', { max_bid_locked: parseFloat(maxBid) });
                     }
                   }}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Gavel className="h-4 w-4 mr-1" />
                   Set Bid
@@ -672,7 +815,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="danger"
                   onClick={() => setShowRejectModal(true)}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <Ban className="h-4 w-4 mr-1" />
                   Reject
@@ -690,7 +833,7 @@ export default function OpportunityDetailPage() {
                       handleStatusChange('won', { final_price: parseFloat(finalPrice) });
                     }
                   }}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Won
@@ -698,7 +841,7 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="danger"
                   onClick={() => handleStatusChange('lost')}
-                  disabled={updating}
+                  disabled={updating || emittingEvent}
                 >
                   <XCircle className="h-4 w-4 mr-1" />
                   Lost

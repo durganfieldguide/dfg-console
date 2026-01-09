@@ -751,3 +751,31 @@ export function checkStaleness(opportunity: OpportunityWithAnalysis): {
     reasons,
   };
 }
+
+// =============================================================================
+// MVC EVENTS (#187)
+// =============================================================================
+
+import type { MvcEvent, MvcEventType, MvcEventPayload } from '@dfg/types';
+
+export interface CreateEventParams {
+  opportunity_id: string;
+  event_type: MvcEventType;
+  payload: MvcEventPayload;
+  emitted_at?: string;
+}
+
+export async function createEvent(params: CreateEventParams): Promise<MvcEvent> {
+  const response = await fetchApi<ApiResponse<MvcEvent>>('/api/events', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+  return response.data;
+}
+
+export async function getEvents(opportunityId: string): Promise<MvcEvent[]> {
+  const response = await fetchApi<ApiResponse<{ events: MvcEvent[] }>>(
+    `/api/events?opportunity_id=${encodeURIComponent(opportunityId)}`
+  );
+  return response.data.events;
+}

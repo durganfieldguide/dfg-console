@@ -16,6 +16,7 @@ import { handleOpportunities } from './routes/opportunities';
 import { handleDismissAlert, handleAlerts } from './routes/alerts';
 import { handleSources } from './routes/sources';
 import { handleIngestRoute } from './routes/ingest';
+import { handleEvents } from './routes/events';
 import { loadCategoryConfig, loadAllCategoryConfigs } from './lib/category-loader';
 
 // =============================================================================
@@ -94,6 +95,11 @@ const handler: ExportedHandler<Env> = {
       // Route: /api/ingest/*
       if (path.startsWith('/api/ingest')) {
         return handleIngestRoute(request, env, path, method);
+      }
+
+      // Route: /api/events/* (#187: MVC event logging)
+      if (path.startsWith('/api/events')) {
+        return handleEvents(request, env, path, method);
       }
 
       // Route: /api/categories/* (category configuration)
