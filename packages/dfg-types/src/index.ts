@@ -243,6 +243,104 @@ export interface ListResponse<T> {
 }
 
 // =============================================================================
+// DECISION REASON CODES (#188)
+// =============================================================================
+
+export type DecisionReasonCode =
+  | 'price_too_high'
+  | 'price_no_margin'
+  | 'condition_major'
+  | 'condition_unknown'
+  | 'title_salvage'
+  | 'title_unclear'
+  | 'location_too_far'
+  | 'location_restricted'
+  | 'demand_low'
+  | 'demand_saturated'
+  | 'timing_bad'
+  | 'inspection_failed'
+  | 'other';
+
+export interface ReasonCodeOption {
+  code: DecisionReasonCode;
+  category: string;
+  label: string;
+}
+
+export const REASON_CODES: ReasonCodeOption[] = [
+  { code: 'price_too_high', category: 'Price', label: 'Price exceeds max bid threshold' },
+  { code: 'price_no_margin', category: 'Price', label: 'Insufficient profit margin' },
+  { code: 'condition_major', category: 'Condition', label: 'Major mechanical/structural issues' },
+  { code: 'condition_unknown', category: 'Condition', label: 'Cannot assess condition from available info' },
+  { code: 'title_salvage', category: 'Title', label: 'Salvage or branded title' },
+  { code: 'title_unclear', category: 'Title', label: 'Title status uncertain' },
+  { code: 'location_too_far', category: 'Location', label: 'Transport cost prohibitive' },
+  { code: 'location_restricted', category: 'Location', label: 'Pickup constraints' },
+  { code: 'demand_low', category: 'Demand', label: 'Low buyer demand for this type' },
+  { code: 'demand_saturated', category: 'Demand', label: 'Market oversupplied' },
+  { code: 'timing_bad', category: 'Timing', label: "Auction timing doesn't work" },
+  { code: 'inspection_failed', category: 'Inspection', label: 'Failed inspection criteria' },
+  { code: 'other', category: 'Other', label: 'Other reason (requires notes)' },
+];
+
+// =============================================================================
+// MVC EVENTS (#187)
+// =============================================================================
+
+export type MvcEventType = 'decision_made' | 'bid_submitted' | 'bid_result' | 'sale_result';
+
+export interface DecisionMadePayload {
+  decision: 'PASS' | 'BID' | 'WATCH';
+  decision_reason?: DecisionReasonCode[];  // Multi-select reason codes (#188)
+  note?: string;  // Required when "other" is in decision_reason
+  analyst_verdict?: AnalysisRecommendation;
+  analyst_confidence?: number;
+  // Legacy fields from #187 (optional for backward compatibility)
+  operator_context?: {
+    current_status?: OpportunityStatus;
+    buy_box_score?: number;
+    max_bid_high?: number;
+  };
+}
+
+export interface BidSubmittedPayload {
+  bid_amount: number;
+  bid_strategy?: 'last_minute' | 'early' | 'manual';
+}
+
+export interface BidResultPayload {
+  won: boolean;
+  final_price?: number;
+  winning_bid?: number;
+}
+
+export interface SaleResultPayload {
+  sale_price: number;
+  sale_date: string;
+  platform: string;
+  fees_total: number;
+  net_proceeds: number;
+}
+
+export type MvcEventPayload =
+  | DecisionMadePayload
+  | BidSubmittedPayload
+  | BidResultPayload
+  | SaleResultPayload;
+
+export interface MvcEvent {
+  id: string;
+  opportunity_id: string;
+  event_type: MvcEventType;
+  idempotency_key: string;
+  sequence_number: number;
+  payload: MvcEventPayload;
+  schema_version: string;
+  emitted_at: string;
+  created_at: string;
+}
+
+// =============================================================================
 // DASHBOARD
 // =============================================================================
 
@@ -265,58 +363,3 @@ export interface DashboardStats {
   last_scout_run: string | null;
   last_ingest: string | null;
 }
-
-// =============================================================================
-// MVC EVENTS (#187)
-// =============================================================================
-
-export type MvcEventType =
-  | 'decision_made'
-  | 'bid_submitted'
-  | 'bid_result'
-  | 'sale_result';
-
-export interface MvcEvent {
-  id: string;
-  opportunity_id: string;
-  event_type: MvcEventType;
-  idempotency_key: string;
-  sequence_number: number;
-  payload: MvcEventPayload;
-  schema_version: string;
-  emitted_at: string;
-  created_at: string;
-}
-
-export interface DecisionMadePayload {
-  decision: 'PASS' | 'BID';
-  decision_reason?: string;
-  operator_context?: {
-    current_status?: OpportunityStatus;
-    buy_box_score?: number;
-    max_bid_high?: number;
-  };
-}
-
-export interface BidSubmittedPayload {
-  bid_amount: number;
-  bid_strategy?: string;
-  auction_platform: string;
-}
-
-export interface BidResultPayload {
-  result: 'won' | 'lost' | 'outbid';
-  final_price?: number;
-}
-
-export interface SaleResultPayload {
-  sale_price: number;
-  sale_date: string;
-  buyer_type?: string;
-}
-
-export type MvcEventPayload =
-  | DecisionMadePayload
-  | BidSubmittedPayload
-  | BidResultPayload
-  | SaleResultPayload;

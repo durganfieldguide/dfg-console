@@ -9,6 +9,7 @@
 import type {
   OpportunityStatus,
   RejectionReason,
+  DecisionReasonCode,
   WatchTrigger,
   WatchThreshold,
   Alert,
@@ -195,6 +196,7 @@ export interface UpdateOpportunityRequest {
   status?: OpportunityStatus;
   rejection_reason?: RejectionReason;
   rejection_note?: string;
+  reason_codes?: DecisionReasonCode[];  // #188: Multi-select reason codes for PASS decisions
   watch_trigger?: WatchTrigger;
   watch_threshold?: WatchThreshold;
   max_bid_locked?: number;

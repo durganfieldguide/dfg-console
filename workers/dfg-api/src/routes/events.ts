@@ -6,7 +6,7 @@
 import type { Env } from '../core/env';
 import { json, jsonError, ErrorCodes, parseJsonBody, getQueryParam } from '../core/http';
 import { generateId, nowISO, parseJsonSafe } from '../lib/utils';
-import type { MvcEvent, MvcEventType, MvcEventPayload } from '@dfg/types';
+import type { MvcEventType, MvcEventPayload } from '@dfg/types';
 
 // =============================================================================
 // MAIN ROUTER
