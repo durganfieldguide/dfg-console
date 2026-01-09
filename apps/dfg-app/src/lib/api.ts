@@ -753,10 +753,10 @@ export function checkStaleness(opportunity: OpportunityWithAnalysis): {
 }
 
 // =============================================================================
-// MVC EVENTS (#187)
+// MVC EVENTS (#187, #188)
 // =============================================================================
 
-import type { MvcEvent, MvcEventType, MvcEventPayload } from '@dfg/types';
+import type { MvcEvent, MvcEventType, MvcEventPayload, DecisionMadePayload } from '@dfg/types';
 
 export interface CreateEventParams {
   opportunity_id: string;
@@ -778,4 +778,25 @@ export async function getEvents(opportunityId: string): Promise<MvcEvent[]> {
     `/api/events?opportunity_id=${encodeURIComponent(opportunityId)}`
   );
   return response.data.events;
+}
+
+/**
+ * Create a decision_made event for an opportunity.
+ * Used to log operator decisions (PASS, BID, WATCH) with reason codes.
+ * Convenience wrapper around createEvent for decision_made events.
+ */
+export async function createDecisionEvent(
+  opportunityId: string,
+  payload: DecisionMadePayload
+): Promise<MvcEvent> {
+  const response = await fetchApi<{ data: MvcEvent }>('/api/events', {
+    method: 'POST',
+    body: JSON.stringify({
+      opportunity_id: opportunityId,
+      event_type: 'decision_made',
+      payload,
+      emitted_at: new Date().toISOString(),
+    }),
+  });
+  return response.data;
 }

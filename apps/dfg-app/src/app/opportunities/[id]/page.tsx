@@ -30,6 +30,9 @@ import { GatesDisplay, type ComputedGates } from '@/components/features/gates-di
 import { StalenessBanner, type StalenessReason } from '@/components/features/staleness-banner';
 import { KillSwitchBanner } from '@/components/features/kill-switch-banner';
 import { RequiredExit } from '@/components/features/required-exit';
+// #188: Decision reason taxonomy
+import { ReasonCodeSelect } from '@/components/ReasonCodeSelect';
+import { DecisionReasonCode } from '@dfg/types';
 import {
   cn,
   formatCurrency,
@@ -48,6 +51,7 @@ import {
   checkStaleness,
   createEvent,
   getEvents,
+  createDecisionEvent,
   type AnalysisResult,
   type OpportunityWithAnalysis,
 } from '@/lib/api';
@@ -68,6 +72,10 @@ export default function OpportunityDetailPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showWatchModal, setShowWatchModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+
+  // #188: Decision reason taxonomy state
+  const [selectedReasonCodes, setSelectedReasonCodes] = useState<DecisionReasonCode[]>([]);
+  const [rejectionNote, setRejectionNote] = useState('');
 
   // Sprint 1.5 state
   const [operatorInputs, setOperatorInputs] = useState<OperatorInputs | null>(null);
@@ -862,34 +870,139 @@ export default function OpportunityDetailPage() {
           </div>
         </div>
 
-        {/* Reject Modal - Simple implementation */}
+        {/* Reject Modal - Enhanced with reason codes (#188) */}
         {showRejectModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 m-4 max-w-sm w-full">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 m-4 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold mb-4">Reject Opportunity</h3>
-              <select
-                className="w-full border rounded-lg p-2 mb-4"
-                onChange={(e) => {
-                  if (e.target.value) {
-                    handleStatusChange('rejected', {
-                      rejection_reason: e.target.value as RejectionReason,
-                    });
+
+              {/* Legacy single-select reason (backward compatibility) */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Primary Reason
+                </label>
+                <select
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  onChange={(e) => {
+                    // Auto-select corresponding reason code
+                    const reason = e.target.value as RejectionReason;
+                    if (reason && !selectedReasonCodes.length) {
+                      // Map legacy reasons to new codes
+                      const codeMap: Record<RejectionReason, DecisionReasonCode> = {
+                        too_far: 'location_too_far',
+                        too_expensive: 'price_too_high',
+                        wrong_category: 'other',
+                        poor_condition: 'condition_major',
+                        missing_info: 'condition_unknown',
+                        other: 'other',
+                      };
+                      if (codeMap[reason]) {
+                        setSelectedReasonCodes([codeMap[reason]]);
+                      }
+                    }
+                  }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Select primary reason...</option>
+                  <option value="too_far">Too Far</option>
+                  <option value="too_expensive">Too Expensive</option>
+                  <option value="wrong_category">Wrong Category</option>
+                  <option value="poor_condition">Poor Condition</option>
+                  <option value="missing_info">Missing Info</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              {/* Multi-select reason codes (#188) */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Why are you passing? <span className="text-red-500">*</span> (select all that apply)
+                </label>
+                <ReasonCodeSelect
+                  value={selectedReasonCodes}
+                  onChange={setSelectedReasonCodes}
+                />
+              </div>
+
+              {/* Conditional notes field for "other" */}
+              {selectedReasonCodes.includes('other') && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Please explain <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 min-h-[80px]"
+                    placeholder="Provide details about why you're passing..."
+                    value={rejectionNote}
+                    onChange={(e) => setRejectionNote(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
                     setShowRejectModal(false);
+                    setSelectedReasonCodes([]);
+                    setRejectionNote('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    // Determine primary rejection reason from selected codes
+                    let primaryReason: RejectionReason = 'other';
+                    if (selectedReasonCodes.includes('location_too_far') || selectedReasonCodes.includes('location_restricted')) {
+                      primaryReason = 'too_far';
+                    } else if (selectedReasonCodes.includes('price_too_high') || selectedReasonCodes.includes('price_no_margin')) {
+                      primaryReason = 'too_expensive';
+                    } else if (selectedReasonCodes.includes('condition_major')) {
+                      primaryReason = 'poor_condition';
+                    } else if (selectedReasonCodes.includes('condition_unknown')) {
+                      primaryReason = 'missing_info';
+                    }
+
+                    await handleStatusChange('rejected', {
+                      rejection_reason: primaryReason,
+                      rejection_note: rejectionNote || undefined,
+                      reason_codes: selectedReasonCodes,
+                    });
+
+                    // #188: Send decision_made event with reason codes
+                    try {
+                      // Map verdict from 'BUY' to 'BID' for AnalysisRecommendation type
+                      const verdict = analysisResult?.report_fields?.verdict;
+                      const mappedVerdict = verdict === 'BUY' ? 'BID' : verdict;
+
+                      await createDecisionEvent(opportunity!.id, {
+                        decision: 'PASS',
+                        decision_reason: selectedReasonCodes,
+                        note: rejectionNote || undefined,
+                        analyst_verdict: mappedVerdict,
+                        analyst_confidence: analysisResult?.report_fields?.confidence,
+                      });
+                    } catch (error) {
+                      console.error('Failed to log decision event:', error);
+                      // Non-blocking: continue even if event logging fails
+                    }
+
+                    setShowRejectModal(false);
+                    setSelectedReasonCodes([]);
+                    setRejectionNote('');
+                  }}
+                  disabled={
+                    updating ||
+                    selectedReasonCodes.length === 0 ||
+                    (selectedReasonCodes.includes('other') && !rejectionNote.trim())
                   }
-                }}
-                defaultValue=""
-              >
-                <option value="" disabled>Select reason...</option>
-                <option value="too_far">Too Far</option>
-                <option value="too_expensive">Too Expensive</option>
-                <option value="wrong_category">Wrong Category</option>
-                <option value="poor_condition">Poor Condition</option>
-                <option value="missing_info">Missing Info</option>
-                <option value="other">Other</option>
-              </select>
-              <Button variant="ghost" onClick={() => setShowRejectModal(false)}>
-                Cancel
-              </Button>
+                >
+                  {updating ? 'Rejecting...' : 'Confirm Rejection'}
+                </Button>
+              </div>
             </div>
           </div>
         )}
