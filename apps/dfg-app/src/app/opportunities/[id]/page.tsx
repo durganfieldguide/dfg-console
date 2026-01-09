@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { StatusBadge, ScoreBadge } from '@/components/ui/Badge';
 import { TabbedAnalysis } from '@/components/features/tabbed-analysis';
+import { NextActionCard } from '@/components/NextActionCard';
 // Sprint 1.5 components
 import { TitleInputs, type OperatorInputs } from '@/components/features/title-inputs';
 import { GatesDisplay, type ComputedGates } from '@/components/features/gates-display';
@@ -356,6 +357,12 @@ export default function OpportunityDetailPage() {
         )}
 
         <div className="p-4 space-y-4">
+          {/* Next Action Card - #185 */}
+          <NextActionCard
+            analysis={analysisResult}
+            analysisTimestamp={analysisTimestamp}
+          />
+
           {/* Sprint 1.5: Staleness Banner */}
           <StalenessBanner
             isStale={isStale}
