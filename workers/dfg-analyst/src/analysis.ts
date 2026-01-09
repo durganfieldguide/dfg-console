@@ -6,7 +6,10 @@ import type {
   PriceRange,
   AcquisitionModel,
   ListingData,
-  AssetSummary
+  AssetSummary,
+  VerdictGate,
+  VerdictGateResult,
+  Verdict
 } from "./types";
 
 import {
@@ -302,8 +305,6 @@ export function calculateProfitScenarios(
 // VERDICT + GATES (ENGINE 1: CASHFLOW-FIRST)
 // ============================================
 
-export type Verdict = "STRONG_BUY" | "BUY" | "MARGINAL" | "PASS";
-
 // 40% Rule mandate (after repairs, all-in).
 export function calculateVerdict(
   maxBid: number,
@@ -328,10 +329,11 @@ export function applyVerdictGates(
   condition: ConditionAssessment,
   _assetSummary?: AssetSummary,
   _meta?: Record<string, unknown> & { scenarios?: ReturnType<typeof calculateProfitScenarios> }
-): { verdict: Verdict; reasons: string[] } {
+): VerdictGateResult {
   const reasons: string[] = [];
+  const gates: VerdictGate[] = [];  // #148: Structured gate data
 
-  // Extract data for new gates (#156)
+  // Extract data for gate checks
   const identityConfidence = condition.assessment_confidence || condition.identity_confidence;
   const hasFrameDamage = condition.structural_damage === true;
   const hasSevereRust = condition.frame_integrity === "compromised" ||
@@ -352,62 +354,122 @@ export function applyVerdictGates(
     verdict = order[r] ?? verdict;
   };
 
-  // Thin evidence: fewer than 6 photos => downgrade (#156)
+  // Gate 1: Photo count (#148)
   if (photoCount < 6) {
-    if (photoCount < 3) {
-      // Very thin evidence: cap at MARGINAL
+    const isCritical = photoCount < 3;
+    gates.push({
+      id: 'insufficient_photos',
+      type: isCritical ? 'blocking' : 'downgrade',
+      status: 'failed',
+      category: isCritical ? 'critical' : 'confidence',
+      title: isCritical ? 'Critical Photo Shortage' : 'Limited Photos',
+      description: `Only ${photoCount} photos available. ${isCritical ? 'Cannot assess condition' : 'Analysis confidence limited'}.`,
+      condition: `Need at least ${isCritical ? '3' : '6'} photos (have ${photoCount})`,
+      impact: isCritical ? 'Capped at MARGINAL' : 'Downgraded one level'
+    });
+
+    if (isCritical) {
       downgradeToAtLeast("MARGINAL");
       reasons.push(`Only ${photoCount} photos - insufficient evidence`);
     } else {
-      // Downgrade one level (BUY→MARGINAL, MARGINAL→PASS)
-      if (verdict === "STRONG_BUY") {
-        verdict = "BUY";
-        reasons.push(`Limited photos (${photoCount}) - downgraded one level`);
-      } else if (verdict === "BUY") {
-        verdict = "MARGINAL";
-        reasons.push(`Limited photos (${photoCount}) - downgraded one level`);
-      } else if (verdict === "MARGINAL") {
-        verdict = "PASS";
-        reasons.push(`Limited photos (${photoCount}) - downgraded one level`);
-      }
+      if (verdict === "STRONG_BUY") verdict = "BUY";
+      else if (verdict === "BUY") verdict = "MARGINAL";
+      else if (verdict === "MARGINAL") verdict = "PASS";
+      reasons.push(`Limited photos (${photoCount}) - downgraded one level`);
     }
   }
 
-  // Identity conflict: cap at MARGINAL
+  // Gate 2: Identity conflict (#148)
   if (condition.identity_conflict) {
+    gates.push({
+      id: 'identity_conflict',
+      type: 'downgrade',
+      status: 'failed',
+      category: 'confidence',
+      title: 'Identity Conflict',
+      description: 'Conflicting information about asset identity. Cannot verify exact make/model.',
+      condition: 'Need clear VIN or consistent identifying information',
+      impact: 'Capped at MARGINAL'
+    });
     downgradeToAtLeast("MARGINAL");
     reasons.push("Identity conflict - not confident in asset identification");
   }
 
-  // Low identity confidence: PASS (#156)
+  // Gate 3: Low identity confidence (#148)
   if (identityConfidence === "low") {
+    gates.push({
+      id: 'low_identity_confidence',
+      type: 'blocking',
+      status: 'failed',
+      category: 'critical',
+      title: 'Low Identity Confidence',
+      description: 'Cannot confidently identify what asset this is. Critical for valuation.',
+      condition: 'Need clear photos of VIN, badging, or identifying features',
+      impact: 'Auto-PASS'
+    });
     downgradeToAtLeast("PASS");
     reasons.push("Auto-PASS: Low identity confidence");
   }
 
-  // Storage constraint: single-car garage reality (unless explicitly overridden)
+  // Gate 4: Storage constraint (#148)
   const storageOverride = _meta?.storage_override === true;
   const lengthFt = condition.dimensions?.length_ft;
   if (!storageOverride && typeof lengthFt === "number" && Number.isFinite(lengthFt) && lengthFt > 18) {
+    gates.push({
+      id: 'storage_constraint',
+      type: 'downgrade',
+      status: 'failed',
+      category: 'confidence',
+      title: 'Storage Constraint',
+      description: `Asset is ${lengthFt}ft long. Exceeds single-car garage capacity (18ft max).`,
+      condition: 'Need alternative storage or override storage constraint',
+      impact: 'Capped at MARGINAL'
+    });
     downgradeToAtLeast("MARGINAL");
     reasons.push(`Storage constraint: ${lengthFt}ft length exceeds garage capacity`);
   }
 
-  // Unknown brakes (especially tandem): cap at MARGINAL
+  // Gate 5: Unknown brakes (#148)
   if (condition.axle_status === "tandem" && condition.brakes === "unknown") {
+    gates.push({
+      id: 'unknown_brakes',
+      type: 'downgrade',
+      status: 'failed',
+      category: 'confidence',
+      title: 'Unknown Brake Status',
+      description: 'Tandem axle trailer with unknown brake condition. Safety concern for towing.',
+      condition: 'Need verification of brake functionality',
+      impact: 'Capped at MARGINAL'
+    });
     downgradeToAtLeast("MARGINAL");
     reasons.push("Unknown brakes on tandem axle - safety risk");
   }
 
-  // Title issues: salvage/missing/BOS => PASS (if over $5k); otherwise cap at MARGINAL (#156)
+  // Gate 6: Title issues (#148)
   if (condition.title_status && condition.title_status !== "clean") {
     const titleProblematic = !["clean", "on_file", "unknown"].includes(condition.title_status);
 
     if (titleProblematic) {
       const isCriticalTitle = ["salvage", "missing", "bos", "bill_of_sale"].includes(condition.title_status);
       const isHighValue = currentBid > 5000;
+      const autoPass = isCriticalTitle && isHighValue;
 
-      if (isCriticalTitle && isHighValue) {
+      gates.push({
+        id: 'title_issue',
+        type: autoPass ? 'blocking' : 'downgrade',
+        status: 'failed',
+        category: autoPass ? 'critical' : 'confidence',
+        title: autoPass ? `${condition.title_status.toUpperCase()} Title` : 'Title Issue',
+        description: autoPass
+          ? `${condition.title_status} title on asset over $5k. Major resale barrier.`
+          : `Title status: ${condition.title_status}. May affect resale.`,
+        condition: autoPass
+          ? 'Need clean title or asset value under $5k'
+          : 'Verify title can be cleared or updated',
+        impact: autoPass ? 'Auto-PASS' : 'Capped at MARGINAL'
+      });
+
+      if (autoPass) {
         downgradeToAtLeast("PASS");
         reasons.push(`Auto-PASS: ${condition.title_status} title over $5k`);
       } else if (isCriticalTitle) {
@@ -420,20 +482,51 @@ export function applyVerdictGates(
     }
   }
 
-  // Frame damage visible: PASS (#156)
+  // Gate 7: Frame damage (#148)
   if (hasFrameDamage) {
+    gates.push({
+      id: 'frame_damage',
+      type: 'blocking',
+      status: 'failed',
+      category: 'critical',
+      title: 'Frame Damage Visible',
+      description: 'Structural frame damage detected in photos. Major safety and resale concern.',
+      condition: 'Frame must be intact for safe operation',
+      impact: 'Auto-PASS'
+    });
     downgradeToAtLeast("PASS");
     reasons.push("Auto-PASS: Frame damage visible");
   }
 
-  // Severe structural rust: PASS (#156)
+  // Gate 8: Severe structural rust (#148)
   if (hasSevereRust) {
+    gates.push({
+      id: 'severe_rust',
+      type: 'blocking',
+      status: 'failed',
+      category: 'critical',
+      title: 'Severe Structural Rust',
+      description: 'Frame integrity compromised by rust. Structural failure risk.',
+      condition: 'Frame must have solid structural integrity',
+      impact: 'Auto-PASS'
+    });
     downgradeToAtLeast("PASS");
     reasons.push("Auto-PASS: Severe structural rust");
   }
 
-  // VIN not confirmed: downgrade one level (#156)
+  // Gate 9: VIN not confirmed (#148)
   if (!vinConfirmed && condition.vin_visible === null) {
+    gates.push({
+      id: 'vin_unconfirmed',
+      type: 'downgrade',
+      status: 'failed',
+      category: 'confidence',
+      title: 'VIN Not Confirmed',
+      description: 'VIN not visible in photos. Cannot verify vehicle history or title match.',
+      condition: 'Need clear photo of VIN plate',
+      impact: 'Downgraded one level'
+    });
+
     if (verdict === "STRONG_BUY") {
       verdict = "BUY";
       reasons.push("VIN not confirmed - downgraded one level");
@@ -443,11 +536,22 @@ export function applyVerdictGates(
     }
   }
 
-  // Over 300mi: downgrade unless margin > 35% (#156)
+  // Gate 10: Distance/transport (#148)
   if (distance && distance > 300) {
     const marginExceptionMet = expectedMargin >= 0.35;
 
     if (!marginExceptionMet) {
+      gates.push({
+        id: 'high_distance',
+        type: 'downgrade',
+        status: 'failed',
+        category: 'confidence',
+        title: 'High Transport Distance',
+        description: `Asset is ${Math.round(distance)}mi away. High transport costs eat into margins.`,
+        condition: 'Need 35%+ margin to justify transport or find closer asset',
+        impact: 'Downgraded one level'
+      });
+
       if (verdict === "STRONG_BUY") {
         verdict = "BUY";
         reasons.push(`Transport distance ${Math.round(distance)}mi - downgraded one level`);
@@ -458,17 +562,38 @@ export function applyVerdictGates(
     }
   }
 
-  // Quick-sale safety: if marginal and downside is too thin, bump to PASS unless explicitly overridden.
+  // Gate 11: Quick-sale safety (#148)
   if (verdict === "MARGINAL" && _meta?.scenarios && _meta.scenarios.quick_sale) {
     const qs = _meta.scenarios.quick_sale;
     const hasOverride = _meta?.quick_flip_override === true;
     if (!hasOverride && qs.gross_profit < 300 && qs.margin < 0.15) {
+      gates.push({
+        id: 'thin_downside',
+        type: 'blocking',
+        status: 'failed',
+        category: 'critical',
+        title: 'Thin Downside Safety',
+        description: `Quick-sale scenario shows $${qs.gross_profit} profit at ${(qs.margin * 100).toFixed(0)}% margin. Too thin for safety.`,
+        condition: 'Need 15%+ margin AND $300+ profit in worst case',
+        impact: 'Downgraded to PASS'
+      });
       downgradeToAtLeast("PASS");
       reasons.push("Quick-sale margin too thin (<15% and <$300 profit)");
     }
   }
 
-  return { verdict, reasons };
+  // Calculate summary stats (#148)
+  const criticalGates = gates.filter(g => g.category === 'critical');
+  const allCriticalPassed = criticalGates.length === 0 || criticalGates.every(g => g.status === 'passed');
+
+  return {
+    verdict,
+    reasons,
+    gates,
+    allCriticalPassed,
+    passedCount: gates.filter(g => g.status === 'passed').length,
+    totalCount: gates.length
+  };
 }
 
 // ============================================
@@ -480,6 +605,10 @@ function thresholdsFor(desired: Exclude<Verdict, "PASS">): { profit: number; mar
     case "STRONG_BUY": return { profit: 800, margin: 0.40 };
     case "BUY": return { profit: 600, margin: 0.35 };
     case "MARGINAL": return { profit: 400, margin: 0.25 };
+    default: {
+      const _exhaustive: never = desired;
+      throw new Error(`Unexpected verdict: ${_exhaustive}`);
+    }
   }
 }
 

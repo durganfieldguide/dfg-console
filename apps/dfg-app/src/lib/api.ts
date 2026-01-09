@@ -489,6 +489,21 @@ export interface AnalysisResult {
     verdict: string;
     verdict_reasoning: string;
     verdict_reasons?: string[];  // #156: Tracks specific verdict adjustments/downgrades
+    verdict_gates?: Array<{      // #148: Structured gate data
+      id: string;
+      type: 'blocking' | 'downgrade';
+      status: 'failed' | 'passed';
+      category: 'critical' | 'confidence';
+      title: string;
+      description: string;
+      condition: string;
+      impact: string;
+    }>;
+    gates_summary?: {            // #148: Summary stats
+      allCriticalPassed: boolean;
+      passedCount: number;
+      totalCount: number;
+    };
     max_bid: number | null;
     profit_at_max: number | null;
     repair_estimate: number | null;

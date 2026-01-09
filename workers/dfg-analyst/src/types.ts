@@ -18,6 +18,12 @@ export interface Limits {
 }
 
 // ============================================
+// VERDICT TYPES
+// ============================================
+
+export type Verdict = "STRONG_BUY" | "BUY" | "MARGINAL" | "PASS";
+
+// ============================================
 // LISTING DATA (Ingress Contract)
 // ============================================
 
@@ -395,6 +401,30 @@ export interface ProfitScenario {
   days_to_sell: number;
 }
 
+// ============================================
+// VERDICT GATE TYPES (#148)
+// ============================================
+
+export interface VerdictGate {
+  id: string;                      // e.g., "insufficient_photos"
+  type: 'blocking' | 'downgrade';  // Did it block completely or just downgrade?
+  status: 'failed' | 'passed';     // Based on current conditions
+  category: 'critical' | 'confidence'; // Hard blocker vs soft concern
+  title: string;                   // "Insufficient Photos"
+  description: string;             // Detailed explanation
+  condition: string;               // What needs to change: "Need 6+ photos (have 4)"
+  impact: string;                  // "Downgraded from BUY to MARGINAL"
+}
+
+export interface VerdictGateResult {
+  verdict: Verdict;
+  reasons: string[];              // Keep for backward compat
+  gates: VerdictGate[];           // NEW: Structured gate data
+  allCriticalPassed: boolean;
+  passedCount: number;
+  totalCount: number;
+}
+
 export interface InvestorLensOutput {
   phoenix_comp_category: string;
   phoenix_resale_range: PriceRange;
@@ -412,9 +442,15 @@ export interface InvestorLensOutput {
     premium: ProfitScenario;
   };
   
-  verdict: "STRONG_BUY" | "BUY" | "MARGINAL" | "PASS";
+  verdict: Verdict;
   verdict_reasoning: string;
   verdict_reasons?: string[];  // #156: Tracks specific verdict adjustments/downgrades
+  verdict_gates?: VerdictGate[];  // #148: Structured gate data with pass/fail status
+  gates_summary?: {               // #148: Summary stats for gates
+    allCriticalPassed: boolean;
+    passedCount: number;
+    totalCount: number;
+  };
   max_bid: number;
 
   inspection_priorities: string[];

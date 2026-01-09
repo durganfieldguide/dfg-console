@@ -11,6 +11,7 @@ import {
 import { RiskAssessment, type RiskAssessmentData } from './risk-assessment';
 import { PreBidChecklist, type ChecklistItem } from './pre-bid-checklist';
 import { PhotoPipelineMetrics, type PhotoMetrics } from './photo-pipeline-metrics';
+import { GatesDisplay, type ComputedGates } from './gates-display';
 import type { AnalysisResult } from '@/lib/api';
 
 type Verdict = 'BUY' | 'WATCH' | 'PASS';
@@ -108,6 +109,40 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
     summary: string;
   } | undefined;
 
+  // Extract verdict gates (#148) - structured gate display
+  const verdictGates = (analysis as any)?.investor_lens?.verdict_gates as Array<{
+    id: string;
+    type: 'blocking' | 'downgrade';
+    status: 'failed' | 'passed';
+    category: 'critical' | 'confidence';
+    title: string;
+    description: string;
+    condition: string;
+    impact: string;
+  }> | undefined;
+
+  const gatesSummary = (analysis as any)?.investor_lens?.gates_summary as {
+    allCriticalPassed: boolean;
+    passedCount: number;
+    totalCount: number;
+  } | undefined;
+
+  // Map VerdictGate objects to ComputedGates interface for GatesDisplay
+  const computedGates: ComputedGates | null = verdictGates && verdictGates.length > 0 ? {
+    gates: verdictGates.map(g => ({
+      name: g.id,
+      status: g.status as 'passed' | 'failed',
+      reason: g.description,
+      isCritical: g.category === 'critical'
+    })),
+    allCriticalPassed: gatesSummary?.allCriticalPassed ?? false,
+    passedCount: gatesSummary?.passedCount ?? 0,
+    totalCount: gatesSummary?.totalCount ?? verdictGates.length,
+    summary: gatesSummary?.allCriticalPassed
+      ? "All critical gates cleared"
+      : `${verdictGates.filter(g => g.category === 'critical' && g.status === 'failed').length} critical gate(s) blocking`
+  } : null;
+
   // Check for V2.7 format (observed_issues) or V2.6 format (confirmed_issues)
   const hasRiskData = riskAssessment && (
     (riskAssessment as any).observed_issues?.length > 0 ||
@@ -192,22 +227,27 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
         </div>
       </div>
 
-      {/* Verdict Adjustments (#156) - Show specific reasons for verdict downgrades/gates */}
-      {(analysis as any)?.investor_lens?.verdict_reasons &&
-       (analysis as any).investor_lens.verdict_reasons.length > 0 && (
-        <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700">
-          <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Verdict Adjustments:
-          </p>
-          <ul className="space-y-1">
-            {(analysis as any).investor_lens.verdict_reasons.map((reason: string, i: number) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
-                <span className="shrink-0 mt-0.5">•</span>
-                <span>{reason}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {/* Verdict Gates (#148) - Structured gate display with status indicators */}
+      {computedGates ? (
+        <GatesDisplay gates={computedGates} />
+      ) : (
+        /* Fallback to simple text display for old analyses without verdict_gates */
+        (analysis as any)?.investor_lens?.verdict_reasons &&
+        (analysis as any).investor_lens.verdict_reasons.length > 0 && (
+          <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700">
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Verdict Adjustments:
+            </p>
+            <ul className="space-y-1">
+              {(analysis as any).investor_lens.verdict_reasons.map((reason: string, i: number) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                  <span className="shrink-0 mt-0.5">•</span>
+                  <span>{reason}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
       )}
 
       {/* Liquidity Overview (#147) - Time to sell and demand level */}
