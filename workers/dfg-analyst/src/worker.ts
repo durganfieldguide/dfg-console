@@ -1649,18 +1649,21 @@ async function fetchImageAsBase64(
       // 429 = rate limited, 503 = overloaded - these are retryable
       if (response.status === 429 || response.status === 503) {
         lastError = `HTTP ${response.status} (retryable)`;
+        console.log(`[IMAGE] Image ${index} got ${response.status}, retrying...`);
         continue; // Retry
       }
 
       // 403/401 = likely hotlink protection - retry with proxy on next attempt
       if (!useProxy && (response.status === 403 || response.status === 401)) {
         lastError = `HTTP ${response.status} (hotlink blocked)`;
+        console.log(`[IMAGE] Image ${index} got ${response.status}, will retry with proxy`);
         useProxy = true;
         continue; // Retry with proxy
       }
 
       if (!response.ok) {
         // Non-retryable HTTP error
+        console.log(`[IMAGE] Image ${index} failed with HTTP ${response.status}, URL: ${url.substring(0, 100)}`);
         return {
           result: {
             index,
@@ -1701,8 +1704,15 @@ async function fetchImageAsBase64(
         };
       }
 
-      // Convert to base64
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      // Convert to base64 - process in chunks to avoid stack overflow on large images
+      const uint8Array = new Uint8Array(buffer);
+      const CHUNK_SIZE = 8192; // Process 8KB at a time to avoid call stack issues
+      let binaryString = '';
+      for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
+        const chunk = uint8Array.subarray(i, Math.min(i + CHUNK_SIZE, uint8Array.length));
+        binaryString += String.fromCharCode(...chunk);
+      }
+      const base64 = btoa(binaryString);
       const mediaType = contentType.split(';')[0].trim();
 
       return {
@@ -1720,6 +1730,7 @@ async function fetchImageAsBase64(
       // AbortError = timeout, network errors may be transient
       const isTimeout = err.name === 'AbortError';
       lastError = isTimeout ? 'Timeout (15s)' : (err.message || 'Unknown fetch error');
+      console.log(`[IMAGE] Image ${index} fetch exception (attempt ${attempt + 1}/${maxRetries + 1}): ${lastError}, URL: ${url.substring(0, 100)}`);
 
       // Network errors and timeouts are retryable
       if (attempt < maxRetries) {
@@ -1729,6 +1740,7 @@ async function fetchImageAsBase64(
   }
 
   // All retries exhausted
+  console.log(`[IMAGE] Image ${index} FAILED after all retries. Last error: ${lastError}, URL: ${url.substring(0, 100)}`);
   return {
     result: {
       index,
@@ -1907,6 +1919,11 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
   }
 
   console.log(`[ANALYSIS] Starting analysis for: ${listingData.title} (category: ${listingData.category_id || 'unknown'})`);
+  console.log(`[ANALYSIS] Received ${listingData.photos.length} photos`);
+  console.log(`[ANALYSIS] Photos type: ${typeof listingData.photos}, isArray: ${Array.isArray(listingData.photos)}`);
+  if (listingData.photos.length > 0) {
+    console.log(`[ANALYSIS] First 3 photo URLs:`, listingData.photos.slice(0, 3));
+  }
 
   ensureSierraFees(listingData);
 
@@ -2550,7 +2567,32 @@ export default {
         headers: { "Content-Type": "application/json" }
       });
     }
-    
+
+    // Debug endpoint to test photo fetching directly
+    if (url.pathname === "/debug/fetch-photo" && request.method === "POST") {
+      try {
+        const { photoUrl } = await request.json() as { photoUrl: string };
+        console.log(`[DEBUG] Testing fetch for: ${photoUrl}`);
+        const result = await fetchImageAsBase64(photoUrl, 0, 2);
+        return new Response(JSON.stringify({
+          success: result.result.status === 'ok',
+          result: result.result,
+          hasBase64: !!result.base64,
+          base64Length: result.base64?.length || 0
+        }), {
+          headers: { "Content-Type": "application/json" }
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+    }
+
     if (url.pathname === "/analyze" && request.method === "POST") {
       try {
         const listingData = await request.json() as ListingData;
