@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "cd ../../packages/dfg-types && npx tsup src/index.ts --format cjs,esm --dts",
     "dev": "next dev --turbo -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
@@ -11,7 +10,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@dfg/types": "*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
     "lucide-react": "^0.400.0",
