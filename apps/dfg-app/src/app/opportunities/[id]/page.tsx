@@ -56,7 +56,7 @@ import {
   type OpportunityWithAnalysis,
 } from '@/lib/api';
 import type { OpportunityDetail, OpportunityStatus, RejectionReason } from '@/types';
-import type { MvcEvent } from '@dfg/types';
+import type { MvcEvent, DecisionMadePayload } from '@dfg/types';
 
 export default function OpportunityDetailPage() {
   const params = useParams();
@@ -151,17 +151,18 @@ export default function OpportunityDetailPage() {
     setEventError(null);
 
     try {
+      const payload: DecisionMadePayload = {
+        decision,
+        operator_context: {
+          current_status: opportunity?.status,
+          buy_box_score: opportunity?.buy_box_score ?? undefined,
+          max_bid_high: opportunity?.max_bid_high ?? undefined,
+        },
+      };
       await createEvent({
         opportunity_id: id,
         event_type: 'decision_made',
-        payload: {
-          decision,
-          operator_context: {
-            current_status: opportunity?.status,
-            buy_box_score: opportunity?.buy_box_score ?? undefined,
-            max_bid_high: opportunity?.max_bid_high ?? undefined,
-          },
-        },
+        payload,
       });
       return true;
     } catch (error) {

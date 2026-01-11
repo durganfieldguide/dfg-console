@@ -180,6 +180,7 @@ export default function CommandPage() {
             <>
               <WorkQueueSection
                 title="Needs QA"
+                queueType="needs-qa"
                 icon={CheckCircle}
                 cards={queues.needsQa}
                 loading={refreshing.has('needs-qa')}
@@ -189,6 +190,7 @@ export default function CommandPage() {
 
               <WorkQueueSection
                 title="Needs PM"
+                queueType="needs-pm"
                 icon={AlertCircle}
                 cards={queues.needsPm}
                 loading={refreshing.has('needs-pm')}
@@ -198,6 +200,7 @@ export default function CommandPage() {
 
               <WorkQueueSection
                 title="Dev Queue"
+                queueType="dev-queue"
                 icon={Layers}
                 cards={queues.devQueue}
                 loading={refreshing.has('dev-queue')}
@@ -207,6 +210,7 @@ export default function CommandPage() {
 
               <WorkQueueSection
                 title="Ready to Merge"
+                queueType="ready-to-merge"
                 icon={GitPullRequest}
                 cards={queues.readyToMerge}
                 loading={refreshing.has('ready-to-merge')}
@@ -218,6 +222,7 @@ export default function CommandPage() {
 
               <WorkQueueSection
                 title="In Flight"
+                queueType="in-flight"
                 icon={PlayCircle}
                 cards={queues.inFlight}
                 loading={refreshing.has('in-flight')}

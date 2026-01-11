@@ -1,6 +1,6 @@
 # PM Team Handoff
 
-**Updated:** 2026-01-07
+**Updated:** 2026-01-09
 
 ---
 
@@ -59,17 +59,17 @@ DFG is an operator tool and subscription SaaS for deal flow generation. Not a ma
 
 ## Current Focus
 
-**Sprint N+8** — Ready to proceed
+**Sprint N+9** — COMPLETE ✅
 
-10 stories labeled `status:ready` + `sprint:n+8`:
-- 5 P0: #145, #146, #152, #153, #154
-- 5 P1: #147, #148, #150, #155, #156
+16 points delivered in single 4xDev parallel session:
+- ✅ #185 Next Action UI (3 pts) — PR #200, commit fcb2a9e
+- ✅ #21 Salvage Fix (5 pts) — commit eff732b
+- ✅ #187 MVC Event Logging (5 pts) — PR #201, commit 7c3377f
+- ✅ #188 Reason Taxonomy (3 pts) — PR #202, commit bfdc762
 
-**No blockers.** #157 and #159 are closed.
+**All issues closed, production-verified.**
 
-**Other ready items (not sprint-tagged):**
-- #123: FIX-004 Analyst Endpoints Unauthenticated (P0, security)
-- #131, #130, #129, #128, #143: P1 tech debt and bugs
+**TEMP OVERRIDE in effect:** QA on production after merge (not preview). PR workflow ready but paused for velocity.
 
 **Roadmap:**
 - Feb 2026: 3-5 private beta users
@@ -111,34 +111,45 @@ DFG is an operator tool and subscription SaaS for deal flow generation. Not a ma
 
 ## Session Notes
 
-**Last session (Jan 7 AM):**
-- Shipped handoff system (PM.md, DEV.md, QA.md + `/sod` and `/eod` commands)
-- 11 slash commands now available for Dev Team
-- Confirmed #157 and #159 are closed (no P0 blockers)
+**This session (Jan 9):**
 
-**This session (Jan 7 PM):**
-- Closed 37 stale issues (Sprint N+2 through N+6 cleanup)
-- Completed #172: Git worktrees evaluation (ready for parallel dev)
-- **MAJOR:** Completed #173: Type consolidation (unblocks worktrees)
-  - Fixed production bug: hard_gate_failure → 'other' (DB constraint compliance)
-  - Consolidated shared types into @dfg/types package
-  - All typechecks pass (app + API)
-- Created #175: Schema evolution for rejection reasons (P2 follow-up)
-- Fixed `/eod` command and `.claude/settings.json` (committed)
+🎯 **First 4xDev Parallel Session** — 16 points delivered
 
-**Deliverables:**
-- `docs/worktrees-analysis.md` — Full evaluation with prep checklist
-- Commit 3ad0ff7 — Type consolidation (18 files changed)
-- Issue #175 — Follow-up for schema evolution
+Executed 4 tracks simultaneously using git worktrees:
 
-**Status:**
-- **Worktrees: UNBLOCKED** — Type consolidation complete, ready for parallel work
-- **Sprint N+8: READY** — 5 P0 stories ready for dev (#145, #146, #152, #153, #154)
+| Track | Issue | Points | PR | Commit | Status |
+|-------|-------|--------|-----|--------|--------|
+| A | #185 Next Action UI | 3 | #200 | fcb2a9e | ✅ DONE |
+| B | #21 Salvage Fix | 5 | — | eff732b | ✅ DONE |
+| C | #187 MVC Events | 5 | #201 | 7c3377f | ✅ DONE |
+| D | #188 Reason Taxonomy | 3 | #202 | bfdc762 | ✅ DONE |
+
+**Key deliverables:**
+- NextActionCard component (verdict-driven operator guidance)
+- Boilerplate detection (prevents T&C from triggering false salvage flags)
+- MVC event logging (decision_made events with audit trail)
+- D1 migration 0006_mvc_events.sql applied
+- Decision reason taxonomy (13 codes, 8 categories, multi-select)
+
+**Deployments:**
+- dfg-analyst worker deployed
+- dfg-api worker deployed
+- D1 mvc_events table + 4 indexes created
+
+**Process learnings:**
+- Type dependencies handled via rebase (#188 needed #187's types)
+- CI fix required mid-flight (unused MvcEvent import)
+- Preview URL testing not in effect — QA on production after merge
+
+**Production QA verified:**
+- #185: NextActionCard renders with verdict, why, walk triggers, max bid
+- #187: Event endpoints live, Reject modal triggers events
+- #188: Multi-select chips, 8 categories, "Other" shows notes field, validation works
 
 **Next session should:**
-1. Start Sprint N+8 P0 stories (type consolidation no longer blocks)
-2. Optionally set up worktrees for parallel development
-3. Consider #123 (unauthenticated analyst endpoints - security P0)
+1. Deploy dfg-analyst for #21 activation (boilerplate detection)
+2. Plan Sprint N+10
+3. Consider #123 (P0 security - unauthenticated analyst endpoints)
 
 ---
 

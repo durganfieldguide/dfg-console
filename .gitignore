@@ -39,3 +39,4 @@ coverage/
 # Local / tool-specific
 .claude/settings.local.json
 tsconfig.tsbuildinfo
+.gemini/

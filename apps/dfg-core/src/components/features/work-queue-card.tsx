@@ -9,23 +9,51 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
-import type { WorkQueueCard, PromptType } from '@/types/github';
+import type { WorkQueueCard, PromptType, QueueType } from '@/types/github';
 
 interface WorkQueueCardProps {
   card: WorkQueueCard;
+  queueType: QueueType;
   onCopyPrompt: (card: WorkQueueCard, type: PromptType) => Promise<void>;
 }
 
-export function WorkQueueCard({ card, onCopyPrompt }: WorkQueueCardProps) {
-  const [copying, setCopying] = useState<PromptType | null>(null);
+/**
+ * Get the primary action for each queue type.
+ * Returns null for queues that are info-only.
+ */
+function getPrimaryAction(queueType: QueueType): { type: PromptType; label: string } | null {
+  switch (queueType) {
+    case 'needs-qa':
+      return { type: 'qa', label: 'Copy QA Prompt' };
+    case 'needs-pm':
+      return { type: 'pm', label: 'Copy PM Prompt' };
+    case 'dev-queue':
+      return { type: 'agent-brief', label: 'Copy Agent Brief' };
+    case 'ready-to-merge':
+      return { type: 'merge', label: 'Copy Merge Prompt' };
+    case 'in-flight':
+      return null; // Info only, no action
+    default:
+      return null;
+  }
+}
 
-  const handleCopy = async (type: PromptType) => {
-    setCopying(type);
+export function WorkQueueCard({ card, queueType, onCopyPrompt }: WorkQueueCardProps) {
+  const [copying, setCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const primaryAction = getPrimaryAction(queueType);
+
+  const handleCopy = async () => {
+    if (!primaryAction) return;
+    
+    setCopying(true);
     try {
-      await onCopyPrompt(card, type);
+      await onCopyPrompt(card, primaryAction.type);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } finally {
-      // Reset after a brief delay to show feedback
-      setTimeout(() => setCopying(null), 1000);
+      setCopying(false);
     }
   };
 
@@ -112,54 +140,36 @@ export function WorkQueueCard({ card, onCopyPrompt }: WorkQueueCardProps) {
         Updated {relativeTime}
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2">
+      {/* Primary Action */}
+      {primaryAction && (
         <Button
-          variant="secondary"
+          variant={copied ? 'primary' : 'secondary'}
           size="sm"
-          onClick={() => handleCopy('qa')}
-          loading={copying === 'qa'}
-          disabled={copying !== null && copying !== 'qa'}
+          onClick={handleCopy}
+          disabled={copying}
+          className={cn(
+            'transition-all',
+            copied && 'bg-green-600 hover:bg-green-600 text-white'
+          )}
         >
-          <Copy className="h-3 w-3 mr-1.5" />
-          QA Prompt
+          {copying ? (
+            <>
+              <Copy className="h-3 w-3 mr-1.5 animate-pulse" />
+              Copying...
+            </>
+          ) : copied ? (
+            <>
+              <CheckCircle className="h-3 w-3 mr-1.5" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-3 w-3 mr-1.5" />
+              {primaryAction.label}
+            </>
+          )}
         </Button>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => handleCopy('pm')}
-          loading={copying === 'pm'}
-          disabled={copying !== null && copying !== 'pm'}
-        >
-          <Copy className="h-3 w-3 mr-1.5" />
-          PM Prompt
-        </Button>
-
-        {card.hasAgentBrief && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => handleCopy('agent-brief')}
-            loading={copying === 'agent-brief'}
-            disabled={copying !== null && copying !== 'agent-brief'}
-          >
-            <Copy className="h-3 w-3 mr-1.5" />
-            Agent Brief
-          </Button>
-        )}
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => handleCopy('merge')}
-          loading={copying === 'merge'}
-          disabled={copying !== null && copying !== 'merge'}
-        >
-          <Copy className="h-3 w-3 mr-1.5" />
-          Merge Prompt
-        </Button>
-      </div>
+      )}
     </div>
   );
 }

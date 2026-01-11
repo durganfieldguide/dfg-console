@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { WorkQueueCard } from './work-queue-card';
 import { cn } from '@/lib/utils';
-import type { WorkQueueCard as CardType, PromptType } from '@/types/github';
+import type { WorkQueueCard as CardType, PromptType, QueueType } from '@/types/github';
 
 interface WorkQueueSectionProps {
   title: string;
+  queueType: QueueType;
   icon: React.ComponentType<{ className?: string }>;
   cards: CardType[];
   loading: boolean;
@@ -19,6 +20,7 @@ interface WorkQueueSectionProps {
 
 export function WorkQueueSection({
   title,
+  queueType,
   icon: Icon,
   cards,
   loading,
@@ -83,6 +85,7 @@ export function WorkQueueSection({
               <WorkQueueCard
                 key={`${card.type}-${card.number}`}
                 card={card}
+                queueType={queueType}
                 onCopyPrompt={onCopyPrompt}
               />
             ))}
