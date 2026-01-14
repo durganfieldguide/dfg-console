@@ -1,8 +1,11 @@
 /**
- * DFG Relay Worker
- * 
+ * Crane Relay Worker
+ *
  * Enables PM Team to create GitHub issues via HTTP POST.
  * Eliminates copy-paste handoffs between Claude Web and GitHub.
+ *
+ * Multi-repo support: All endpoints accept an optional `repo` parameter.
+ * If not provided, defaults to GITHUB_OWNER/GITHUB_REPO from env.
  */
 
 interface Env {
@@ -17,7 +20,7 @@ interface Env {
   EVIDENCE_BUCKET: R2Bucket;
   RELAY_SHARED_SECRET: string;
   GH_APP_ID: string;
-  GH_INSTALLATIONS_JSON: string; // Multi-org: {"org":"installation_id",...}
+  GH_INSTALLATIONS_JSON: string;
   GH_PRIVATE_KEY_PEM: string;
   LABEL_RULES_JSON: string;
   GH_API_BASE?: string;
@@ -29,22 +32,26 @@ interface DirectivePayload {
   labels: string[];
   body: string;
   assignees?: string[];
+  repo?: string; // Optional: defaults to GITHUB_OWNER/GITHUB_REPO
 }
 
 interface CommentPayload {
   issue: number;
   body: string;
+  repo?: string; // Optional: defaults to GITHUB_OWNER/GITHUB_REPO
 }
 
 interface ClosePayload {
   issue: number;
   comment?: string;
+  repo?: string; // Optional: defaults to GITHUB_OWNER/GITHUB_REPO
 }
 
 interface LabelsPayload {
   issue: number;
   add?: string[];
   remove?: string[];
+  repo?: string; // Optional: defaults to GITHUB_OWNER/GITHUB_REPO
 }
 
 interface GitHubIssueResponse {
@@ -57,7 +64,7 @@ interface GitHubIssueResponse {
 // V2 TYPES
 // ============================================================================
 
-type Verdict = "PASS" | "FAIL" | "BLOCKED" | "PASS_UNVERIFIED" | "FAIL_UNCONFIRMED";
+type Verdict = "PASS" | "FAIL" | "BLOCKED" | "PASS_UNVERIFIED" | "FAIL_UNCONFIRMED" | "PASS_PENDING_APPROVAL";
 type Role = "QA" | "DEV" | "PM" | "MENTOR";
 type ScopeResult = { id: string; status: "PASS" | "FAIL" | "SKIPPED"; notes?: string };
 type RelayEvent = {
@@ -142,10 +149,22 @@ async function sha256Hex(input: string): Promise<string> {
   return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+/**
+ * Get default repo from env or use provided repo
+ */
+function getRepo(env: Env, providedRepo?: string): string {
+  if (providedRepo && isRepoSlug(providedRepo)) {
+    return providedRepo;
+  }
+  return `${env.GITHUB_OWNER}/${env.GITHUB_REPO}`;
+}
+
 // CORS configuration (#98)
 const ALLOWED_ORIGINS = [
   'https://app.durganfieldguide.com',
   'https://durganfieldguide.com',
+  'https://core.durganfieldguide.com',
+  'https://crane-command.vercel.app',
   'http://localhost:3000',
 ];
 
@@ -165,15 +184,14 @@ export default {
     const url = new URL(request.url);
     currentRequest = request;
 
-    // Request-lifecycle cache for GitHub token (V2) - per org
-    const ghTokenCache = new Map<string, Promise<string>>();
+    // Request-lifecycle cache for GitHub tokens (V2) - keyed by org
+    const ghTokenCache: Record<string, Promise<string>> = {};
     const getGhToken = (repo: string) => {
-      const { owner } = splitRepo(repo);
-      if (!ghTokenCache.has(owner)) {
-        const installationId = getInstallationIdForRepo(env, repo);
-        ghTokenCache.set(owner, getInstallationToken(env, installationId));
+      const org = repo.split("/")[0];
+      if (!ghTokenCache[org]) {
+        ghTokenCache[org] = getInstallationToken(env, repo);
       }
-      return ghTokenCache.get(owner)!;
+      return ghTokenCache[org];
     };
 
     // CORS headers for preflight (#98: restricted origins)
@@ -209,6 +227,22 @@ export default {
       if (!id) return badRequest("Missing evidence id");
       try {
         return await handleEvidenceGet(request, env, id);
+      } catch (err: any) {
+        return v2Json({ error: "Internal error", details: String(err?.message || err) }, 500);
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/v2/approval-queue") {
+      try {
+        return await handleGetApprovalQueue(request, env);
+      } catch (err: any) {
+        return v2Json({ error: "Internal error", details: String(err?.message || err) }, 500);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/v2/approve") {
+      try {
+        return await handleApprove(request, env, getGhToken);
       } catch (err: any) {
         return v2Json({ error: "Internal error", details: String(err?.message || err) }, 500);
       }
@@ -278,12 +312,15 @@ async function handleDirective(request: Request, env: Env): Promise<Response> {
     }, 400);
   }
 
+  // Get repo (with default)
+  const repo = getRepo(env, payload.repo);
+
   // Build issue body with metadata header
   const issueBody = buildIssueBody(payload);
 
   // Create GitHub issue
   try {
-    const issue = await createGitHubIssue(env, {
+    const issue = await createGitHubIssue(env, repo, {
       title: payload.title,
       body: issueBody,
       labels: payload.labels || [],
@@ -294,6 +331,7 @@ async function handleDirective(request: Request, env: Env): Promise<Response> {
       success: true,
       issue: issue.number,
       url: issue.html_url,
+      repo,
     });
   } catch (error) {
     console.error('GitHub API error:', error);
@@ -309,7 +347,7 @@ async function handleDirective(request: Request, env: Env): Promise<Response> {
  */
 function buildIssueBody(payload: DirectivePayload): string {
   const header = [
-    '<!-- DFG Relay: Auto-generated issue -->',
+    '<!-- Crane Relay: Auto-generated issue -->',
     `**Routed to:** ${payload.to.toUpperCase()} Team`,
     `**Created:** ${new Date().toISOString()}`,
     '',
@@ -407,13 +445,17 @@ async function handleComment(request: Request, env: Env): Promise<Response> {
     }, 400);
   }
 
+  // Get repo (with default)
+  const repo = getRepo(env, payload.repo);
+
   // Create GitHub comment
   try {
-    await createGitHubComment(env, payload.issue, payload.body);
+    await createGitHubComment(env, repo, payload.issue, payload.body);
 
     return jsonResponse({
       success: true,
       issue: payload.issue,
+      repo,
     });
   } catch (error) {
     console.error('GitHub API error:', error);
@@ -455,19 +497,23 @@ async function handleClose(request: Request, env: Env): Promise<Response> {
     }, 400);
   }
 
+  // Get repo (with default)
+  const repo = getRepo(env, payload.repo);
+
   // Close GitHub issue (with optional comment)
   try {
     // Add comment if provided
     if (payload.comment) {
-      await createGitHubComment(env, payload.issue, payload.comment);
+      await createGitHubComment(env, repo, payload.issue, payload.comment);
     }
 
     // Close the issue
-    await closeGitHubIssue(env, payload.issue);
+    await closeGitHubIssue(env, repo, payload.issue);
 
     return jsonResponse({
       success: true,
       issue: payload.issue,
+      repo,
     });
   } catch (error) {
     console.error('GitHub API error:', error);
@@ -517,26 +563,30 @@ async function handleLabels(request: Request, env: Env): Promise<Response> {
     }, 400);
   }
 
+  // Get repo (with default)
+  const repo = getRepo(env, payload.repo);
+
   // Update labels on GitHub issue
   try {
     // Remove labels first (if specified)
     if (payload.remove && payload.remove.length > 0) {
       for (const label of payload.remove) {
-        await removeGitHubLabel(env, payload.issue, label);
+        await removeGitHubLabel(env, repo, payload.issue, label);
       }
     }
 
     // Add labels (if specified)
     if (payload.add && payload.add.length > 0) {
-      await addGitHubLabels(env, payload.issue, payload.add);
+      await addGitHubLabels(env, repo, payload.issue, payload.add);
     }
 
     // Fetch updated labels
-    const labels = await getGitHubLabels(env, payload.issue);
+    const labels = await getGitHubLabels(env, repo, payload.issue);
 
     return jsonResponse({
       success: true,
       issue: payload.issue,
+      repo,
       labels,
     });
   } catch (error) {
@@ -553,6 +603,7 @@ async function handleLabels(request: Request, env: Env): Promise<Response> {
  */
 async function createGitHubIssue(
   env: Env,
+  repo: string,
   params: {
     title: string;
     body: string;
@@ -560,14 +611,14 @@ async function createGitHubIssue(
     assignees: string[];
   }
 ): Promise<GitHubIssueResponse> {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues`;
+  const url = `https://api.github.com/repos/${repo}/issues`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `token ${env.GITHUB_TOKEN}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'dfg-relay-worker',
+      'User-Agent': 'crane-relay-worker',
       'Accept': 'application/vnd.github.v3+json',
     },
     body: JSON.stringify({
@@ -591,17 +642,18 @@ async function createGitHubIssue(
  */
 async function createGitHubComment(
   env: Env,
+  repo: string,
   issueNumber: number,
   body: string
 ): Promise<void> {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}/comments`;
+  const url = `https://api.github.com/repos/${repo}/issues/${issueNumber}/comments`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `token ${env.GITHUB_TOKEN}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'dfg-relay-worker',
+      'User-Agent': 'crane-relay-worker',
       'Accept': 'application/vnd.github.v3+json',
     },
     body: JSON.stringify({ body }),
@@ -618,16 +670,17 @@ async function createGitHubComment(
  */
 async function closeGitHubIssue(
   env: Env,
+  repo: string,
   issueNumber: number
 ): Promise<void> {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}`;
+  const url = `https://api.github.com/repos/${repo}/issues/${issueNumber}`;
 
   const response = await fetch(url, {
     method: 'PATCH',
     headers: {
       'Authorization': `token ${env.GITHUB_TOKEN}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'dfg-relay-worker',
+      'User-Agent': 'crane-relay-worker',
       'Accept': 'application/vnd.github.v3+json',
     },
     body: JSON.stringify({ state: 'closed' }),
@@ -644,17 +697,18 @@ async function closeGitHubIssue(
  */
 async function addGitHubLabels(
   env: Env,
+  repo: string,
   issueNumber: number,
   labels: string[]
 ): Promise<void> {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}/labels`;
+  const url = `https://api.github.com/repos/${repo}/issues/${issueNumber}/labels`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `token ${env.GITHUB_TOKEN}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'dfg-relay-worker',
+      'User-Agent': 'crane-relay-worker',
       'Accept': 'application/vnd.github.v3+json',
     },
     body: JSON.stringify({ labels }),
@@ -671,16 +725,17 @@ async function addGitHubLabels(
  */
 async function removeGitHubLabel(
   env: Env,
+  repo: string,
   issueNumber: number,
   label: string
 ): Promise<void> {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}/labels/${encodeURIComponent(label)}`;
+  const url = `https://api.github.com/repos/${repo}/issues/${issueNumber}/labels/${encodeURIComponent(label)}`;
 
   const response = await fetch(url, {
     method: 'DELETE',
     headers: {
       'Authorization': `token ${env.GITHUB_TOKEN}`,
-      'User-Agent': 'dfg-relay-worker',
+      'User-Agent': 'crane-relay-worker',
       'Accept': 'application/vnd.github.v3+json',
     },
   });
@@ -696,15 +751,16 @@ async function removeGitHubLabel(
  */
 async function getGitHubLabels(
   env: Env,
+  repo: string,
   issueNumber: number
 ): Promise<string[]> {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/issues/${issueNumber}`;
+  const url = `https://api.github.com/repos/${repo}/issues/${issueNumber}`;
 
   const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Authorization': `token ${env.GITHUB_TOKEN}`,
-      'User-Agent': 'dfg-relay-worker',
+      'User-Agent': 'crane-relay-worker',
       'Accept': 'application/vnd.github.v3+json',
     },
   });
@@ -765,7 +821,7 @@ function validateEvent(e: any): { ok: true; event: RelayEvent } | { ok: false; m
   }
 
   let overall_verdict: Verdict | undefined = e.overall_verdict;
-  if (overall_verdict && !["PASS", "FAIL", "BLOCKED", "PASS_UNVERIFIED", "FAIL_UNCONFIRMED"].includes(overall_verdict)) {
+  if (overall_verdict && !["PASS", "FAIL", "BLOCKED", "PASS_UNVERIFIED", "FAIL_UNCONFIRMED", "PASS_PENDING_APPROVAL"].includes(overall_verdict)) {
     return { ok: false, message: "overall_verdict invalid" };
   }
 
@@ -900,7 +956,7 @@ async function githubFetch(env: Env, token: string, method: string, path: string
     headers: {
       "authorization": `Bearer ${token}`,
       "accept": "application/vnd.github+json",
-      "user-agent": "dfg-relay-v2",
+      "user-agent": "crane-relay-v2",
       ...(body ? { "content-type": "application/json" } : {})
     },
     body: body ? JSON.stringify(body) : undefined
@@ -908,7 +964,14 @@ async function githubFetch(env: Env, token: string, method: string, path: string
   return res;
 }
 
-async function getInstallationToken(env: Env, installationId: string): Promise<string> {
+async function getInstallationToken(env: Env, repo: string): Promise<string> {
+  const { owner } = splitRepo(repo);
+  const installations = JSON.parse(env.GH_INSTALLATIONS_JSON || '{}');
+  const installationId = installations[owner];
+  if (!installationId) {
+    throw new Error(`No GitHub App installation found for org: ${owner}`);
+  }
+  
   const appJwt = await createAppJwt(env);
   const res = await githubFetch(env, appJwt, "POST", `/app/installations/${installationId}/access_tokens`);
   if (!res.ok) {
@@ -922,28 +985,6 @@ async function getInstallationToken(env: Env, installationId: string): Promise<s
 function splitRepo(repo: string): { owner: string; name: string } {
   const [owner, name] = repo.split("/");
   return { owner, name };
-}
-
-/**
- * Get GitHub App installation ID for a repo's org
- * Parses GH_INSTALLATIONS_JSON to find the installation ID for the repo's org
- */
-function getInstallationIdForRepo(env: Env, repo: string): string {
-  const { owner } = splitRepo(repo);
-
-  let installations: Record<string, string>;
-  try {
-    installations = JSON.parse(env.GH_INSTALLATIONS_JSON);
-  } catch (err) {
-    throw new Error(`Failed to parse GH_INSTALLATIONS_JSON: ${err}`);
-  }
-
-  const installationId = installations[owner];
-  if (!installationId) {
-    throw new Error(`No installation ID found for org: ${owner}`);
-  }
-
-  return installationId;
 }
 
 // ============================================================================
@@ -1424,7 +1465,42 @@ async function handlePostEvents(req: Request, env: Env, getGhToken: (repo: strin
 
   const commentId = await upsertRollingComment(env, ghToken, event.repo, event.issue_number, body);
 
-  // Apply label transitions
+  // Check if this needs approval queue
+  if (effectiveVerdict === "PASS_PENDING_APPROVAL") {
+    // Add to approval queue instead of transitioning labels
+    const queueId = crypto.randomUUID();
+    await env.DB.prepare(
+      `INSERT INTO approval_queue
+       (id, event_id, repo, issue_number, pr_number, commit_sha, agent, verdict, summary, scope_results, evidence_urls, created_at, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
+    ).bind(
+      queueId,
+      event.event_id,
+      event.repo,
+      event.issue_number,
+      event.build?.pr ?? null,
+      event.build?.commit_sha ?? null,
+      event.agent,
+      effectiveVerdict,
+      event.summary ?? null,
+      event.scope_results ? JSON.stringify(event.scope_results) : null,
+      event.evidence_urls ? JSON.stringify(event.evidence_urls) : null,
+      nowIso()
+    ).run();
+
+    return v2Json({
+      ok: true,
+      event_id: event.event_id,
+      stored: true,
+      queued: true,
+      queue_id: queueId,
+      rolling_comment_id: commentId,
+      verdict: effectiveVerdict,
+      provenance_verified: provenanceVerified
+    }, 201);
+  }
+
+  // Apply label transitions (for non-queued verdicts)
   await applyLabelRules(env, ghToken, event.repo, event.issue_number, event.event_type, effectiveVerdict);
 
   return v2Json({
@@ -1438,52 +1514,160 @@ async function handlePostEvents(req: Request, env: Env, getGhToken: (repo: strin
 }
 
 // ============================================================================
-// ROUTER INTEGRATION
+// APPROVAL QUEUE HANDLERS
 // ============================================================================
-// Add these routes to your existing fetch handler:
-//
-// export default {
-//   async fetch(req: Request, env: Env): Promise<Response> {
-//     const url = new URL(req.url);
-//
-//     // Request-lifecycle cache for GitHub token
-//     let ghTokenPromise: Promise<string> | null = null;
-//     const getGhToken = () => {
-//       if (!ghTokenPromise) ghTokenPromise = getInstallationToken(env);
-//       return ghTokenPromise;
-//     };
-//
-//     // V2 ROUTES (add before existing routes)
-//     if (req.method === "POST" && url.pathname === "/v2/events") {
-//       try {
-//         return await handlePostEvents(req, env, getGhToken);
-//       } catch (err: any) {
-//         return json({ error: "Internal error", details: String(err?.message || err) }, 500);
-//       }
-//     }
-//
-//     if (req.method === "POST" && url.pathname === "/v2/evidence") {
-//       try {
-//         return await handleEvidenceUpload(req, env);
-//       } catch (err: any) {
-//         return json({ error: "Internal error", details: String(err?.message || err) }, 500);
-//       }
-//     }
-//
-//     if (req.method === "GET" && url.pathname.startsWith("/v2/evidence/")) {
-//       const id = url.pathname.replace("/v2/evidence/", "").trim();
-//       if (!id) return badRequest("Missing evidence id");
-//       try {
-//         return await handleEvidenceGet(req, env, id);
-//       } catch (err: any) {
-//         return json({ error: "Internal error", details: String(err?.message || err) }, 500);
-//       }
-//     }
-//
-//     // EXISTING ROUTES (keep as-is)
-//     // ... /health, /directive, /labels, /comment, /close ...
-//   }
-// };
+
+async function handleGetApprovalQueue(req: Request, env: Env): Promise<Response> {
+  const authErr = requireAuth(req, env);
+  if (authErr) return authErr;
+
+  const url = new URL(req.url);
+  const status = url.searchParams.get("status") || "pending";
+  const repo = url.searchParams.get("repo");
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
+
+  let query = `SELECT * FROM approval_queue WHERE status = ?`;
+  const params: any[] = [status];
+
+  if (repo) {
+    query += ` AND repo = ?`;
+    params.push(repo);
+  }
+
+  query += ` ORDER BY created_at DESC LIMIT ?`;
+  params.push(limit);
+
+  const results = await env.DB.prepare(query).bind(...params).all();
+
+  const items = results.results.map((row: any) => ({
+    id: row.id,
+    event_id: row.event_id,
+    repo: row.repo,
+    issue_number: row.issue_number,
+    pr_number: row.pr_number,
+    commit_sha: row.commit_sha,
+    agent: row.agent,
+    verdict: row.verdict,
+    summary: row.summary,
+    scope_results: row.scope_results ? JSON.parse(row.scope_results) : null,
+    evidence_urls: row.evidence_urls ? JSON.parse(row.evidence_urls) : null,
+    created_at: row.created_at,
+    status: row.status,
+    reviewed_at: row.reviewed_at,
+    reviewed_by: row.reviewed_by,
+    review_notes: row.review_notes
+  }));
+
+  return v2Json({ ok: true, items, count: items.length });
+}
+
+async function handleApprove(req: Request, env: Env, getGhToken: (repo: string) => Promise<string>): Promise<Response> {
+  const authErr = requireAuth(req, env);
+  if (authErr) return authErr;
+
+  let payload: { ids: string[]; action: "approve" | "reject"; notes?: string; reviewed_by?: string };
+  try {
+    payload = await req.json();
+  } catch {
+    return badRequest("Invalid JSON body");
+  }
+
+  if (!payload.ids || !Array.isArray(payload.ids) || payload.ids.length === 0) {
+    return badRequest("ids array required");
+  }
+  if (!payload.action || !["approve", "reject"].includes(payload.action)) {
+    return badRequest("action must be 'approve' or 'reject'");
+  }
+
+  const results: Array<{ id: string; success: boolean; error?: string }> = [];
+
+  for (const id of payload.ids) {
+    try {
+      // Get queue item
+      const item = await env.DB.prepare(
+        "SELECT * FROM approval_queue WHERE id = ? AND status = 'pending'"
+      ).bind(id).first<any>();
+
+      if (!item) {
+        results.push({ id, success: false, error: "Not found or already processed" });
+        continue;
+      }
+
+      const ghToken = await getGhToken(item.repo);
+
+      // Update queue status
+      await env.DB.prepare(
+        `UPDATE approval_queue 
+         SET status = ?, reviewed_at = ?, reviewed_by = ?, review_notes = ?
+         WHERE id = ?`
+      ).bind(
+        payload.action === "approve" ? "approved" : "rejected",
+        nowIso(),
+        payload.reviewed_by || "captain",
+        payload.notes || null,
+        id
+      ).run();
+
+      // Apply label transitions
+      if (payload.action === "approve") {
+        // Same as PASS verdict
+        await applyLabelRules(env, ghToken, item.repo, item.issue_number, "qa.result_submitted", "PASS");
+      } else {
+        // Rejection: add needs:dev
+        const issue = await getIssueDetails(env, ghToken, item.repo, item.issue_number);
+        const currentLabels = issue.labels.map((l: any) => l.name);
+        const newLabels = currentLabels.filter((l: string) => l !== "needs:qa");
+        if (!newLabels.includes("needs:dev")) {
+          newLabels.push("needs:dev");
+        }
+        await putIssueLabels(env, ghToken, item.repo, item.issue_number, newLabels);
+      }
+
+      // Update rolling comment with approval note
+      const issue = await getIssueDetails(env, ghToken, item.repo, item.issue_number);
+      const latestDevRow = await getLatestEventByType(env, item.repo, item.issue_number, "dev.update");
+      const latestQaRow = await getLatestEventByType(env, item.repo, item.issue_number, "qa.result_submitted");
+      const latestDev = latestDevRow ? safeParseEvent(latestDevRow.payload_json) : null;
+      const latestQa = latestQaRow ? safeParseEvent(latestQaRow.payload_json) : null;
+      const recent = await getRecentEvents(env, item.repo, item.issue_number, 5);
+
+      const approvalNote = `${payload.action === "approve" ? "✅ Approved" : "❌ Rejected"} by ${payload.reviewed_by || "captain"}${payload.notes ? `: ${payload.notes}` : ""}`;
+
+      const body = renderRelayStatusMarkdown({
+        issue,
+        repo: item.repo,
+        issueNumber: item.issue_number,
+        provenance: {
+          pr: item.pr_number,
+          commit: item.commit_sha,
+          verified: null,
+          prHead: null,
+          environment: null
+        },
+        latestDev,
+        latestQa,
+        recent
+      }) + `\n\n### Approval\n${approvalNote}`;
+
+      await upsertRollingComment(env, ghToken, item.repo, item.issue_number, body);
+
+      results.push({ id, success: true });
+    } catch (err: any) {
+      results.push({ id, success: false, error: String(err?.message || err) });
+    }
+  }
+
+  const approved = results.filter(r => r.success).length;
+  const failed = results.filter(r => !r.success).length;
+
+  return v2Json({
+    ok: failed === 0,
+    processed: results.length,
+    approved,
+    failed,
+    results
+  });
+}
 
 // ============================================================================
 // EXPORTS (for integration)
@@ -1493,6 +1677,8 @@ export {
   handlePostEvents,
   handleEvidenceUpload,
   handleEvidenceGet,
+  handleGetApprovalQueue,
+  handleApprove,
   getInstallationToken,
   requireAuth,
   v2Json,
@@ -1500,4 +1686,5 @@ export {
   conflict,
   unauthorized
 };
+
 
