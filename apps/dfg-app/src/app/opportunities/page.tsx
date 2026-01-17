@@ -19,7 +19,9 @@ function OpportunitiesContent() {
   const [opportunities, setOpportunities] = useState<OpportunitySummary[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
 
   // Filter state from URL
   const status = searchParams.get('status') as OpportunityStatus | null;
@@ -38,11 +40,17 @@ function OpportunitiesContent() {
   // Sprint N+4: New today filter (#71)
   const newToday = searchParams.get('new_today') === 'true';
 
-  const fetchOpportunities = useCallback(async () => {
-    setLoading(true);
+  const fetchOpportunities = useCallback(async (append = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const params: ListOpportunitiesParams = {
         limit: 50,
+        offset: append ? opportunities.length : 0,
       };
 
       if (status) params.status = status;
@@ -62,14 +70,22 @@ function OpportunitiesContent() {
       if (newToday) params.new_today = true;
 
       const result = await listOpportunities(params);
-      setOpportunities(result.opportunities);
+
+      if (append) {
+        setOpportunities(prev => [...prev, ...result.opportunities]);
+      } else {
+        setOpportunities(result.opportunities);
+      }
+
       setTotal(result.total);
+      setHasMore((append ? opportunities.length : 0) + result.opportunities.length < result.total);
     } catch (error) {
       console.error('Failed to fetch opportunities:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday]);
+  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday, opportunities.length]);
 
   useEffect(() => {
     fetchOpportunities();
@@ -111,7 +127,7 @@ function OpportunitiesContent() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={fetchOpportunities}
+                onClick={() => fetchOpportunities()}
                 disabled={loading}
               >
                 <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -204,7 +220,7 @@ function OpportunitiesContent() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={fetchOpportunities}
+              onClick={() => fetchOpportunities()}
               disabled={loading}
             >
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -345,11 +361,34 @@ function OpportunitiesContent() {
               )}
             </div>
           ) : (
-            <div className="space-y-3">
-              {opportunities.map((opp) => (
-                <OpportunityCard key={opp.id} opportunity={opp} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {opportunities.map((opp) => (
+                  <OpportunityCard key={opp.id} opportunity={opp} />
+                ))}
+              </div>
+              {hasMore && (
+                <div className="flex justify-center mt-6">
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={() => fetchOpportunities(true)}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Load More ({opportunities.length} of {total})
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
