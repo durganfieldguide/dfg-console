@@ -1,7 +1,9 @@
 {
-  "allowedTools": [
-    "Edit",
-    "Write",
-    "Bash"
-  ]
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Write"
+    ]
+  }
 }
