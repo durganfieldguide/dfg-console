@@ -109,6 +109,10 @@ import { calculateProfit, calculateMargin } from '@dfg/money-math'
 
 ### dfg-analyst
 - AI-powered analysis using Claude API (Anthropic)
+- **Authentication Required**: All endpoints require Bearer token authentication
+  - Header: `Authorization: Bearer <ANALYST_SERVICE_SECRET>`
+  - Protected endpoints: `/analyze`, `/analyze/justifications`, `/debug/fetch-photo`
+  - Unauthenticated requests return 401 Unauthorized
 - Category-specific prompts and market data:
   - Power Tools: `prompts-power-tools.ts`, `analysis-power-tools.ts`
   - Vehicles: `prompts-vehicles.ts`, `analysis-vehicles.ts`
@@ -165,8 +169,9 @@ bucket_name = "dfg-storage"
 
 Secrets (not in source control):
 ```bash
-npx wrangler secret put CLAUDE_API_KEY
-npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put ANTHROPIC_API_KEY     # dfg-analyst
+npx wrangler secret put ANALYST_SERVICE_SECRET # dfg-analyst (Bearer token)
+npx wrangler secret put GITHUB_TOKEN          # dfg-relay
 ```
 
 ## Security

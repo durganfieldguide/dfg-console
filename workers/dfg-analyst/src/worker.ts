@@ -47,6 +47,7 @@ import {
 
 interface Env {
   ANTHROPIC_API_KEY: string;
+  ANALYST_SERVICE_SECRET: string;
   DEBUG?: string;
 }
 
@@ -2554,8 +2555,27 @@ export async function analyzeAsset(env: Env, listingData: ListingData, includeJu
   };
 
   console.log(`[COMPLETE] ${investorLens.verdict} | ${Date.now() - startTime}ms`);
-  
+
   return report;
+}
+
+// ============================================
+// AUTHENTICATION
+// ============================================
+
+function authenticateRequest(request: Request, env: Env): boolean {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader) return false;
+
+  const expectedToken = `Bearer ${env.ANALYST_SERVICE_SECRET}`;
+  return authHeader === expectedToken;
+}
+
+function unauthorizedResponse(): Response {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: { "Content-Type": "application/json" }
+  });
 }
 
 export default {
@@ -2570,6 +2590,9 @@ export default {
 
     // Debug endpoint to test photo fetching directly
     if (url.pathname === "/debug/fetch-photo" && request.method === "POST") {
+      if (!authenticateRequest(request, env)) {
+        return unauthorizedResponse();
+      }
       try {
         const { photoUrl } = await request.json() as { photoUrl: string };
         console.log(`[DEBUG] Testing fetch for: ${photoUrl}`);
@@ -2594,6 +2617,9 @@ export default {
     }
 
     if (url.pathname === "/analyze" && request.method === "POST") {
+      if (!authenticateRequest(request, env)) {
+        return unauthorizedResponse();
+      }
       try {
         const listingData = await request.json() as ListingData;
         const report = await analyzeAsset(env, listingData, false);
@@ -2607,6 +2633,9 @@ export default {
     }
     
     if (url.pathname === "/analyze/justifications" && request.method === "POST") {
+      if (!authenticateRequest(request, env)) {
+        return unauthorizedResponse();
+      }
       try {
         const report = await request.json() as DualLensReport;
         

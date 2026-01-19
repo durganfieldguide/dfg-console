@@ -13,3 +13,13 @@ enabled = true
 
 [vars]
 # No global vars - all config via environment-specific sections
+
+# ============================================
+# REQUIRED SECRETS
+# ============================================
+# Set these secrets using:
+#   npx wrangler secret put <SECRET_NAME>
+#
+# ANTHROPIC_API_KEY        - Claude API key for analysis
+# ANALYST_SERVICE_SECRET   - Bearer token for endpoint authentication
+#                            (required for /analyze, /analyze/justifications, /debug/fetch-photo)
