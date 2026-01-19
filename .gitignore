@@ -40,3 +40,4 @@ coverage/
 .claude/settings.local.json
 tsconfig.tsbuildinfo
 .gemini/
+.codex/
