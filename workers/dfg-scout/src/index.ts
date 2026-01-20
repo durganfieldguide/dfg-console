@@ -29,6 +29,28 @@ export default {
       }
     }
 
+    // 2a. Operator Config Endpoint (#214)
+    if (cleanPath === '/ops/config') {
+      if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
+      try {
+        const userId = searchParams.get('user_id') || 'default';
+        const result = await env.DFG_DB.prepare(
+          'SELECT key, value FROM operator_config WHERE user_id = ?'
+        ).bind(userId).all();
+
+        // Convert rows to key-value object
+        const config: Record<string, string> = {};
+        for (const row of result.results || []) {
+          const r = row as { key: string; value: string };
+          config[r.key] = r.value;
+        }
+
+        return json({ user_id: userId, config });
+      } catch (err: any) {
+        return json({ error: 'Config fetch failed', details: err.message }, 500);
+      }
+    }
+
     // 2b. Listings Endpoint (for frontend Opportunities page)
     if (cleanPath === '/ops/listings') {
       if (!(isOps || isAdmin)) return json({ error: 'Unauthorized' }, 401);
