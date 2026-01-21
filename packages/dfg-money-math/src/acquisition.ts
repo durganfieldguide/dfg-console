@@ -36,8 +36,9 @@ function calculateTierFee(bid: number, tier: FeeScheduleTier): number {
   if (tier.feeType === 'flat') {
     fee = tier.amount;
   } else {
-    // percent: amount is decimal (0.03 = 3%)
-    fee = bid * tier.amount;
+    // percent: amount is decimal (0.03 = 3%) or whole number (3 = 3%)
+    const feePercent = tier.amount > 1 ? tier.amount / 100 : tier.amount;
+    fee = bid * feePercent;
   }
 
   // Apply cap if specified
