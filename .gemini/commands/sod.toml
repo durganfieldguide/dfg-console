@@ -1,0 +1,2 @@
+description = "Start of Day - Load session context"
+prompt = "Run the command: bash ./scripts/sod-universal.sh"
