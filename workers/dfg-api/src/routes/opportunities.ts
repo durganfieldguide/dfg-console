@@ -36,6 +36,21 @@ import {
 import { computeAlertsForOpportunity } from './alerts';
 
 // =============================================================================
+// CUSTOM ERRORS
+// =============================================================================
+
+/**
+ * Error thrown when the analyst worker fails to process a request.
+ * Used to distinguish analyst-specific failures from other errors.
+ */
+class AnalystWorkerError extends Error {
+  constructor(message: string, public readonly statusCode?: number) {
+    super(message);
+    this.name = 'AnalystWorkerError';
+  }
+}
+
+// =============================================================================
 // MAIN ROUTER
 // =============================================================================
 
@@ -1356,16 +1371,22 @@ interface AiAnalysisResult {
 
 /**
  * Call dfg-analyst worker for AI analysis
+ * @throws {AnalystWorkerError} When the analyst worker fails or times out
  */
 async function callAnalystWorker(
   env: Env,
   listingData: Record<string, unknown>
-): Promise<AiAnalysisResult | null> {
+): Promise<AiAnalysisResult> {
   console.log('[callAnalystWorker] Starting AI analysis, ANALYST binding:', !!env.ANALYST, 'ANALYST_URL:', env.ANALYST_URL);
-  try {
-    // Use service binding if available (production), otherwise use URL
-    let response: Response;
 
+  // Use service binding if available (production), otherwise use URL
+  let response: Response;
+
+  // Set up 25 second timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+  try {
     if (env.ANALYST) {
       // Service binding - direct worker-to-worker call
       console.log('[callAnalystWorker] Using ANALYST service binding');
@@ -1373,6 +1394,7 @@ async function callAnalystWorker(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(listingData),
+        signal: controller.signal,
       });
       console.log('[callAnalystWorker] Service binding response status:', response.status);
     } else if (env.ANALYST_URL) {
@@ -1382,25 +1404,35 @@ async function callAnalystWorker(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(listingData),
+        signal: controller.signal,
       });
     } else {
-      console.log('[callAnalystWorker] No ANALYST binding or ANALYST_URL configured, skipping AI analysis');
-      return null;
+      console.log('[callAnalystWorker] No ANALYST binding or ANALYST_URL configured');
+      throw new AnalystWorkerError('No ANALYST binding or ANALYST_URL configured');
     }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[callAnalystWorker] Analyst worker error:', response.status, errorText);
-      return null;
-    }
-
-    const result = await response.json() as AiAnalysisResult;
-    console.log('[callAnalystWorker] AI analysis successful, verdict:', result?.investor_lens?.verdict);
-    return result;
   } catch (error) {
+    if (error instanceof AnalystWorkerError) {
+      throw error;
+    }
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('[callAnalystWorker] Request timed out after 25 seconds');
+      throw new AnalystWorkerError('Analyst worker request timed out after 25 seconds');
+    }
     console.error('[callAnalystWorker] Failed to call analyst worker:', error);
-    return null;
+    throw new AnalystWorkerError(`Failed to call analyst worker: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    clearTimeout(timeoutId);
   }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[callAnalystWorker] Analyst worker error:', response.status, errorText);
+    throw new AnalystWorkerError(`Analyst returned ${response.status}: ${errorText}`, response.status);
+  }
+
+  const result = await response.json() as AiAnalysisResult;
+  console.log('[callAnalystWorker] AI analysis successful, verdict:', result?.investor_lens?.verdict);
+  return result;
 }
 
 async function analyzeOpportunity(
@@ -1418,6 +1450,9 @@ async function analyzeOpportunity(
   if (!row) {
     return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
   }
+
+  // Capture original updated_at for optimistic locking (#237)
+  const originalUpdatedAt = row.updated_at;
 
   const now = nowISO();
   const analysisRunId = generateId();
@@ -1474,7 +1509,16 @@ async function analyzeOpportunity(
       } : undefined,
     };
 
-    aiAnalysisResult = await callAnalystWorker(env, listingData);
+    try {
+      aiAnalysisResult = await callAnalystWorker(env, listingData);
+    } catch (error) {
+      if (error instanceof AnalystWorkerError) {
+        console.error('[analyzeOpportunity] AI analysis failed:', error.message);
+        // Continue without AI analysis - aiAnalysisResult stays null
+      } else {
+        throw error; // Re-throw unexpected errors
+      }
+    }
   }
 
   // ==========================================================================
@@ -1539,8 +1583,9 @@ async function analyzeOpportunity(
     aiAnalysisSuccess: aiAnalysisResult !== null,
   };
 
-  // Insert analysis run (now with ai_analysis_json column)
-  await env.DB.prepare(`
+  // Insert analysis run and update opportunity atomically using D1 batch
+  // This ensures both operations succeed or fail together
+  const insertStatement = env.DB.prepare(`
     INSERT INTO analysis_runs (
       id, opportunity_id, created_at,
       listing_snapshot_hash, assumptions_json, operator_inputs_json,
@@ -1561,38 +1606,66 @@ async function analyzeOpportunity(
     '1.0', // calc_version
     '1.0', // gates_version
     aiAnalysisResult ? JSON.stringify(aiAnalysisResult) : null,
-  ).run();
+  );
 
-  // Update opportunity with AI-derived values if available
+  // Build UPDATE statement with optimistic lock check (#237)
+  // The WHERE clause includes updated_at = originalUpdatedAt to detect concurrent modifications
   // Also update last_operator_review_at to clear STALE badge (analysis = operator review)
-  if (aiAnalysisResult?.investor_lens?.max_bid) {
-    await env.DB.prepare(`
-      UPDATE opportunities
-      SET current_analysis_run_id = ?,
-          last_analyzed_at = ?,
-          last_operator_review_at = ?,
-          updated_at = ?,
-          max_bid_low = ?,
-          max_bid_high = ?
-      WHERE id = ?
-    `).bind(
-      analysisRunId,
-      now,
-      now,
-      now,
-      derived.maxBidLow,
-      derived.maxBidHigh,
-      id
-    ).run();
-  } else {
-    await env.DB.prepare(`
-      UPDATE opportunities
-      SET current_analysis_run_id = ?,
-          last_analyzed_at = ?,
-          last_operator_review_at = ?,
-          updated_at = ?
-      WHERE id = ?
-    `).bind(analysisRunId, now, now, now, id).run();
+  const updateStatement = aiAnalysisResult?.investor_lens?.max_bid
+    ? env.DB.prepare(`
+        UPDATE opportunities
+        SET current_analysis_run_id = ?,
+            last_analyzed_at = ?,
+            last_operator_review_at = ?,
+            updated_at = ?,
+            max_bid_low = ?,
+            max_bid_high = ?
+        WHERE id = ? AND updated_at = ?
+      `).bind(
+        analysisRunId,
+        now,
+        now,
+        now,
+        derived.maxBidLow,
+        derived.maxBidHigh,
+        id,
+        originalUpdatedAt
+      )
+    : env.DB.prepare(`
+        UPDATE opportunities
+        SET current_analysis_run_id = ?,
+            last_analyzed_at = ?,
+            last_operator_review_at = ?,
+            updated_at = ?
+        WHERE id = ? AND updated_at = ?
+      `).bind(analysisRunId, now, now, now, id, originalUpdatedAt);
+
+  // Execute both statements atomically
+  try {
+    const batchResults = await env.DB.batch([insertStatement, updateStatement]);
+
+    // Verify both operations succeeded
+    for (const result of batchResults) {
+      if (!result.success) {
+        console.error('[analyzeOpportunity] Batch operation failed:', result);
+        return jsonError(ErrorCodes.INTERNAL_ERROR, 'Failed to persist analysis', 500);
+      }
+    }
+
+    // Check if the UPDATE affected any rows (optimistic lock check) (#237)
+    const updateResult = batchResults[1];
+    if (updateResult.meta.changes === 0) {
+      // The opportunity was modified by another request - delete the orphaned analysis_runs record
+      await env.DB.prepare(`DELETE FROM analysis_runs WHERE id = ?`).bind(analysisRunId).run();
+      return jsonError(
+        ErrorCodes.CONFLICT,
+        'Opportunity was modified by another request. Please try again.',
+        409
+      );
+    }
+  } catch (error) {
+    console.error('[analyzeOpportunity] DB error:', error);
+    return jsonError(ErrorCodes.INTERNAL_ERROR, 'Database error during analysis', 500);
   }
 
   // Log the re-analyze action

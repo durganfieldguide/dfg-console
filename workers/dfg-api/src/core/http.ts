@@ -79,6 +79,7 @@ export const ErrorCodes = {
   BATCH_TOO_LARGE: 'BATCH_TOO_LARGE',
   UNAUTHORIZED: 'UNAUTHORIZED',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  CONFLICT: 'CONFLICT',
 } as const;
 
 // =============================================================================

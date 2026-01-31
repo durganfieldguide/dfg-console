@@ -366,7 +366,7 @@ export default function OpportunityDetailPage() {
               variant="secondary"
               size="sm"
               onClick={handleAnalyze}
-              disabled={analyzing}
+              disabled={analyzing || !opportunity}
               className="shrink-0"
             >
               {analyzing ? (
