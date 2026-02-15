@@ -10,29 +10,29 @@
 
 ## Changes from Round 1
 
-1. **Added US-013 (Simplified Reject Flow) and revised US-006.** The Target Customer explicitly stated the reject modal is too heavy ("One tap, one reason code, done. Stop making me fill out forms."). The dual reject mechanism (legacy single-select dropdown + multi-select reason codes from #188 taxonomy) creates confusion. Added a new story for streamlined mobile rejection and revised US-006 acceptance criteria to clarify which path is primary. *(Triggered by: Target Customer, UX Lead Concern #2)*
+1. **Added US-013 (Simplified Reject Flow) and revised US-006.** The Target Customer explicitly stated the reject modal is too heavy ("One tap, one reason code, done. Stop making me fill out forms."). The dual reject mechanism (legacy single-select dropdown + multi-select reason codes from #188 taxonomy) creates confusion. Added a new story for streamlined mobile rejection and revised US-006 acceptance criteria to clarify which path is primary. _(Triggered by: Target Customer, UX Lead Concern #2)_
 
-2. **Revised US-004 to address "inbox direct to bid" workflow gap.** The Target Customer reported: "I have to go inbox -> qualifying -> inspect before I can set a bid. That's three status changes for something I already know I want." The state machine does not allow inbox -> bid. Added OQ-008 to formalize this as a decision item. The state machine as coded in `@dfg/types` is authoritative; changing it requires a PM decision and migration. *(Triggered by: Target Customer)*
+2. **Revised US-004 to address "inbox direct to bid" workflow gap.** The Target Customer reported: "I have to go inbox -> qualifying -> inspect before I can set a bid. That's three status changes for something I already know I want." The state machine does not allow inbox -> bid. Added OQ-008 to formalize this as a decision item. The state machine as coded in `@dfg/types` is authoritative; changing it requires a PM decision and migration. _(Triggered by: Target Customer)_
 
-3. **Promoted OQ-002 (tuning_events CHECK constraint) to a confirmed bug (EC-013).** Verified in codebase: migration 0001 line 158-160 defines CHECK constraint allowing only `'rejection', 'win', 'loss', 'score_override', 'time_in_stage'`, but `opportunities.ts` line 1278 inserts `event_type: 'status_change'` for auto-rejection tuning events. D1 (SQLite) enforces CHECK constraints, so this INSERT will fail silently or throw. This is a P0 data integrity issue. *(Triggered by: Technical Lead schema review, self-identified in Round 1)*
+3. **Promoted OQ-002 (tuning_events CHECK constraint) to a confirmed bug (EC-013).** Verified in codebase: migration 0001 line 158-160 defines CHECK constraint allowing only `'rejection', 'win', 'loss', 'score_override', 'time_in_stage'`, but `opportunities.ts` line 1278 inserts `event_type: 'status_change'` for auto-rejection tuning events. D1 (SQLite) enforces CHECK constraints, so this INSERT will fail silently or throw. This is a P0 data integrity issue. _(Triggered by: Technical Lead schema review, self-identified in Round 1)_
 
-4. **Added BR-059 through BR-063 for batch operation clarifications.** Target Customer confirmed batch reject with a single reason code applied to all items is the expected behavior. Codebase review confirms this is already how it works (line 873: `rejection_reason` is a top-level field, not per-item). Documented explicitly to resolve ambiguity. Also added rules for the Attention Required quick-pass action, which the UX Lead identified as using a default "other" reason with no confirmation. *(Triggered by: Target Customer, UX Lead Concern #2)*
+4. **Added BR-059 through BR-063 for batch operation clarifications.** Target Customer confirmed batch reject with a single reason code applied to all items is the expected behavior. Codebase review confirms this is already how it works (line 873: `rejection_reason` is a top-level field, not per-item). Documented explicitly to resolve ambiguity. Also added rules for the Attention Required quick-pass action, which the UX Lead identified as using a default "other" reason with no confirmation. _(Triggered by: Target Customer, UX Lead Concern #2)_
 
-5. **Revised US-002 to cross-reference UX Lead's default tab concern.** The UX Lead noted the analysis defaults to the "Report" tab, but the most actionable data is on "Summary" and "Investor" tabs. Added AC-002.6 addressing tab default behavior and linked to OQ-009. *(Triggered by: UX Lead Concern #4)*
+5. **Revised US-002 to cross-reference UX Lead's default tab concern.** The UX Lead noted the analysis defaults to the "Report" tab, but the most actionable data is on "Summary" and "Investor" tabs. Added AC-002.6 addressing tab default behavior and linked to OQ-009. _(Triggered by: UX Lead Concern #4)_
 
-6. **Added EC-013 and EC-014 for newly identified edge cases.** EC-013 covers the tuning_events CHECK constraint failure (promoted from OQ-002). EC-014 covers the Attention Required quick-pass action creating rejections with default "other" reason and no note, which passes backend validation only because the batch/quick path does not enforce the `rejection_note` requirement for "other" -- or it fails silently. *(Triggered by: UX Lead Concern #2, codebase verification)*
+6. **Added EC-013 and EC-014 for newly identified edge cases.** EC-013 covers the tuning*events CHECK constraint failure (promoted from OQ-002). EC-014 covers the Attention Required quick-pass action creating rejections with default "other" reason and no note, which passes backend validation only because the batch/quick path does not enforce the `rejection_note` requirement for "other" -- or it fails silently. *(Triggered by: UX Lead Concern #2, codebase verification)\_
 
-7. **Revised OQ-001 with codebase-confirmed OR logic in `applyVerdictThresholds`.** Verified at `category-config.ts` line 258: `if (profit >= thresholds.buy.min_profit || margin >= thresholds.buy.min_margin)`. This means a trailer deal with $600 profit but 5% margin receives a BUY verdict. Escalated severity from "High" to "Critical" given Product Principle #1 (Numbers must be right) and Target Customer statement: "If the profit calculation was wrong -- I'm done." *(Triggered by: self-identified Round 1, confirmed via codebase)*
+7. **Revised OQ-001 with codebase-confirmed OR logic in `applyVerdictThresholds`.** Verified at `category-config.ts` line 258: `if (profit >= thresholds.buy.min_profit || margin >= thresholds.buy.min_margin)`. This means a trailer deal with $600 profit but 5% margin receives a BUY verdict. Escalated severity from "High" to "Critical" given Product Principle #1 (Numbers must be right) and Target Customer statement: "If the profit calculation was wrong -- I'm done." _(Triggered by: self-identified Round 1, confirmed via codebase)_
 
-8. **Added BR-064 for photo lightbox swipe gesture gap.** Target Customer explicitly requested swipe-between-photos behavior. Current implementation requires tap-to-dismiss, tap-next-thumbnail. Documented as a P2 UX gap, not a business rule violation. *(Triggered by: Target Customer)*
+8. **Added BR-064 for photo lightbox swipe gesture gap.** Target Customer explicitly requested swipe-between-photos behavior. Current implementation requires tap-to-dismiss, tap-next-thumbnail. Documented as a P2 UX gap, not a business rule violation. _(Triggered by: Target Customer)_
 
-9. **Revised US-010 to incorporate Target Customer's P0 assessment of scout alerting.** The Target Customer rated scout failure alerting as "the #1 gap" and stated it should be P0, not P1 as originally classified. Both PM and Target Customer agree this is critical for trust. Revised priority in gaps table. *(Triggered by: Target Customer, PM risk assessment)*
+9. **Revised US-010 to incorporate Target Customer's P0 assessment of scout alerting.** The Target Customer rated scout failure alerting as "the #1 gap" and stated it should be P0, not P1 as originally classified. Both PM and Target Customer agree this is critical for trust. Revised priority in gaps table. _(Triggered by: Target Customer, PM risk assessment)_
 
-10. **Added cross-references to Technical Lead's non-functional requirements throughout acceptance criteria.** Performance budgets (API < 200ms p95, analysis < 30s p95, LCP < 2.5s) are now referenced in relevant user stories as testable thresholds. *(Triggered by: Technical Lead)*
+10. **Added cross-references to Technical Lead's non-functional requirements throughout acceptance criteria.** Performance budgets (API < 200ms p95, analysis < 30s p95, LCP < 2.5s) are now referenced in relevant user stories as testable thresholds. _(Triggered by: Technical Lead)_
 
-11. **Revised traceability matrix to include UX screens and Technical Lead API endpoints.** Round 1 matrix was correct but sparse on UI component mapping. Now includes specific screen references from UX Lead's information architecture. *(Triggered by: UX Lead)*
+11. **Revised traceability matrix to include UX screens and Technical Lead API endpoints.** Round 1 matrix was correct but sparse on UI component mapping. Now includes specific screen references from UX Lead's information architecture. _(Triggered by: UX Lead)_
 
-12. **Added OQ-010 for the `prompt()` financial input concern.** Both UX Lead and Target Customer flagged this. For a system where Product Principle #1 is "Numbers must be right," entering bid amounts via `window.prompt()` is a design risk. Formalized as an open question with severity. *(Triggered by: UX Lead Concern #1, Target Customer)*
+12. **Added OQ-010 for the `prompt()` financial input concern.** Both UX Lead and Target Customer flagged this. For a system where Product Principle #1 is "Numbers must be right," entering bid amounts via `window.prompt()` is a design risk. Formalized as an open question with severity. _(Triggered by: UX Lead Concern #1, Target Customer)_
 
 ---
 
@@ -50,10 +50,10 @@
 
 - [ ] AC-001.1: Given the operator opens the dashboard, when new opportunities have been ingested in the last 24 hours, then opportunities with status `inbox` are displayed sorted by `auction_ends_at ASC` (soonest-ending first, NULLs last).
 - [ ] AC-001.2: Given an opportunity is in `inbox` status, when it has a `buy_box_score >= 70` and `last_analyzed_at IS NOT NULL` and auction ends within 48 hours or was created within last 12 hours, then it appears in the Strike Zone count on the stats endpoint.
-- [ ] AC-001.3: Given the opportunity list is loaded, when the operator views it on iOS Safari, then each opportunity card displays: title, current bid (formatted as USD), auction end time (relative), distance in miles, buy_box_score, and a primary image thumbnail. All interactive elements meet 44x44px minimum touch targets. *(Ref: UX Lead, CLAUDE.md iOS patterns)*
+- [ ] AC-001.3: Given the opportunity list is loaded, when the operator views it on iOS Safari, then each opportunity card displays: title, current bid (formatted as USD), auction end time (relative), distance in miles, buy*box_score, and a primary image thumbnail. All interactive elements meet 44x44px minimum touch targets. *(Ref: UX Lead, CLAUDE.md iOS patterns)\_
 - [ ] AC-001.4: Given the operator applies a status filter, when `status=inbox` is selected, then only inbox opportunities are returned and the total count reflects the filtered set.
 - [ ] AC-001.5: Given the opportunity list, when the total exceeds 50 items, then pagination via `limit` and `offset` query parameters returns correct subsets and the `total` count remains accurate.
-- [ ] AC-001.6: Given the API response, then the list endpoint responds in < 200ms at p95. *(Ref: Technical Lead NFR)*
+- [ ] AC-001.6: Given the API response, then the list endpoint responds in < 200ms at p95. _(Ref: Technical Lead NFR)_
 
 **Business Rules:**
 
@@ -84,8 +84,8 @@
 - [ ] AC-002.3: Given the opportunity has photos, when the operator taps a photo thumbnail, then a full-screen lightbox appears. Tapping outside the lightbox closes it.
 - [ ] AC-002.4: Given the opportunity has `source_url`, when the operator taps "View Listing", then the original auction listing opens in a new browser tab.
 - [ ] AC-002.5: Given the opportunity has active alerts, when the detail page loads, then alerts are displayed sorted by severity (critical > high > medium > low) with dismiss buttons.
-- [ ] AC-002.6: Given the tabbed analysis interface, when the operator views it, then the most actionable information (verdict, max bid, margin) is immediately visible without requiring tab navigation. *(Ref: UX Lead Concern #4, see OQ-009)*
-- [ ] AC-002.7: Given the detail page, then the API response completes in < 300ms at p95. *(Ref: Technical Lead NFR)*
+- [ ] AC-002.6: Given the tabbed analysis interface, when the operator views it, then the most actionable information (verdict, max bid, margin) is immediately visible without requiring tab navigation. _(Ref: UX Lead Concern #4, see OQ-009)_
+- [ ] AC-002.7: Given the detail page, then the API response completes in < 300ms at p95. _(Ref: Technical Lead NFR)_
 
 **Business Rules:**
 
@@ -120,7 +120,7 @@
 - [ ] AC-003.7: Given a previous analysis run exists, when a new analysis is run, then a `delta` object is returned showing the change in recommendation and max bid from the previous run.
 - [ ] AC-003.8: Given concurrent modifications occur, when the optimistic lock check fails (`updated_at` mismatch), then a 409 Conflict is returned and the orphaned `analysis_runs` record is cleaned up.
 - [ ] AC-003.9: Given an analysis is triggered, when it completes successfully, then `last_analyzed_at` and `last_operator_review_at` are both updated on the opportunity (clears STALE badge).
-- [ ] AC-003.10: Given an analysis is triggered, then the full analysis (including AI call) completes in < 30s at p95. Without AI, it completes in < 500ms at p95. *(Ref: Technical Lead NFR)*
+- [ ] AC-003.10: Given an analysis is triggered, then the full analysis (including AI call) completes in < 30s at p95. Without AI, it completes in < 500ms at p95. _(Ref: Technical Lead NFR)_
 
 **Business Rules:**
 
@@ -154,7 +154,7 @@
 - [ ] AC-004.5: Given any status transition, then an `operator_actions` record with `action_type='status_change'` is created with `from_status`, `to_status`, and `payload`.
 - [ ] AC-004.6: Given a transition to `bid`, then an MVC event of type `decision_made` with `decision='BID'` must be emitted BEFORE the status change. If event emission fails, the transition is blocked.
 - [ ] AC-004.7: Given a transition to `rejected`, then an MVC event of type `decision_made` with `decision='PASS'` must be emitted BEFORE the status change. If event emission fails, the transition is blocked.
-- [ ] AC-004.8: Given the bottom action bar on the detail page, when the opportunity is in a given status, then only contextually valid actions are shown per the state machine. *(Ref: UX Lead, Interaction Pattern 1)*
+- [ ] AC-004.8: Given the bottom action bar on the detail page, when the opportunity is in a given status, then only contextually valid actions are shown per the state machine. _(Ref: UX Lead, Interaction Pattern 1)_
 
 **Business Rules:**
 
@@ -204,7 +204,7 @@
 - BR-015: Watch triggers are: `ending_soon`, `time_window`, `manual`.
 - BR-016: `watch_cycle` is monotonically increasing per opportunity; it never resets. This ensures alert dismissal keys remain unique across multiple watch cycles.
 - BR-017: Watch-fired alerts use the key format `watch_fired:{watch_cycle}` for dismissal tracking.
-- BR-060: Watch triggers are checked via cron every 5 minutes. An alert may fire up to 5 minutes after the trigger condition is met. The default 4-hour `hours_before` threshold provides sufficient buffer for this latency. *(Ref: Technical Lead R8)*
+- BR-060: Watch triggers are checked via cron every 5 minutes. An alert may fire up to 5 minutes after the trigger condition is met. The default 4-hour `hours_before` threshold provides sufficient buffer for this latency. _(Ref: Technical Lead R8)_
 
 **Out of Scope:**
 
@@ -226,7 +226,7 @@
 - [ ] AC-006.1: Given the operator initiates rejection, when no `rejection_reason` is provided, then the API returns `MISSING_FIELD` error (400).
 - [ ] AC-006.2: Given the operator selects `rejection_reason='other'`, when no `rejection_note` is provided, then the API returns `MISSING_FIELD` error (400).
 - [ ] AC-006.3: Given a valid rejection, then a `tuning_events` record with `event_type='rejection'` is created, capturing `reason_code`, `buy_box_score`, and `time_in_pipeline_hours`.
-- [ ] AC-006.4: Given the rejection modal on mobile, when the operator opens it, then a streamlined single-interaction flow is presented: multi-select reason codes from the decision taxonomy (#188), with the legacy single-select dropdown available but not required as a separate step. *(Revised per Target Customer feedback)*
+- [ ] AC-006.4: Given the rejection modal on mobile, when the operator opens it, then a streamlined single-interaction flow is presented: multi-select reason codes from the decision taxonomy (#188), with the legacy single-select dropdown available but not required as a separate step. _(Revised per Target Customer feedback)_
 - [ ] AC-006.5: Given the rejection is confirmed, then an MVC event of type `decision_made` with `decision='PASS'` and `decision_reason` (array of reason codes) is logged.
 - [ ] AC-006.6: Given the operator rejects from the `inspect` status, when the opportunity was analyzed with a `BID` recommendation, then the `analyst_verdict` is included in the decision event payload (for disagreement tracking).
 
@@ -236,7 +236,7 @@
 - BR-019: The decision reason taxonomy (#188) includes 13 codes across 8 categories: `price_too_high`, `price_no_margin`, `condition_major`, `condition_unknown`, `location_too_far`, `location_restricted`, `timing_ending`, `timing_pickup`, `title_issues`, `category_mismatch`, `competition_concern`, `market_soft`, `other`.
 - BR-020: Rejection tuning events feed the scoring algorithm. The `buy_box_score` at time of rejection, combined with the reason code, provides a training signal for false-positive reduction.
 - BR-021: If the operator's rejection disagrees with an AI `BID` recommendation, this is tracked as a false positive for the success metric "False positive rate <= 30%".
-- BR-061: The reject modal must be completable in 2 taps on mobile: (1) select a reason code, (2) confirm rejection. The "other" code requiring a note is the only exception. *(Triggered by: Target Customer feedback: "One tap, one reason code, done.")*
+- BR-061: The reject modal must be completable in 2 taps on mobile: (1) select a reason code, (2) confirm rejection. The "other" code requiring a note is the only exception. _(Triggered by: Target Customer feedback: "One tap, one reason code, done.")_
 
 **Out of Scope:**
 
@@ -268,7 +268,7 @@
 - BR-023: Maximum batch size is 50 items per request.
 - BR-024: Batch operations are NOT atomic -- they process sequentially. Partial success is a valid outcome.
 - BR-025: Each item in a batch operation gets its own `operator_actions` audit record with `action_type='batch_reject'` or `action_type='batch_archive'`.
-- BR-062: Batch reject applies a single `rejection_reason` (and optional `rejection_note`) to all items in the batch. Per-item reason codes are not supported. This is confirmed by the API design: `rejection_reason` is a top-level field on the batch request body, not nested per item. *(Confirmed by codebase: `opportunities.ts` line 873)*
+- BR-062: Batch reject applies a single `rejection_reason` (and optional `rejection_note`) to all items in the batch. Per-item reason codes are not supported. This is confirmed by the API design: `rejection_reason` is a top-level field on the batch request body, not nested per item. _(Confirmed by codebase: `opportunities.ts` line 873)_
 
 **Out of Scope:**
 
@@ -293,7 +293,7 @@
 - [ ] AC-008.4: Given operator inputs are saved, then an `operator_actions` record with `action_type='augmentation'` is created.
 - [ ] AC-008.5: Given operator inputs change after an analysis run exists, then `inputsChangedSinceAnalysis` is set to `true` in the response, signaling the operator should re-analyze.
 - [ ] AC-008.6: Given the verification needed filter, when an opportunity has `operator_inputs_json IS NULL` or any of `titleStatus`, `titleInHand`, `lienStatus`, or `odometerMiles` has `verificationLevel='unverified'` or is NULL, then the opportunity appears in the "Verification Needed" count.
-- [ ] AC-008.7: Given auto-rejection from a hard gate failure, when the system creates a tuning_events record, then the `event_type` must be `'rejection'` (not `'status_change'`). See EC-013 for the current bug. *(Added Round 2)*
+- [ ] AC-008.7: Given auto-rejection from a hard gate failure, when the system creates a tuning*events record, then the `event_type` must be `'rejection'` (not `'status_change'`). See EC-013 for the current bug. *(Added Round 2)\_
 
 **Business Rules:**
 
@@ -301,7 +301,7 @@
 - BR-027: Operator inputs use a deep merge strategy: submitting `{ title: { vin: { value: "1HGCM..." } } }` does NOT erase previously saved `titleStatus`.
 - BR-028: Auto-rejection from hard gate failures creates both an `operator_actions` record (status_change) and a `tuning_events` record with `auto_rejected: true`.
 - BR-029: The gated economics system applies a 20% haircut to max bid when gates are NOT cleared (bid readiness = `NOT_BID_READY`), giving the operator a decision: verify and use full max bid, or accept the haircut.
-- BR-063: The Kill Switch Banner for hard gate failures must NOT auto-redirect the operator away from the detail page. The operator must be able to see the reason, understand it, and optionally override if the gate condition is incorrect (e.g., listing erroneously states "salvage" when the title is actually rebuilt). *(Triggered by: Target Customer: "Don't redirect me. Let me see it.")*
+- BR-063: The Kill Switch Banner for hard gate failures must NOT auto-redirect the operator away from the detail page. The operator must be able to see the reason, understand it, and optionally override if the gate condition is incorrect (e.g., listing erroneously states "salvage" when the title is actually rebuilt). _(Triggered by: Target Customer: "Don't redirect me. Let me see it.")_
 
 **Out of Scope:**
 
@@ -324,7 +324,7 @@
 - [ ] AC-009.2: Given an opportunity in `bid` status, when the operator taps "Lost", then the status transitions to `lost` with no additional required fields.
 - [ ] AC-009.3: Given a `won` outcome, then `final_price` is stored on the opportunity and can be retrieved via `GET /api/opportunities/:id`.
 - [ ] AC-009.4: Given the `outcomes` table schema exists, when outcome tracking UI is built (P1 remaining gap), then `purchase_price`, `repair_cost_parts`, `repair_cost_labor`, `sold_price`, `fees`, `net_profit`, and `days_held` can be recorded.
-- [ ] AC-009.5: Given a `won` transition, when the operator is prompted for `final_price`, then the input mechanism must validate for positive numeric values (no currency symbols, no commas, no negative values). See OQ-010 regarding the `prompt()` dialog concern. *(Added Round 2)*
+- [ ] AC-009.5: Given a `won` transition, when the operator is prompted for `final_price`, then the input mechanism must validate for positive numeric values (no currency symbols, no commas, no negative values). See OQ-010 regarding the `prompt()` dialog concern. _(Added Round 2)_
 
 **Business Rules:**
 
@@ -359,8 +359,8 @@
 **Business Rules:**
 
 - BR-034: Scout uptime target is >= 95% of scheduled runs completing successfully.
-- BR-035: Scout failure alerting is identified as a P0 gap (revised from P1 per Target Customer feedback). The operator currently discovers stale data by observation, not by proactive alerting. The Target Customer stated: "If the scout goes down Friday night, I don't find out until Monday when I notice the inbox is suspiciously empty." *(Priority revised in Round 2)*
-- BR-036: IronPlanet capture rate is currently ~17% (vs Sierra at higher rates). This is a known P1 gap that affects deal flow completeness. The Target Customer stated this is unacceptable and may undermine trust in the system. *(Ref: Target Customer: "That's worse than not having the tool at all.")*
+- BR-035: Scout failure alerting is identified as a P0 gap (revised from P1 per Target Customer feedback). The operator currently discovers stale data by observation, not by proactive alerting. The Target Customer stated: "If the scout goes down Friday night, I don't find out until Monday when I notice the inbox is suspiciously empty." _(Priority revised in Round 2)_
+- BR-036: IronPlanet capture rate is currently ~17% (vs Sierra at higher rates). This is a known P1 gap that affects deal flow completeness. The Target Customer stated this is unacceptable and may undermine trust in the system. _(Ref: Target Customer: "That's worse than not having the tool at all.")_
 
 **Out of Scope:**
 
@@ -414,12 +414,12 @@
 - [ ] AC-012.2: Given strike zone criteria, then an opportunity qualifies when: status is `inbox` or `qualifying`, score >= 70, analysis exists (`last_analyzed_at IS NOT NULL`), and either auction ends within 48 hours or was created within last 12 hours.
 - [ ] AC-012.3: Given needs_attention count, then it equals `watch_alerts_fired + stale_qualifying.over_24h`.
 - [ ] AC-012.4: Given the dashboard on iOS Safari, then all counts are visible without horizontal scrolling and tap targets for drill-down are >= 44x44px.
-- [ ] AC-012.5: Given the Attention Required list, when the operator taps the inline "Pass" action on an item, then the action is completed with a single tap (no confirmation modal for inline quick actions). The rejection uses `rejection_reason='other'` as default. *(Added Round 2 per UX Lead observation)*
+- [ ] AC-012.5: Given the Attention Required list, when the operator taps the inline "Pass" action on an item, then the action is completed with a single tap (no confirmation modal for inline quick actions). The rejection uses `rejection_reason='other'` as default. _(Added Round 2 per UX Lead observation)_
 
 **Business Rules:**
 
 - BR-040: Strike zone is the primary triage mechanism. These are the highest-value items requiring immediate operator attention.
-- BR-041: `verification_needed` reflects opportunities with unverified or missing operator inputs across four critical fields: titleStatus, titleInHand, lienStatus, odometerMiles. Dashboard label should communicate this clearly (see OQ-011). *(Ref: Target Customer: "'Verification Needed' doesn't tell me anything.")*
+- BR-041: `verification_needed` reflects opportunities with unverified or missing operator inputs across four critical fields: titleStatus, titleInHand, lienStatus, odometerMiles. Dashboard label should communicate this clearly (see OQ-011). _(Ref: Target Customer: "'Verification Needed' doesn't tell me anything.")_
 - BR-042: The operator response time success metric targets median < 4 hours from inbox to qualifying/rejected.
 
 **Out of Scope:**
@@ -439,71 +439,71 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ### Financial Rules (Non-Negotiable)
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-008 | Profit = Net Proceeds - Acquisition Cost. Margin % = (Profit / Acquisition Cost) * 100. | CLAUDE.md, canonical money math |
-| BR-009 | Sierra Auction buyer premium uses `SIERRA_FEE_SCHEDULE` from `@dfg/money-math` (tiered: flat fees, percent fees, caps). | `calculation-spine.ts` line 106-108 |
-| BR-010 | `max_bid_low` = AI max bid * 0.9; `max_bid_high` = AI max bid * 1.0. | `opportunities.ts` line 1558-1561 |
-| BR-029 | Gated economics: 20% haircut on max bid when gates NOT cleared (`NOT_BID_READY`). | `calculation-spine.ts` line 279 |
-| BR-030 | `final_price` must be positive (> 0) for `won` transitions. | `opportunities.ts` line 810-813 |
-| BR-032 | Realized margin = (net_profit / acquisition_cost) * 100. Listing fees are SELLING COSTS ONLY, never included in acquisition cost. | CLAUDE.md |
+| ID     | Rule                                                                                                                               | Source                              |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| BR-008 | Profit = Net Proceeds - Acquisition Cost. Margin % = (Profit / Acquisition Cost) \* 100.                                           | CLAUDE.md, canonical money math     |
+| BR-009 | Sierra Auction buyer premium uses `SIERRA_FEE_SCHEDULE` from `@dfg/money-math` (tiered: flat fees, percent fees, caps).            | `calculation-spine.ts` line 106-108 |
+| BR-010 | `max_bid_low` = AI max bid _ 0.9; `max_bid_high` = AI max bid _ 1.0.                                                               | `opportunities.ts` line 1558-1561   |
+| BR-029 | Gated economics: 20% haircut on max bid when gates NOT cleared (`NOT_BID_READY`).                                                  | `calculation-spine.ts` line 279     |
+| BR-030 | `final_price` must be positive (> 0) for `won` transitions.                                                                        | `opportunities.ts` line 810-813     |
+| BR-032 | Realized margin = (net_profit / acquisition_cost) \* 100. Listing fees are SELLING COSTS ONLY, never included in acquisition cost. | CLAUDE.md                           |
 
 ### Category Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-043 | Trailers (default): min_profit=$600, min_margin=40%, max_acquisition=$6,000, target_days_to_sell=14, max_distance=100mi. | `category-config.ts` |
-| BR-044 | Fleet Trucks: min_profit=$1,500, min_margin=20%, max_acquisition=$15,000, target_days_to_sell=21, max_distance=150mi. | `category-config.ts` |
-| BR-045 | Power Tools: min_profit=$40, min_margin=30%, max_acquisition=$500, target_days_to_sell=7, max_distance=50mi. | `category-config.ts` |
+| ID     | Rule                                                                                                                                     | Source                                    |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| BR-043 | Trailers (default): min_profit=$600, min_margin=40%, max_acquisition=$6,000, target_days_to_sell=14, max_distance=100mi.                 | `category-config.ts`                      |
+| BR-044 | Fleet Trucks: min_profit=$1,500, min_margin=20%, max_acquisition=$15,000, target_days_to_sell=21, max_distance=150mi.                    | `category-config.ts`                      |
+| BR-045 | Power Tools: min_profit=$40, min_margin=30%, max_acquisition=$500, target_days_to_sell=7, max_distance=50mi.                             | `category-config.ts`                      |
 | BR-046 | Category detection falls through: explicit category_id match > vehicle keyword match > vehicle make/model title match > default trailer. | `category-config.ts` detectCategoryType() |
 
 ### Workflow Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-012 | State machine transitions are enforced server-side. Invalid transitions return 400. | `@dfg/types` STATE_TRANSITIONS |
-| BR-013 | Every status change creates an `operator_actions` record AND an MVC event. | `opportunities.ts` |
-| BR-014 | `watch` -> `qualifying` backward transition is allowed. | `@dfg/types` STATE_TRANSITIONS |
-| BR-022 | Batch operations: reject and archive only, max 50 items, sequential (not atomic). | `opportunities.ts` batchOperation() |
-| BR-026 | Hard gate auto-rejection: title `salvage` or `missing` (verified). | `opportunities.ts` updateOperatorInputs() |
-| BR-047 | Optimistic locking on analysis runs: `updated_at` mismatch returns 409 Conflict and cleans up orphaned records. | `opportunities.ts` line 1611-1665 |
-| BR-059 | State machine does not allow `inbox` -> `bid`. Minimum path is 3 transitions. | `@dfg/types` STATE_TRANSITIONS, see OQ-008 |
-| BR-062 | Batch reject uses a single `rejection_reason` for all items. | `opportunities.ts` line 873 |
-| BR-063 | Kill Switch Banner must not auto-redirect away from detail page. | Target Customer feedback |
+| ID     | Rule                                                                                                            | Source                                     |
+| ------ | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| BR-012 | State machine transitions are enforced server-side. Invalid transitions return 400.                             | `@dfg/types` STATE_TRANSITIONS             |
+| BR-013 | Every status change creates an `operator_actions` record AND an MVC event.                                      | `opportunities.ts`                         |
+| BR-014 | `watch` -> `qualifying` backward transition is allowed.                                                         | `@dfg/types` STATE_TRANSITIONS             |
+| BR-022 | Batch operations: reject and archive only, max 50 items, sequential (not atomic).                               | `opportunities.ts` batchOperation()        |
+| BR-026 | Hard gate auto-rejection: title `salvage` or `missing` (verified).                                              | `opportunities.ts` updateOperatorInputs()  |
+| BR-047 | Optimistic locking on analysis runs: `updated_at` mismatch returns 409 Conflict and cleans up orphaned records. | `opportunities.ts` line 1611-1665          |
+| BR-059 | State machine does not allow `inbox` -> `bid`. Minimum path is 3 transitions.                                   | `@dfg/types` STATE_TRANSITIONS, see OQ-008 |
+| BR-062 | Batch reject uses a single `rejection_reason` for all items.                                                    | `opportunities.ts` line 873                |
+| BR-063 | Kill Switch Banner must not auto-redirect away from detail page.                                                | Target Customer feedback                   |
 
 ### Scoring and Analysis Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-003 | Score bands: high >= 70, medium 40-69, low < 40. | `opportunities.ts` line 209-217 |
-| BR-048 | AI verdict mapping: STRONG_BUY/BUY -> BID (if gates clear) or WATCH (if not); MARGINAL -> WATCH; PASS -> PASS. | `opportunities.ts` line 1529-1546 |
-| BR-049 | Gate-based fallback: if AI unavailable, allCriticalCleared -> BID, criticalOpen <= 2 -> WATCH, else NEEDS_INFO. | `opportunities.ts` line 1540-1546 |
-| BR-050 | Bid readiness: `DO_NOT_BID` for PASS economics, confirmed deal breakers, or salvage/missing title. `NOT_BID_READY` for missing auction end time or unverified title/mileage. `BID_READY` when economics work and all gates cleared. | `calculation-spine.ts` evaluateBidReadiness() |
-| BR-051 | Confidence breakdown has 4 dimensions: price, title, condition, timing. Each scored independently. Overall score 0-5. | `calculation-spine.ts` evaluateConfidenceBreakdown() |
+| ID     | Rule                                                                                                                                                                                                                                | Source                                               |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| BR-003 | Score bands: high >= 70, medium 40-69, low < 40.                                                                                                                                                                                    | `opportunities.ts` line 209-217                      |
+| BR-048 | AI verdict mapping: STRONG_BUY/BUY -> BID (if gates clear) or WATCH (if not); MARGINAL -> WATCH; PASS -> PASS.                                                                                                                      | `opportunities.ts` line 1529-1546                    |
+| BR-049 | Gate-based fallback: if AI unavailable, allCriticalCleared -> BID, criticalOpen <= 2 -> WATCH, else NEEDS_INFO.                                                                                                                     | `opportunities.ts` line 1540-1546                    |
+| BR-050 | Bid readiness: `DO_NOT_BID` for PASS economics, confirmed deal breakers, or salvage/missing title. `NOT_BID_READY` for missing auction end time or unverified title/mileage. `BID_READY` when economics work and all gates cleared. | `calculation-spine.ts` evaluateBidReadiness()        |
+| BR-051 | Confidence breakdown has 4 dimensions: price, title, condition, timing. Each scored independently. Overall score 0-5.                                                                                                               | `calculation-spine.ts` evaluateConfidenceBreakdown() |
 
 ### Alert Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-052 | Auction ending alerts: < 4 hours = critical, < 24 hours = high, < 48 hours = medium. | `alerts.ts` line 49-101 |
-| BR-053 | Stale qualifying alert fires after 24 hours in qualifying status. Severity upgrades to high after 48 hours. | `alerts.ts` line 106-124 |
-| BR-054 | Bid threshold alert fires when current_bid >= 90% of max_bid_locked. | `alerts.ts` line 127-148 |
-| BR-055 | Alert dismissals are per-key, stored in `operator_actions`. Dismissing an alert does not prevent future alerts of different keys. | `alerts.ts` |
+| ID     | Rule                                                                                                                              | Source                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| BR-052 | Auction ending alerts: < 4 hours = critical, < 24 hours = high, < 48 hours = medium.                                              | `alerts.ts` line 49-101  |
+| BR-053 | Stale qualifying alert fires after 24 hours in qualifying status. Severity upgrades to high after 48 hours.                       | `alerts.ts` line 106-124 |
+| BR-054 | Bid threshold alert fires when current_bid >= 90% of max_bid_locked.                                                              | `alerts.ts` line 127-148 |
+| BR-055 | Alert dismissals are per-key, stored in `operator_actions`. Dismissing an alert does not prevent future alerts of different keys. | `alerts.ts`              |
 
 ### UX/Mobile Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-061 | Reject modal completable in 2 taps on mobile (select reason, confirm). | Target Customer |
+| ID     | Rule                                                                                                                                                 | Source                   |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| BR-061 | Reject modal completable in 2 taps on mobile (select reason, confirm).                                                                               | Target Customer          |
 | BR-064 | Photo lightbox does not support swipe gesture between photos. Current behavior: tap thumbnail to open, tap to dismiss. Swipe is a P2 UX enhancement. | Target Customer, UX Lead |
 
 ### Data Integrity Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-056 | All SQL queries must use `.bind()` parameterization. No template literal interpolation in SQL. | CLAUDE.md |
-| BR-057 | R2 snapshots are immutable. New data creates a new key; existing keys are never overwritten. | CLAUDE.md |
-| BR-058 | MVC events are immutable. Once emitted, events cannot be modified or deleted. | Product Principle #6 |
+| ID     | Rule                                                                                           | Source               |
+| ------ | ---------------------------------------------------------------------------------------------- | -------------------- |
+| BR-056 | All SQL queries must use `.bind()` parameterization. No template literal interpolation in SQL. | CLAUDE.md            |
+| BR-057 | R2 snapshots are immutable. New data creates a new key; existing keys are never overwritten.   | CLAUDE.md            |
+| BR-058 | MVC events are immutable. Once emitted, events cannot be modified or deleted.                  | Product Principle #6 |
 
 ---
 
@@ -531,7 +531,7 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 **Expected Behavior:** Analysis completes with `aiAnalysisResult = null`. Gate-based fallback recommendation is used. `max_bid_low` and `max_bid_high` remain at their existing values (which may be null if never analyzed). The UI should display the opportunity without max bid values and show the gate-based recommendation.
 
-**Risk:** Medium. Operator has less information for decision-making. The Next Action Card should degrade gracefully when AI analysis is unavailable. *(Ref: UX Lead Interaction Pattern 3)*
+**Risk:** Medium. Operator has less information for decision-making. The Next Action Card should degrade gracefully when AI analysis is unavailable. _(Ref: UX Lead Interaction Pattern 3)_
 
 ### EC-004: Batch Reject with Mixed Invalid States
 
@@ -613,7 +613,7 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 **Expected Behavior (CORRECT):** The auto-rejection tuning event should use `event_type: 'rejection'` (which is an allowed value and semantically correct -- the auto-rejection IS a rejection). Alternatively, the CHECK constraint should be updated via migration to include `'status_change'`.
 
-**Risk:** P0. This is a data integrity bug that silently loses tuning signals for auto-rejections, undermining the algorithm improvement feedback loop (BR-020). *(Promoted from OQ-002 in Round 1)*
+**Risk:** P0. This is a data integrity bug that silently loses tuning signals for auto-rejections, undermining the algorithm improvement feedback loop (BR-020). _(Promoted from OQ-002 in Round 1)_
 
 **Resolution:** Fix the code to use `event_type: 'rejection'` with `auto_rejected: true` in `signal_data` (preferred, no migration needed), OR add migration to expand CHECK constraint. The former is simpler and semantically cleaner.
 
@@ -625,25 +625,25 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 **Expected Behavior (CORRECT):** Either (a) the quick-pass should use a different default reason (e.g., `'missing_info'`), or (b) the quick-pass should bypass the `'other' requires note` validation, or (c) the UX should prompt for a note. Option (a) is simplest.
 
-**Risk:** Medium. Needs verification of the actual frontend implementation of the quick-pass action. If it sends `rejection_reason='other'`, it will fail on every attempt. *(Triggered by: UX Lead Concern #2)*
+**Risk:** Medium. Needs verification of the actual frontend implementation of the quick-pass action. If it sends `rejection_reason='other'`, it will fail on every attempt. _(Triggered by: UX Lead Concern #2)_
 
 ---
 
 ## Open Questions
 
-| ID | Question | Impact | Suggested Resolution |
-|----|----------|--------|---------------------|
-| OQ-001 | **CRITICAL:** The `applyVerdictThresholds` function uses OR logic: meeting EITHER `min_profit` OR `min_margin` triggers BUY verdict. Verified at `category-config.ts` line 258. This means a trailer deal with $600 profit but only 5% margin receives a BUY recommendation. Per Product Principle #1 (Numbers must be right) and Product Principle #3 (Conservative over optimistic), this appears incorrect. | Critical -- affects recommendation accuracy. A 5% margin on a $12,000 acquisition with $600 profit could easily become a loss after unexpected costs. | Recommend AND logic for BUY threshold (must meet BOTH profit AND margin), OR logic for WATCH (meet either). This aligns with the conservative philosophy. Requires PM decision and backtest on historical data before changing. |
-| OQ-002 | ~~RESOLVED~~ Promoted to EC-013 (confirmed bug). The `tuning_events` CHECK constraint does not include `'status_change'`, but the code inserts it. | P0 -- see EC-013 | Fix code to use `event_type: 'rejection'` with `auto_rejected: true` in signal_data. |
-| OQ-003 | The stats endpoint `last_scout_run` and `last_ingest` are both `null` (TODO). Without these, the operator cannot verify pipeline health from the dashboard. What is the timeline for implementation? | High -- relates to Scout failure alerting (revised to P0 gap per Target Customer) | Implement as part of P0 scout reliability work. |
-| OQ-004 | The `outcomes` table exists in schema but has no API endpoints or UI. ADR-003 recommends simple win/loss with final price for MVP. Is this sufficient to validate the success metric "Realized margin >= 25%"? | High -- cannot validate core success metric without outcome data | `final_price` on won deals is necessary but not sufficient. Need at minimum `sold_price` to calculate profit. Target Customer says outcome tracking in a spreadsheet is acceptable for MVP. Recommend deferring outcomes UI to P1 as planned. |
-| OQ-005 | What happens when the operator's location changes? The `max_distance_miles` category config and `distance_miles` on opportunities are static. Does re-analysis update distance? | Low for MVP (single operator, fixed location) | Defer to Phase 1 when per-user location preferences are implemented. |
-| OQ-006 | The `attention` filter includes analysis_stale items (last_analyzed_at > 7 days ago). Should items that have NEVER been analyzed (`last_analyzed_at IS NULL`) also appear in the attention count? Currently `analysisStale` filter includes them, but `attention` does not. | Medium -- missed items in attention view | Recommend aligning the attention filter to also include never-analyzed items. The `analysisStale` filter correctly includes NULL with `(last_analyzed_at IS NULL OR ...)` but `attention` only checks `last_analyzed_at IS NOT NULL AND ...`. |
-| OQ-007 | The bid entry UI uses `prompt()` (browser native dialog) for entering max bid amount and final price. This is functional but does not validate input format. What if the operator enters "$1,500" or "1500.50"? | Medium -- data integrity risk | See OQ-010 for expanded analysis. |
-| OQ-008 | **NEW:** Should the state machine allow a fast-track path from `inbox` directly to `bid` (or at least `inbox` -> `inspect` -> `bid`)? The Target Customer explicitly requested this: "I have to go inbox -> qualifying -> inspect before I can set a bid. That's three status changes for something I already know I want." The current state machine requires `inbox -> qualifying -> inspect -> bid`. | High -- affects operator efficiency on time-sensitive auctions. The PM Product Principle #2 (Speed is competitive advantage) supports shorter paths. Product Principle #5 (Operator decides, system recommends) supports letting the operator skip stages. | Options: (A) Add `inbox -> inspect` transition (reduces to 2 steps: inbox -> inspect -> bid). (B) Add `inbox -> bid` transition (1 step, but bypasses all gates and evaluation). (C) Keep current and document that the workflow enforces discipline. Recommend option (A) as a compromise: it preserves the inspect gate (operator must consciously confirm readiness to bid) while removing the qualifying step for obvious deals. Requires `@dfg/types` and backend changes. PM decision required. |
-| OQ-009 | **NEW:** Should the analysis tab default to "Summary" instead of "Report"? The UX Lead observed that the most actionable information (max bid, margin, verdict reasoning) is on the "Summary" and "Investor" tabs, but the default is "Report" (raw AI text). The Next Action Card partially mitigates this, but detailed reasoning requires tab navigation. | Low-Medium -- affects time-to-decision during deep evaluation | The Target Customer's 3-second decision target is primarily served by the Next Action Card (which is above the tabs). Changing the default tab is a low-risk improvement. Recommend changing to "Summary" as default. |
-| OQ-010 | **NEW (expanded from OQ-007):** The `window.prompt()` dialog used for entering `max_bid_locked` (Set Bid) and `final_price` (Won) provides no input validation, no currency formatting, no confirmation step, and inconsistent behavior across iOS Safari versions. For a system where Product Principle #1 is "Numbers must be right" and these are the two most consequential financial inputs in the entire workflow, this is a design risk. | High -- a mistyped bid amount has direct financial consequences. The UX Lead and Target Customer both flagged this. | Replace with a custom modal component that: (1) enforces numeric input, (2) strips currency formatting ($ , .), (3) shows a confirmation step ("You are setting max bid to $X,XXX. Confirm?"), (4) validates positive values > 0. Classify as P1 pre-beta blocker. Accept for P0 founder use with awareness. |
-| OQ-011 | **NEW:** Should the "Verification Needed" dashboard label be renamed? The Target Customer said: "Verify what? That label doesn't tell me anything. If it means 'this opportunity has open critical gates,' then say 'Needs Info' or 'Check This.'" | Low -- cosmetic label change | Recommend renaming to "Needs Info" or "Missing Details" to better communicate the action required. Simple frontend text change. |
+| ID     | Question                                                                                                                                                                                                                                                                                                                                                                                                                                        | Impact                                                                                                                                                                                                                                                     | Suggested Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OQ-001 | **CRITICAL:** The `applyVerdictThresholds` function uses OR logic: meeting EITHER `min_profit` OR `min_margin` triggers BUY verdict. Verified at `category-config.ts` line 258. This means a trailer deal with $600 profit but only 5% margin receives a BUY recommendation. Per Product Principle #1 (Numbers must be right) and Product Principle #3 (Conservative over optimistic), this appears incorrect.                                  | Critical -- affects recommendation accuracy. A 5% margin on a $12,000 acquisition with $600 profit could easily become a loss after unexpected costs.                                                                                                      | Recommend AND logic for BUY threshold (must meet BOTH profit AND margin), OR logic for WATCH (meet either). This aligns with the conservative philosophy. Requires PM decision and backtest on historical data before changing.                                                                                                                                                                                                                                                                       |
+| OQ-002 | ~~RESOLVED~~ Promoted to EC-013 (confirmed bug). The `tuning_events` CHECK constraint does not include `'status_change'`, but the code inserts it.                                                                                                                                                                                                                                                                                              | P0 -- see EC-013                                                                                                                                                                                                                                           | Fix code to use `event_type: 'rejection'` with `auto_rejected: true` in signal_data.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| OQ-003 | The stats endpoint `last_scout_run` and `last_ingest` are both `null` (TODO). Without these, the operator cannot verify pipeline health from the dashboard. What is the timeline for implementation?                                                                                                                                                                                                                                            | High -- relates to Scout failure alerting (revised to P0 gap per Target Customer)                                                                                                                                                                          | Implement as part of P0 scout reliability work.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| OQ-004 | The `outcomes` table exists in schema but has no API endpoints or UI. ADR-003 recommends simple win/loss with final price for MVP. Is this sufficient to validate the success metric "Realized margin >= 25%"?                                                                                                                                                                                                                                  | High -- cannot validate core success metric without outcome data                                                                                                                                                                                           | `final_price` on won deals is necessary but not sufficient. Need at minimum `sold_price` to calculate profit. Target Customer says outcome tracking in a spreadsheet is acceptable for MVP. Recommend deferring outcomes UI to P1 as planned.                                                                                                                                                                                                                                                         |
+| OQ-005 | What happens when the operator's location changes? The `max_distance_miles` category config and `distance_miles` on opportunities are static. Does re-analysis update distance?                                                                                                                                                                                                                                                                 | Low for MVP (single operator, fixed location)                                                                                                                                                                                                              | Defer to Phase 1 when per-user location preferences are implemented.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| OQ-006 | The `attention` filter includes analysis_stale items (last_analyzed_at > 7 days ago). Should items that have NEVER been analyzed (`last_analyzed_at IS NULL`) also appear in the attention count? Currently `analysisStale` filter includes them, but `attention` does not.                                                                                                                                                                     | Medium -- missed items in attention view                                                                                                                                                                                                                   | Recommend aligning the attention filter to also include never-analyzed items. The `analysisStale` filter correctly includes NULL with `(last_analyzed_at IS NULL OR ...)` but `attention` only checks `last_analyzed_at IS NOT NULL AND ...`.                                                                                                                                                                                                                                                         |
+| OQ-007 | The bid entry UI uses `prompt()` (browser native dialog) for entering max bid amount and final price. This is functional but does not validate input format. What if the operator enters "$1,500" or "1500.50"?                                                                                                                                                                                                                                 | Medium -- data integrity risk                                                                                                                                                                                                                              | See OQ-010 for expanded analysis.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| OQ-008 | **NEW:** Should the state machine allow a fast-track path from `inbox` directly to `bid` (or at least `inbox` -> `inspect` -> `bid`)? The Target Customer explicitly requested this: "I have to go inbox -> qualifying -> inspect before I can set a bid. That's three status changes for something I already know I want." The current state machine requires `inbox -> qualifying -> inspect -> bid`.                                         | High -- affects operator efficiency on time-sensitive auctions. The PM Product Principle #2 (Speed is competitive advantage) supports shorter paths. Product Principle #5 (Operator decides, system recommends) supports letting the operator skip stages. | Options: (A) Add `inbox -> inspect` transition (reduces to 2 steps: inbox -> inspect -> bid). (B) Add `inbox -> bid` transition (1 step, but bypasses all gates and evaluation). (C) Keep current and document that the workflow enforces discipline. Recommend option (A) as a compromise: it preserves the inspect gate (operator must consciously confirm readiness to bid) while removing the qualifying step for obvious deals. Requires `@dfg/types` and backend changes. PM decision required. |
+| OQ-009 | **NEW:** Should the analysis tab default to "Summary" instead of "Report"? The UX Lead observed that the most actionable information (max bid, margin, verdict reasoning) is on the "Summary" and "Investor" tabs, but the default is "Report" (raw AI text). The Next Action Card partially mitigates this, but detailed reasoning requires tab navigation.                                                                                    | Low-Medium -- affects time-to-decision during deep evaluation                                                                                                                                                                                              | The Target Customer's 3-second decision target is primarily served by the Next Action Card (which is above the tabs). Changing the default tab is a low-risk improvement. Recommend changing to "Summary" as default.                                                                                                                                                                                                                                                                                 |
+| OQ-010 | **NEW (expanded from OQ-007):** The `window.prompt()` dialog used for entering `max_bid_locked` (Set Bid) and `final_price` (Won) provides no input validation, no currency formatting, no confirmation step, and inconsistent behavior across iOS Safari versions. For a system where Product Principle #1 is "Numbers must be right" and these are the two most consequential financial inputs in the entire workflow, this is a design risk. | High -- a mistyped bid amount has direct financial consequences. The UX Lead and Target Customer both flagged this.                                                                                                                                        | Replace with a custom modal component that: (1) enforces numeric input, (2) strips currency formatting ($ , .), (3) shows a confirmation step ("You are setting max bid to $X,XXX. Confirm?"), (4) validates positive values > 0. Classify as P1 pre-beta blocker. Accept for P0 founder use with awareness.                                                                                                                                                                                          |
+| OQ-011 | **NEW:** Should the "Verification Needed" dashboard label be renamed? The Target Customer said: "Verify what? That label doesn't tell me anything. If it means 'this opportunity has open critical gates,' then say 'Needs Info' or 'Check This.'"                                                                                                                                                                                              | Low -- cosmetic label change                                                                                                                                                                                                                               | Recommend renaming to "Needs Info" or "Missing Details" to better communicate the action required. Simple frontend text change.                                                                                                                                                                                                                                                                                                                                                                       |
 
 ---
 
@@ -651,70 +651,70 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ### User Stories to Features
 
-| User Story | Feature | API Endpoint(s) | DB Tables | UI Screen(s) (Ref: UX Lead IA) |
-|------------|---------|-----------------|-----------|-------------------------------|
-| US-001 | Inbox review, filtering, pagination | GET /api/opportunities, GET /api/opportunities/stats | opportunities | Dashboard (`/`), Opportunities List (`/opportunities`), Filters (`/opportunities/filters`) |
-| US-002 | Opportunity detail view | GET /api/opportunities/:id | opportunities, analysis_runs, operator_actions, sources | Opportunity Detail (`/opportunities/[id]`) |
-| US-003 | AI analysis on demand | POST /api/opportunities/:id/analyze | analysis_runs, opportunities | Opportunity Detail: Analyze button, TabbedAnalysis, NextActionCard |
-| US-004 | Workflow state machine | PATCH /api/opportunities/:id, POST /api/opportunities/:id/actions, POST /api/events | opportunities, operator_actions, mvc_events | Opportunity Detail: Fixed bottom action bar |
-| US-005 | Watch system | PATCH /api/opportunities/:id (to watch), POST /api/triggers/check | opportunities, operator_actions | Opportunity Detail: Watch action, Dashboard: Watching count |
-| US-006 | Structured rejection | PATCH /api/opportunities/:id (to rejected) | opportunities, operator_actions, tuning_events, mvc_events | Opportunity Detail: Reject modal |
-| US-007 | Batch operations | POST /api/opportunities/batch | opportunities, operator_actions, tuning_events | Opportunities List: Batch action UI |
-| US-008 | Operator inputs / gate clearance | PATCH /api/opportunities/:id/inputs | opportunities, operator_actions | Opportunity Detail: Title Info card, Gates Display card, Kill Switch Banner |
-| US-009 | Outcome tracking | PATCH /api/opportunities/:id (to won/lost) | opportunities, outcomes (Phase 1) | Opportunity Detail: Won/Lost buttons |
-| US-010 | Pipeline health monitoring | GET /api/opportunities/stats | sources, scout_runs | Dashboard: Stats, Sources (`/sources`) |
-| US-011 | Staleness detection | GET /api/opportunities (staleness filters), GET /api/opportunities/:id | opportunities, analysis_runs | Opportunity Detail: Staleness Banner, Dashboard: Attention Required |
-| US-012 | Dashboard attention summary | GET /api/opportunities/stats, GET /api/dashboard/attention | opportunities | Dashboard: Attention Required list, Quick Stats grid, Ending Soon list |
+| User Story | Feature                             | API Endpoint(s)                                                                     | DB Tables                                                  | UI Screen(s) (Ref: UX Lead IA)                                                             |
+| ---------- | ----------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| US-001     | Inbox review, filtering, pagination | GET /api/opportunities, GET /api/opportunities/stats                                | opportunities                                              | Dashboard (`/`), Opportunities List (`/opportunities`), Filters (`/opportunities/filters`) |
+| US-002     | Opportunity detail view             | GET /api/opportunities/:id                                                          | opportunities, analysis_runs, operator_actions, sources    | Opportunity Detail (`/opportunities/[id]`)                                                 |
+| US-003     | AI analysis on demand               | POST /api/opportunities/:id/analyze                                                 | analysis_runs, opportunities                               | Opportunity Detail: Analyze button, TabbedAnalysis, NextActionCard                         |
+| US-004     | Workflow state machine              | PATCH /api/opportunities/:id, POST /api/opportunities/:id/actions, POST /api/events | opportunities, operator_actions, mvc_events                | Opportunity Detail: Fixed bottom action bar                                                |
+| US-005     | Watch system                        | PATCH /api/opportunities/:id (to watch), POST /api/triggers/check                   | opportunities, operator_actions                            | Opportunity Detail: Watch action, Dashboard: Watching count                                |
+| US-006     | Structured rejection                | PATCH /api/opportunities/:id (to rejected)                                          | opportunities, operator_actions, tuning_events, mvc_events | Opportunity Detail: Reject modal                                                           |
+| US-007     | Batch operations                    | POST /api/opportunities/batch                                                       | opportunities, operator_actions, tuning_events             | Opportunities List: Batch action UI                                                        |
+| US-008     | Operator inputs / gate clearance    | PATCH /api/opportunities/:id/inputs                                                 | opportunities, operator_actions                            | Opportunity Detail: Title Info card, Gates Display card, Kill Switch Banner                |
+| US-009     | Outcome tracking                    | PATCH /api/opportunities/:id (to won/lost)                                          | opportunities, outcomes (Phase 1)                          | Opportunity Detail: Won/Lost buttons                                                       |
+| US-010     | Pipeline health monitoring          | GET /api/opportunities/stats                                                        | sources, scout_runs                                        | Dashboard: Stats, Sources (`/sources`)                                                     |
+| US-011     | Staleness detection                 | GET /api/opportunities (staleness filters), GET /api/opportunities/:id              | opportunities, analysis_runs                               | Opportunity Detail: Staleness Banner, Dashboard: Attention Required                        |
+| US-012     | Dashboard attention summary         | GET /api/opportunities/stats, GET /api/dashboard/attention                          | opportunities                                              | Dashboard: Attention Required list, Quick Stats grid, Ending Soon list                     |
 
 ### User Stories to Success Metrics
 
-| User Story | Success Metric | Target | Measurement |
-|------------|---------------|--------|-------------|
-| US-001 | Opportunities surfaced per day | >= 15 qualified | Count of non-rejected/archived opportunities created today |
-| US-003, US-006 | Analysis accuracy (operator agreement) | >= 70% BID recs result in operator bid/watch | MVC events: decision_made where analyst_verdict=BID |
-| US-003, US-006 | False positive rate | <= 30% of score > 80 get rejected | Rejection rate of high-score opportunities |
-| US-004, US-012 | Operator response time | Median < 4 hours inbox to qualifying/rejected | status_changed_at delta |
-| US-010 | Scout uptime | >= 95% runs succeed | scout_runs success rate |
-| US-003 | Analysis latency | p95 < 45 seconds | listing.created_at to opportunity.last_analyzed_at |
-| US-009 | Won deals per month | >= 2 acquisitions | Opportunities with status=won |
-| US-009 | Realized margin | >= 25% average | outcomes table net_profit / acquisition_cost (P1), spreadsheet tracking (P0) |
+| User Story     | Success Metric                         | Target                                        | Measurement                                                                  |
+| -------------- | -------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------- |
+| US-001         | Opportunities surfaced per day         | >= 15 qualified                               | Count of non-rejected/archived opportunities created today                   |
+| US-003, US-006 | Analysis accuracy (operator agreement) | >= 70% BID recs result in operator bid/watch  | MVC events: decision_made where analyst_verdict=BID                          |
+| US-003, US-006 | False positive rate                    | <= 30% of score > 80 get rejected             | Rejection rate of high-score opportunities                                   |
+| US-004, US-012 | Operator response time                 | Median < 4 hours inbox to qualifying/rejected | status_changed_at delta                                                      |
+| US-010         | Scout uptime                           | >= 95% runs succeed                           | scout_runs success rate                                                      |
+| US-003         | Analysis latency                       | p95 < 45 seconds                              | listing.created_at to opportunity.last_analyzed_at                           |
+| US-009         | Won deals per month                    | >= 2 acquisitions                             | Opportunities with status=won                                                |
+| US-009         | Realized margin                        | >= 25% average                                | outcomes table net_profit / acquisition_cost (P1), spreadsheet tracking (P0) |
 
 ### User Stories to Business Rules
 
-| User Story | Business Rules |
-|------------|---------------|
-| US-001 | BR-001, BR-002, BR-003 |
-| US-002 | BR-004, BR-005, BR-006 |
-| US-003 | BR-007, BR-008, BR-009, BR-010, BR-011, BR-047, BR-048, BR-049 |
-| US-004 | BR-012, BR-013, BR-014, BR-059 |
-| US-005 | BR-015, BR-016, BR-017, BR-060 |
-| US-006 | BR-018, BR-019, BR-020, BR-021, BR-061 |
-| US-007 | BR-022, BR-023, BR-024, BR-025, BR-062 |
-| US-008 | BR-026, BR-027, BR-028, BR-029, BR-063 |
-| US-009 | BR-030, BR-031, BR-032, BR-033 |
-| US-010 | BR-034, BR-035, BR-036 |
-| US-011 | BR-037, BR-038, BR-039 |
-| US-012 | BR-040, BR-041, BR-042 |
+| User Story | Business Rules                                                 |
+| ---------- | -------------------------------------------------------------- |
+| US-001     | BR-001, BR-002, BR-003                                         |
+| US-002     | BR-004, BR-005, BR-006                                         |
+| US-003     | BR-007, BR-008, BR-009, BR-010, BR-011, BR-047, BR-048, BR-049 |
+| US-004     | BR-012, BR-013, BR-014, BR-059                                 |
+| US-005     | BR-015, BR-016, BR-017, BR-060                                 |
+| US-006     | BR-018, BR-019, BR-020, BR-021, BR-061                         |
+| US-007     | BR-022, BR-023, BR-024, BR-025, BR-062                         |
+| US-008     | BR-026, BR-027, BR-028, BR-029, BR-063                         |
+| US-009     | BR-030, BR-031, BR-032, BR-033                                 |
+| US-010     | BR-034, BR-035, BR-036                                         |
+| US-011     | BR-037, BR-038, BR-039                                         |
+| US-012     | BR-040, BR-041, BR-042                                         |
 
 ### User Stories to Kill Criteria
 
-| Kill Criterion | Related User Stories | Detection Method |
-|---------------|---------------------|-----------------|
-| Zero profitable acquisitions in 90 days | US-009 | Query: `SELECT COUNT(*) FROM opportunities WHERE status='won' AND created_at > datetime('now', '-90 days')` |
-| Sustained negative margins < 10% | US-009 | Requires outcomes data (P1 gap); use spreadsheet for P0 |
-| Operator stops using the tool (< 3 logins/week for 4 weeks) | US-001, US-004 | Auth session tracking (currently hardcoded auth -- no tracking). Accept for P0; must resolve before Phase 1. |
-| Scout data staleness > 50% expired on first view | US-010 | Compare `auction_ends_at` to `status_changed_at` for first transition out of inbox |
-| Analysis disagreement > 60% over 60 days | US-003, US-006 | MVC events: `decision_made` where analyst_verdict=BID but operator decision=PASS |
+| Kill Criterion                                              | Related User Stories | Detection Method                                                                                             |
+| ----------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Zero profitable acquisitions in 90 days                     | US-009               | Query: `SELECT COUNT(*) FROM opportunities WHERE status='won' AND created_at > datetime('now', '-90 days')`  |
+| Sustained negative margins < 10%                            | US-009               | Requires outcomes data (P1 gap); use spreadsheet for P0                                                      |
+| Operator stops using the tool (< 3 logins/week for 4 weeks) | US-001, US-004       | Auth session tracking (currently hardcoded auth -- no tracking). Accept for P0; must resolve before Phase 1. |
+| Scout data staleness > 50% expired on first view            | US-010               | Compare `auction_ends_at` to `status_changed_at` for first transition out of inbox                           |
+| Analysis disagreement > 60% over 60 days                    | US-003, US-006       | MVC events: `decision_made` where analyst_verdict=BID but operator decision=PASS                             |
 
 ### User Stories to Technical Risks (Ref: Technical Lead)
 
-| User Story | Technical Risks |
-|------------|----------------|
-| US-003 | R2 (Analyst timeout under Claude API load), R1 (D1 concurrent write -- optimistic lock handles analysis path) |
-| US-004 | R1 (D1 concurrent write -- PATCH endpoint lacks optimistic lock; accept for single-operator MVP) |
-| US-005 | R8 (Watch trigger latency -- up to 5 min late; acceptable with 4-hour default threshold) |
-| US-010 | R6 (Auction data freshness -- up to 15 min stale from scout cron interval) |
-| US-001, US-002 | R5 (No rate limiting -- accept for MVP with single operator) |
+| User Story     | Technical Risks                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
+| US-003         | R2 (Analyst timeout under Claude API load), R1 (D1 concurrent write -- optimistic lock handles analysis path) |
+| US-004         | R1 (D1 concurrent write -- PATCH endpoint lacks optimistic lock; accept for single-operator MVP)              |
+| US-005         | R8 (Watch trigger latency -- up to 5 min late; acceptable with 4-hour default threshold)                      |
+| US-010         | R6 (Auction data freshness -- up to 15 min stale from scout cron interval)                                    |
+| US-001, US-002 | R5 (No rate limiting -- accept for MVP with single operator)                                                  |
 
 ---
 
@@ -722,19 +722,19 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 The following gaps were identified through codebase analysis and cross-role review. Priorities have been revised based on Target Customer feedback and Technical Lead risk assessment.
 
-| Gap | Priority | User Story | Impact | Triggered By |
-|-----|----------|-----------|--------|-------------|
-| `tuning_events` CHECK constraint rejects `'status_change'` inserts (EC-013) | **P0** | US-008 | Auto-rejection tuning signals silently lost; undermines algorithm feedback loop | Self-identified R1, confirmed R2 |
-| Scout failure alerting absent | **P0** (revised from P1) | US-010 | Operator discovers stale data by observation only. Target Customer: "#1 gap" | Target Customer |
-| `last_scout_run` returns null on stats | **P0** | US-010 | Cannot monitor pipeline health from dashboard | Self-identified R1 |
-| IronPlanet capture rate ~17% | P1 | US-010 | Missing ~83% of IronPlanet listings. Target Customer: "worse than not having the tool at all" | PM, Target Customer |
-| Outcome tracking has no UI | P1 | US-009 | Cannot validate realized margin success metric in-app (spreadsheet acceptable for P0) | PM |
-| `applyVerdictThresholds` uses OR logic (OQ-001) | P1 | US-003 | BUY recommendations on low-margin deals; undermines conservative philosophy | Self-identified R1, confirmed R2 |
-| Bid entry uses browser `prompt()` | P1 (pre-beta blocker) | US-004, US-009 | No input validation for most consequential financial inputs | UX Lead, Target Customer |
-| Dashboard quick-pass may fail on 'other' reason validation (EC-014) | P1 | US-012 | Inline reject action may silently fail | UX Lead |
-| Auth is hardcoded | P0 (security, pre-beta blocker) | N/A | No session tracking for kill criteria; API key exposure risk | PM, Competitor Analyst |
-| No frontend tests | P2 | All UI stories | UI regressions undetected | Technical Lead |
-| Checkbox touch targets below 44px on Filters page | P2 | US-001 | iOS Safari touch target violation | UX Lead |
+| Gap                                                                         | Priority                        | User Story     | Impact                                                                                        | Triggered By                     |
+| --------------------------------------------------------------------------- | ------------------------------- | -------------- | --------------------------------------------------------------------------------------------- | -------------------------------- |
+| `tuning_events` CHECK constraint rejects `'status_change'` inserts (EC-013) | **P0**                          | US-008         | Auto-rejection tuning signals silently lost; undermines algorithm feedback loop               | Self-identified R1, confirmed R2 |
+| Scout failure alerting absent                                               | **P0** (revised from P1)        | US-010         | Operator discovers stale data by observation only. Target Customer: "#1 gap"                  | Target Customer                  |
+| `last_scout_run` returns null on stats                                      | **P0**                          | US-010         | Cannot monitor pipeline health from dashboard                                                 | Self-identified R1               |
+| IronPlanet capture rate ~17%                                                | P1                              | US-010         | Missing ~83% of IronPlanet listings. Target Customer: "worse than not having the tool at all" | PM, Target Customer              |
+| Outcome tracking has no UI                                                  | P1                              | US-009         | Cannot validate realized margin success metric in-app (spreadsheet acceptable for P0)         | PM                               |
+| `applyVerdictThresholds` uses OR logic (OQ-001)                             | P1                              | US-003         | BUY recommendations on low-margin deals; undermines conservative philosophy                   | Self-identified R1, confirmed R2 |
+| Bid entry uses browser `prompt()`                                           | P1 (pre-beta blocker)           | US-004, US-009 | No input validation for most consequential financial inputs                                   | UX Lead, Target Customer         |
+| Dashboard quick-pass may fail on 'other' reason validation (EC-014)         | P1                              | US-012         | Inline reject action may silently fail                                                        | UX Lead                          |
+| Auth is hardcoded                                                           | P0 (security, pre-beta blocker) | N/A            | No session tracking for kill criteria; API key exposure risk                                  | PM, Competitor Analyst           |
+| No frontend tests                                                           | P2                              | All UI stories | UI regressions undetected                                                                     | Technical Lead                   |
+| Checkbox touch targets below 44px on Filters page                           | P2                              | US-001         | iOS Safari touch target violation                                                             | UX Lead                          |
 
 ---
 
@@ -742,27 +742,27 @@ The following gaps were identified through codebase analysis and cross-role revi
 
 This index maps concerns raised by other roles to the business analysis artifacts that address them.
 
-| Role | Concern | Addressed In |
-|------|---------|-------------|
-| Target Customer | Reject flow too heavy ("one tap, one reason code, done") | BR-061, US-006 revised AC-006.4 |
-| Target Customer | Cannot jump from inbox to bid (3 transitions minimum) | BR-059, OQ-008 |
-| Target Customer | Scout failure alerting should be P0 | BR-035 (revised priority), Gaps table |
-| Target Customer | IronPlanet capture rate unacceptable | BR-036, EC-010 |
-| Target Customer | "Verification Needed" label unclear | OQ-011 |
-| Target Customer | Photo swipe gesture missing | BR-064 |
-| Target Customer | Kill Switch Banner should not auto-redirect | BR-063 |
-| Target Customer | Batch reject with single reason for all items | BR-062 (confirmed existing behavior) |
-| UX Lead | Default analysis tab should be Summary, not Report | OQ-009, AC-002.6 |
-| UX Lead | `prompt()` for financial inputs is a design risk | OQ-010 |
-| UX Lead | Dashboard quick-pass uses "other" reason with no note | EC-014 |
-| UX Lead | No undo for destructive actions | Out of scope for MVP; accept risk for founder use |
-| UX Lead | Checkbox touch targets below 44px | Gaps table (P2) |
-| Technical Lead | Performance budgets as testable criteria | AC-001.6, AC-002.7, AC-003.10 |
-| Technical Lead | Watch trigger latency (5-min cron) | BR-060 |
-| Technical Lead | D1 concurrent write risks | Traceability: Technical Risks table |
-| Technical Lead | No optimistic lock on PATCH endpoint | Accept for single-operator MVP per Tech Lead R1 recommendation |
+| Role               | Concern                                                  | Addressed In                                                                        |
+| ------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Target Customer    | Reject flow too heavy ("one tap, one reason code, done") | BR-061, US-006 revised AC-006.4                                                     |
+| Target Customer    | Cannot jump from inbox to bid (3 transitions minimum)    | BR-059, OQ-008                                                                      |
+| Target Customer    | Scout failure alerting should be P0                      | BR-035 (revised priority), Gaps table                                               |
+| Target Customer    | IronPlanet capture rate unacceptable                     | BR-036, EC-010                                                                      |
+| Target Customer    | "Verification Needed" label unclear                      | OQ-011                                                                              |
+| Target Customer    | Photo swipe gesture missing                              | BR-064                                                                              |
+| Target Customer    | Kill Switch Banner should not auto-redirect              | BR-063                                                                              |
+| Target Customer    | Batch reject with single reason for all items            | BR-062 (confirmed existing behavior)                                                |
+| UX Lead            | Default analysis tab should be Summary, not Report       | OQ-009, AC-002.6                                                                    |
+| UX Lead            | `prompt()` for financial inputs is a design risk         | OQ-010                                                                              |
+| UX Lead            | Dashboard quick-pass uses "other" reason with no note    | EC-014                                                                              |
+| UX Lead            | No undo for destructive actions                          | Out of scope for MVP; accept risk for founder use                                   |
+| UX Lead            | Checkbox touch targets below 44px                        | Gaps table (P2)                                                                     |
+| Technical Lead     | Performance budgets as testable criteria                 | AC-001.6, AC-002.7, AC-003.10                                                       |
+| Technical Lead     | Watch trigger latency (5-min cron)                       | BR-060                                                                              |
+| Technical Lead     | D1 concurrent write risks                                | Traceability: Technical Risks table                                                 |
+| Technical Lead     | No optimistic lock on PATCH endpoint                     | Accept for single-operator MVP per Tech Lead R1 recommendation                      |
 | Competitor Analyst | Alert speed gap (15-min cron vs. sub-minute competitors) | Out of scope for MVP; accept. Scraping interval is adequate for auction timescales. |
-| Competitor Analyst | Native app UX advantage | Out of scope; DFG is a web app on iOS Safari (CLAUDE.md constraint) |
-| Competitor Analyst | Shallow moat / replicable technology | Not a BA concern; noted for PM strategic awareness |
-| PM | ADR-003 outcome tracking depth | US-009, OQ-004 |
-| PM | Kill criteria detection methods | Traceability: Kill Criteria table |
+| Competitor Analyst | Native app UX advantage                                  | Out of scope; DFG is a web app on iOS Safari (CLAUDE.md constraint)                 |
+| Competitor Analyst | Shallow moat / replicable technology                     | Not a BA concern; noted for PM strategic awareness                                  |
+| PM                 | ADR-003 outcome tracking depth                           | US-009, OQ-004                                                                      |
+| PM                 | Kill criteria detection methods                          | Traceability: Kill Criteria table                                                   |

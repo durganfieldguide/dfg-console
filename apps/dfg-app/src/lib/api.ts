@@ -17,38 +17,35 @@ import type {
   WatchTrigger,
   WatchThreshold,
   ObservedFacts,
-} from '@/types';
-import type { OperatorInputs } from '@/components/features/title-inputs';
-import type { ComputedGates } from '@/components/features/gates-display';
-import type { StalenessReason } from '@/components/features/staleness-banner';
+} from '@/types'
+import type { OperatorInputs } from '@/components/features/title-inputs'
+import type { ComputedGates } from '@/components/features/gates-display'
+import type { StalenessReason } from '@/components/features/staleness-banner'
 
 /**
  * Fetch from the local Next.js API proxy.
  * The proxy adds authorization and forwards to dfg-api.
  */
-async function fetchApi<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Use local proxy - token is added server-side
-  const url = `/api${path.replace(/^\/api/, '')}`;
+  const url = `/api${path.replace(/^\/api/, '')}`
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
-  };
+  }
 
   const response = await fetch(url, {
     ...options,
     headers,
-  });
+  })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
-    throw new Error(error.error?.message || `API error: ${response.status}`);
+    const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
+    throw new Error(error.error?.message || `API error: ${response.status}`)
   }
 
-  return response.json();
+  return response.json()
 }
 
 // =============================================================================
@@ -56,70 +53,70 @@ async function fetchApi<T>(
 // =============================================================================
 
 export interface ListOpportunitiesParams {
-  status?: OpportunityStatus | OpportunityStatus[];
-  ending_within?: '24h' | '48h' | '7d';
-  score_band?: 'high' | 'medium' | 'low';
-  category_id?: string;
-  needs_attention?: boolean;
-  stale_qualifying?: boolean;
+  status?: OpportunityStatus | OpportunityStatus[]
+  ending_within?: '24h' | '48h' | '7d'
+  score_band?: 'high' | 'medium' | 'low'
+  category_id?: string
+  needs_attention?: boolean
+  stale_qualifying?: boolean
   // Sprint N+1: Staleness filters
-  stale?: boolean;
-  analysis_stale?: boolean;
-  decision_stale?: boolean;
-  ending_soon?: boolean;
+  stale?: boolean
+  analysis_stale?: boolean
+  decision_stale?: boolean
+  ending_soon?: boolean
   // Combined attention filter (all staleness conditions)
-  attention?: boolean;
+  attention?: boolean
   // Sprint N+3: Strike Zone filter (high-value inbox items ready for action)
-  strike_zone?: boolean;
+  strike_zone?: boolean
   // Sprint N+3: Verification Needed filter (opportunities with open critical gates)
-  verification_needed?: boolean;
+  verification_needed?: boolean
   // Sprint N+4: New today filter (#71)
-  new_today?: boolean;
-  limit?: number;
-  offset?: number;
-  sort?: string;
-  order?: 'asc' | 'desc';
+  new_today?: boolean
+  limit?: number
+  offset?: number
+  sort?: string
+  order?: 'asc' | 'desc'
 }
 
 export async function listOpportunities(
   params: ListOpportunitiesParams = {}
 ): Promise<{ opportunities: OpportunitySummary[]; total: number }> {
-  const searchParams = new URLSearchParams();
+  const searchParams = new URLSearchParams()
 
   if (params.status) {
-    const statuses = Array.isArray(params.status) ? params.status.join(',') : params.status;
-    searchParams.set('status', statuses);
+    const statuses = Array.isArray(params.status) ? params.status.join(',') : params.status
+    searchParams.set('status', statuses)
   }
-  if (params.ending_within) searchParams.set('ending_within', params.ending_within);
-  if (params.score_band) searchParams.set('score_band', params.score_band);
-  if (params.category_id) searchParams.set('category_id', params.category_id);
-  if (params.needs_attention) searchParams.set('needs_attention', 'true');
-  if (params.stale_qualifying) searchParams.set('stale_qualifying', 'true');
+  if (params.ending_within) searchParams.set('ending_within', params.ending_within)
+  if (params.score_band) searchParams.set('score_band', params.score_band)
+  if (params.category_id) searchParams.set('category_id', params.category_id)
+  if (params.needs_attention) searchParams.set('needs_attention', 'true')
+  if (params.stale_qualifying) searchParams.set('stale_qualifying', 'true')
   // Sprint N+1: Staleness filters
-  if (params.stale) searchParams.set('stale', 'true');
-  if (params.analysis_stale) searchParams.set('analysis_stale', 'true');
-  if (params.decision_stale) searchParams.set('decision_stale', 'true');
-  if (params.ending_soon) searchParams.set('ending_soon', 'true');
-  if (params.attention) searchParams.set('attention', 'true');
+  if (params.stale) searchParams.set('stale', 'true')
+  if (params.analysis_stale) searchParams.set('analysis_stale', 'true')
+  if (params.decision_stale) searchParams.set('decision_stale', 'true')
+  if (params.ending_soon) searchParams.set('ending_soon', 'true')
+  if (params.attention) searchParams.set('attention', 'true')
   // Sprint N+3: Strike Zone filter
-  if (params.strike_zone) searchParams.set('strike_zone', 'true');
+  if (params.strike_zone) searchParams.set('strike_zone', 'true')
   // Sprint N+3: Verification Needed filter
-  if (params.verification_needed) searchParams.set('verification_needed', 'true');
+  if (params.verification_needed) searchParams.set('verification_needed', 'true')
   // Sprint N+4: New today filter
-  if (params.new_today) searchParams.set('new_today', 'true');
-  if (params.limit) searchParams.set('limit', params.limit.toString());
-  if (params.offset) searchParams.set('offset', params.offset.toString());
-  if (params.sort) searchParams.set('sort', params.sort);
-  if (params.order) searchParams.set('order', params.order);
+  if (params.new_today) searchParams.set('new_today', 'true')
+  if (params.limit) searchParams.set('limit', params.limit.toString())
+  if (params.offset) searchParams.set('offset', params.offset.toString())
+  if (params.sort) searchParams.set('sort', params.sort)
+  if (params.order) searchParams.set('order', params.order)
 
-  const query = searchParams.toString();
-  const path = `/api/opportunities${query ? `?${query}` : ''}`;
+  const query = searchParams.toString()
+  const path = `/api/opportunities${query ? `?${query}` : ''}`
 
-  const response = await fetchApi<ListResponse<OpportunitySummary>>(path);
+  const response = await fetchApi<ListResponse<OpportunitySummary>>(path)
   return {
     opportunities: response.data.opportunities || [],
     total: response.data.total,
-  };
+  }
 }
 
 // Helper to safely parse opportunity data from API
@@ -127,48 +124,48 @@ function parseOpportunityData(data: OpportunityDetail): OpportunityDetail {
   // Parse photos if it's a JSON string (database returns it as string)
   if (typeof data.photos === 'string') {
     try {
-      data.photos = JSON.parse(data.photos);
+      data.photos = JSON.parse(data.photos)
     } catch {
-      data.photos = [];
+      data.photos = []
     }
   }
 
   // Ensure photos is always an array
   if (!Array.isArray(data.photos)) {
-    data.photos = [];
+    data.photos = []
   }
 
   // Ensure alerts is always an array
   if (!Array.isArray(data.alerts)) {
-    data.alerts = [];
+    data.alerts = []
   }
 
   // Ensure actions is always an array
   if (!Array.isArray(data.actions)) {
-    data.actions = [];
+    data.actions = []
   }
 
-  return data;
+  return data
 }
 
 export async function getOpportunity(id: string): Promise<OpportunityDetail> {
   const response = await fetchApi<ApiResponse<OpportunityDetail>>(
     `/api/opportunities/${encodeURIComponent(id)}`
-  );
-  return parseOpportunityData(response.data);
+  )
+  return parseOpportunityData(response.data)
 }
 
 export interface UpdateOpportunityParams {
-  status?: OpportunityStatus;
-  rejection_reason?: RejectionReason;
-  rejection_note?: string;
-  watch_trigger?: WatchTrigger;
-  watch_threshold?: WatchThreshold;
-  max_bid_locked?: number;
-  bid_strategy?: 'last_minute' | 'early' | 'manual';
-  final_price?: number;
-  observed_facts?: ObservedFacts;
-  outcome_notes?: string;
+  status?: OpportunityStatus
+  rejection_reason?: RejectionReason
+  rejection_note?: string
+  watch_trigger?: WatchTrigger
+  watch_threshold?: WatchThreshold
+  max_bid_locked?: number
+  bid_strategy?: 'last_minute' | 'early' | 'manual'
+  final_price?: number
+  observed_facts?: ObservedFacts
+  outcome_notes?: string
 }
 
 export async function updateOpportunity(
@@ -181,15 +178,15 @@ export async function updateOpportunity(
       method: 'PATCH',
       body: JSON.stringify(params),
     }
-  );
-  return parseOpportunityData(response.data);
+  )
+  return parseOpportunityData(response.data)
 }
 
 export interface BatchOperationParams {
-  opportunity_ids: string[];
-  action: 'reject' | 'archive';
-  rejection_reason?: RejectionReason;
-  rejection_note?: string;
+  opportunity_ids: string[]
+  action: 'reject' | 'archive'
+  rejection_reason?: RejectionReason
+  rejection_note?: string
 }
 
 export async function batchOperation(
@@ -201,37 +198,25 @@ export async function batchOperation(
       method: 'POST',
       body: JSON.stringify(params),
     }
-  );
-  return response.data;
+  )
+  return response.data
 }
 
-export async function dismissAlert(
-  opportunityId: string,
-  alertKey: string
-): Promise<void> {
-  await fetchApi(
-    `/api/opportunities/${encodeURIComponent(opportunityId)}/alerts/dismiss`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ alert_key: alertKey }),
-    }
-  );
+export async function dismissAlert(opportunityId: string, alertKey: string): Promise<void> {
+  await fetchApi(`/api/opportunities/${encodeURIComponent(opportunityId)}/alerts/dismiss`, {
+    method: 'POST',
+    body: JSON.stringify({ alert_key: alertKey }),
+  })
 }
 
-export async function createNote(
-  opportunityId: string,
-  note: string
-): Promise<void> {
-  await fetchApi(
-    `/api/opportunities/${encodeURIComponent(opportunityId)}/actions`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        action_type: 'note',
-        payload: { note },
-      }),
-    }
-  );
+export async function createNote(opportunityId: string, note: string): Promise<void> {
+  await fetchApi(`/api/opportunities/${encodeURIComponent(opportunityId)}/actions`, {
+    method: 'POST',
+    body: JSON.stringify({
+      action_type: 'note',
+      payload: { note },
+    }),
+  })
 }
 
 // =============================================================================
@@ -239,41 +224,39 @@ export async function createNote(
 // =============================================================================
 
 export async function getStats(): Promise<DashboardStats> {
-  const response = await fetchApi<ApiResponse<DashboardStats>>(
-    '/api/opportunities/stats'
-  );
-  return response.data;
+  const response = await fetchApi<ApiResponse<DashboardStats>>('/api/opportunities/stats')
+  return response.data
 }
 
 // =============================================================================
 // ATTENTION REQUIRED
 // =============================================================================
 
-export type ReasonChip = 'DECISION_STALE' | 'ENDING_SOON' | 'STALE' | 'ANALYSIS_STALE';
+export type ReasonChip = 'DECISION_STALE' | 'ENDING_SOON' | 'STALE' | 'ANALYSIS_STALE'
 
 export interface AttentionItem {
-  id: string;
-  title: string;
-  source: string;
-  status: OpportunityStatus;
-  max_bid_locked: number | null;
-  auction_ends_at: string | null;
-  status_changed_at: string;
-  last_operator_review_at: string | null;
+  id: string
+  title: string
+  source: string
+  status: OpportunityStatus
+  max_bid_locked: number | null
+  auction_ends_at: string | null
+  status_changed_at: string
+  last_operator_review_at: string | null
   // Decision-grade fields (#69)
-  current_bid: number | null;
-  buy_box_score: number | null;
-  category_id: string | null;
-  is_stale: boolean;
-  is_decision_stale: boolean;
-  is_ending_soon: boolean;
-  is_analysis_stale: boolean;
-  reason_tags: ReasonChip[];
+  current_bid: number | null
+  buy_box_score: number | null
+  category_id: string | null
+  is_stale: boolean
+  is_decision_stale: boolean
+  is_ending_soon: boolean
+  is_analysis_stale: boolean
+  reason_tags: ReasonChip[]
 }
 
 export interface AttentionRequiredResponse {
-  items: AttentionItem[];
-  total_count: number;
+  items: AttentionItem[]
+  total_count: number
 }
 
 /**
@@ -282,8 +265,8 @@ export interface AttentionRequiredResponse {
 export async function getAttentionRequired(limit = 10): Promise<AttentionRequiredResponse> {
   const response = await fetchApi<AttentionRequiredResponse>(
     `/api/dashboard/attention?limit=${limit}`
-  );
-  return response;
+  )
+  return response
 }
 
 /**
@@ -292,7 +275,7 @@ export async function getAttentionRequired(limit = 10): Promise<AttentionRequire
 export async function touchOpportunity(opportunityId: string): Promise<void> {
   await fetchApi(`/api/opportunities/${encodeURIComponent(opportunityId)}/touch`, {
     method: 'POST',
-  });
+  })
 }
 
 // =============================================================================
@@ -300,36 +283,36 @@ export async function touchOpportunity(opportunityId: string): Promise<void> {
 // =============================================================================
 
 export async function listSources(): Promise<Source[]> {
-  const response = await fetchApi<ApiResponse<{ sources: Source[] }>>(
-    '/api/sources'
-  );
-  return response.data.sources;
+  const response = await fetchApi<ApiResponse<{ sources: Source[] }>>('/api/sources')
+  return response.data.sources
 }
 
 export async function updateSource(
   id: string,
-  params: Partial<Pick<Source, 'enabled' | 'display_name' | 'default_buyer_premium_pct' | 'default_pickup_days'>>
+  params: Partial<
+    Pick<Source, 'enabled' | 'display_name' | 'default_buyer_premium_pct' | 'default_pickup_days'>
+  >
 ): Promise<Source> {
-  const response = await fetchApi<ApiResponse<Source>>(
-    `/api/sources/${encodeURIComponent(id)}`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify(params),
-    }
-  );
-  return response.data;
+  const response = await fetchApi<ApiResponse<Source>>(`/api/sources/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(params),
+  })
+  return response.data
 }
 
 // =============================================================================
 // INGEST
 // =============================================================================
 
-export async function syncFromScout(): Promise<{ created: number; updated: number; skipped: number }> {
-  const response = await fetchApi<ApiResponse<{ created: number; updated: number; skipped: number }>>(
-    '/api/ingest/sync',
-    { method: 'POST' }
-  );
-  return response.data;
+export async function syncFromScout(): Promise<{
+  created: number
+  updated: number
+  skipped: number
+}> {
+  const response = await fetchApi<
+    ApiResponse<{ created: number; updated: number; skipped: number }>
+  >('/api/ingest/sync', { method: 'POST' })
+  return response.data
 }
 
 // =============================================================================
@@ -340,8 +323,8 @@ export async function triggerScoutRun(): Promise<{ triggered: boolean; message: 
   const response = await fetchApi<ApiResponse<{ triggered: boolean; message: string }>>(
     '/api/scout/run',
     { method: 'POST' }
-  );
-  return response.data;
+  )
+  return response.data
 }
 
 // =============================================================================
@@ -351,232 +334,234 @@ export async function triggerScoutRun(): Promise<{ triggered: boolean; message: 
 // Full analysis result from dfg-analyst worker
 export interface AnalysisResult {
   // The full formatted report in markdown
-  report_markdown: string;
-  report_summary?: string;
+  report_markdown: string
+  report_summary?: string
 
   // Report fields - the primary source for display values (matches old frontend)
   report_fields: {
-    verdict: 'BUY' | 'WATCH' | 'PASS';
-    max_bid_mid: number;
-    max_bid_worst: number;
-    max_bid_best: number;
-    retail_est: number;
-    wholesale_floor?: number;
-    expected_profit: number;
-    expected_margin: number;
-    confidence: number; // 1-5
-  };
+    verdict: 'BUY' | 'WATCH' | 'PASS'
+    max_bid_mid: number
+    max_bid_worst: number
+    max_bid_best: number
+    retail_est: number
+    wholesale_floor?: number
+    expected_profit: number
+    expected_margin: number
+    confidence: number // 1-5
+  }
 
   // Asset summary
   asset_summary?: {
-    title: string;
-    source: string;
-    current_bid: number;
-  };
+    title: string
+    source: string
+    current_bid: number
+  }
 
   // Condition assessment
   condition?: {
-    overall_grade: string;
-    summary: string;
+    overall_grade: string
+    summary: string
     red_flags: Array<{
-      category: string;
-      severity: string;
-      description: string;
-      requires_inspection?: boolean;
-      riskCategory: "core_risk" | "optional";  // Distinguishes deal-breaking issues from amenity failures
-      buyerImpact: string;                      // Buyer-perspective context (1-2 sentences)
-    }>;
+      category: string
+      severity: string
+      description: string
+      requires_inspection?: boolean
+      riskCategory: 'core_risk' | 'optional' // Distinguishes deal-breaking issues from amenity failures
+      buyerImpact: string // Buyer-perspective context (1-2 sentences)
+    }>
     tires?: {
-      condition: string;
-      estimated_remaining_life: string;
-    };
-  };
+      condition: string
+      estimated_remaining_life: string
+    }
+  }
 
   // Calculation spine - additional detail (optional, report_fields is primary)
   calculation_spine?: {
-    acquisition_cost: number;
-    repair_cost: number;
-    total_investment: number;
-    resale_low: number;
-    resale_high: number;
-    profit_at_low: number;
-    profit_at_high: number;
-    max_bid: number;
-    margin_percent: number;
-  };
+    acquisition_cost: number
+    repair_cost: number
+    total_investment: number
+    resale_low: number
+    resale_high: number
+    profit_at_low: number
+    profit_at_high: number
+    max_bid: number
+    margin_percent: number
+  }
 
   // Bid readiness assessment
   bid_readiness?: {
-    status: 'BID-READY' | 'NOT BID-READY' | 'DO NOT BID';
-    gates_passed: string[];
-    gates_failed: string[];
-    blocking_issues: string[];
-  };
+    status: 'BID-READY' | 'NOT BID-READY' | 'DO NOT BID'
+    gates_passed: string[]
+    gates_failed: string[]
+    blocking_issues: string[]
+  }
 
   // Gated economics
   gated_economics?: {
     verified_scenario: {
-      max_bid: number;
-      profit: number;
-      margin: number;
-    };
+      max_bid: number
+      profit: number
+      margin: number
+    }
     haircutted_scenario: {
-      max_bid: number;
-      profit: number;
-      margin: number;
-      haircut_reason: string;
-    };
-  };
+      max_bid: number
+      profit: number
+      margin: number
+      haircut_reason: string
+    }
+  }
 
   // Unified confidence
   unified_confidence?: {
-    overall: number;
-    grade: string;
+    overall: number
+    grade: string
     penalties: Array<{
-      reason: string;
-      impact: number;
-    }>;
-  };
+      reason: string
+      impact: number
+    }>
+  }
 
   // Condition score
   condition_score?: {
-    score: number;
-    grade: string;
-    coverage_penalty: number;
-  };
+    score: number
+    grade: string
+    coverage_penalty: number
+  }
 
   // Risk assessment
   risk_assessment?: {
-    observed_risks: Array<{ description: string; severity: string }>;
-    unverified_risks: Array<{ description: string; severity: string }>;
-    info_gaps: string[];
-    overall_risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  };
+    observed_risks: Array<{ description: string; severity: string }>
+    unverified_risks: Array<{ description: string; severity: string }>
+    info_gaps: string[]
+    overall_risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+  }
 
   // Risk banner
   risk_banner?: {
-    headline: string;
-    color: string;
-  };
+    headline: string
+    color: string
+  }
 
   // Pre-bid checklist
   pre_bid_checklist?: Array<{
-    item: string;
-    status: 'PASS' | 'FAIL' | 'UNKNOWN';
-    note?: string;
-  }>;
+    item: string
+    status: 'PASS' | 'FAIL' | 'UNKNOWN'
+    note?: string
+  }>
 
   // Market demand assessment (#147)
   market_demand?: {
-    level: 'high' | 'moderate' | 'low' | 'niche';
-    confidence: 'high' | 'medium' | 'low';
-    is_heuristic: boolean;
+    level: 'high' | 'moderate' | 'low' | 'niche'
+    confidence: 'high' | 'medium' | 'low'
+    is_heuristic: boolean
     basis?: {
-      method: string;
-      factors: string[];
-    };
-    missing_inputs?: string[];
+      method: string
+      factors: string[]
+    }
+    missing_inputs?: string[]
     implications: {
-      expected_days_to_sell: string;
-      pricing_advice: string;
-      risk_note: string | null;
-    };
-    summary: string;
-  };
+      expected_days_to_sell: string
+      pricing_advice: string
+      risk_note: string | null
+    }
+    summary: string
+  }
 
   // Investor lens
   investor_lens?: {
-    verdict: string;
-    verdict_reasoning: string;
-    verdict_reasons?: string[];  // #156: Tracks specific verdict adjustments/downgrades
-    verdict_gates?: Array<{      // #148: Structured gate data
-      id: string;
-      type: 'blocking' | 'downgrade';
-      status: 'failed' | 'passed';
-      category: 'critical' | 'confidence';
-      title: string;
-      description: string;
-      condition: string;
-      impact: string;
-    }>;
-    gates_summary?: {            // #148: Summary stats
-      allCriticalPassed: boolean;
-      passedCount: number;
-      totalCount: number;
-    };
-    max_bid: number | null;
-    profit_at_max: number | null;
-    repair_estimate: number | null;
+    verdict: string
+    verdict_reasoning: string
+    verdict_reasons?: string[] // #156: Tracks specific verdict adjustments/downgrades
+    verdict_gates?: Array<{
+      // #148: Structured gate data
+      id: string
+      type: 'blocking' | 'downgrade'
+      status: 'failed' | 'passed'
+      category: 'critical' | 'confidence'
+      title: string
+      description: string
+      condition: string
+      impact: string
+    }>
+    gates_summary?: {
+      // #148: Summary stats
+      allCriticalPassed: boolean
+      passedCount: number
+      totalCount: number
+    }
+    max_bid: number | null
+    profit_at_max: number | null
+    repair_estimate: number | null
     phoenix_resale_range: {
-      quick_sale: number;
-      market_rate: number;
-      premium: number;
-      scarcity?: string;
-    };
+      quick_sale: number
+      market_rate: number
+      premium: number
+      scarcity?: string
+    }
     scenarios?: {
       quick_sale?: {
-        sale_price: number;
-        gross_profit: number;
-        margin: number;
-        days_to_sell?: number;
-      };
+        sale_price: number
+        gross_profit: number
+        margin: number
+        days_to_sell?: number
+      }
       expected?: {
-        sale_price: number;
-        gross_profit: number;
-        margin: number;
-        days_to_sell?: number;
-      };
+        sale_price: number
+        gross_profit: number
+        margin: number
+        days_to_sell?: number
+      }
       premium?: {
-        sale_price: number;
-        gross_profit: number;
-        margin: number;
-        days_to_sell?: number;
-      };
-    };
+        sale_price: number
+        gross_profit: number
+        margin: number
+        days_to_sell?: number
+      }
+    }
     repair_plan: Array<{
-      item: string;
-      cost: number;
-      priority: string;
-    }>;
-    deal_killers: string[];
-    inspection_priorities: string[];
-  };
+      item: string
+      cost: number
+      priority: string
+    }>
+    deal_killers: string[]
+    inspection_priorities: string[]
+  }
 
   // Buyer lens
   buyer_lens?: {
-    fair_market_value_low: number;
-    fair_market_value_high: number;
-    buyer_appeal_score: number;
-    target_buyer_profile: string;
-  };
+    fair_market_value_low: number
+    fair_market_value_high: number
+    buyer_appeal_score: number
+    target_buyer_profile: string
+  }
 
   // Justifications
-  investor_lens_justification?: string;
-  buyer_lens_justification?: string;
+  investor_lens_justification?: string
+  buyer_lens_justification?: string
 
   // Arbitrage opportunity
   arbitrage?: {
-    perception_gap: number;
-    buyer_sees_value: number;
-    investor_total_cost: number;
-  };
+    perception_gap: number
+    buyer_sees_value: number
+    investor_total_cost: number
+  }
 
   // Execution playbook
   execution_playbook?: {
-    next_steps: string[];
-    inspection_checklist: string[];
-    exit_strategy: string;
-  };
+    next_steps: string[]
+    inspection_checklist: string[]
+    exit_strategy: string
+  }
 
   // Metadata
   metadata?: {
-    analysis_duration_ms: number;
-    total_tokens: number;
+    analysis_duration_ms: number
+    total_tokens: number
     model_versions: {
-      condition: string;
-      reasoning: string;
-    };
-  };
+      condition: string
+      reasoning: string
+    }
+  }
 }
 
 /**
@@ -605,22 +590,28 @@ export async function analyzeOpportunity(
       distance_miles: opportunity.distance_miles,
     },
     ends_at: opportunity.auction_ends_at,
-    fee_schedule: opportunity.source_defaults ? {
-      buyer_premium: opportunity.source_defaults.buyer_premium_pct / 100,
-      sales_tax_percent: 0.0825, // Default AZ sales tax
-    } : undefined,
+    fee_schedule: opportunity.source_defaults
+      ? {
+          buyer_premium: opportunity.source_defaults.buyer_premium_pct / 100,
+          sales_tax_percent: 0.0825, // Default AZ sales tax
+        }
+      : undefined,
     // Sprint 1.5: Include operator inputs for the analyst
-    operator_inputs: operatorInputs ? {
-      title_status: operatorInputs.title?.titleStatus?.value,
-      title_in_hand: operatorInputs.title?.titleInHand?.value,
-      lien_status: operatorInputs.title?.lienStatus?.value,
-      vin: operatorInputs.title?.vin?.value,
-      odometer_miles: operatorInputs.title?.odometerMiles?.value,
-      // Include verification levels so analyst knows confidence
-      title_status_verified: operatorInputs.title?.titleStatus?.verificationLevel !== 'unverified',
-      odometer_verified: operatorInputs.title?.odometerMiles?.verificationLevel !== 'unverified',
-    } : undefined,
-  };
+    operator_inputs: operatorInputs
+      ? {
+          title_status: operatorInputs.title?.titleStatus?.value,
+          title_in_hand: operatorInputs.title?.titleInHand?.value,
+          lien_status: operatorInputs.title?.lienStatus?.value,
+          vin: operatorInputs.title?.vin?.value,
+          odometer_miles: operatorInputs.title?.odometerMiles?.value,
+          // Include verification levels so analyst knows confidence
+          title_status_verified:
+            operatorInputs.title?.titleStatus?.verificationLevel !== 'unverified',
+          odometer_verified:
+            operatorInputs.title?.odometerMiles?.verificationLevel !== 'unverified',
+        }
+      : undefined,
+  }
 
   const response = await fetch('/api/analyze', {
     method: 'POST',
@@ -628,14 +619,14 @@ export async function analyzeOpportunity(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(listingData),
-  });
+  })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
-    throw new Error(error.error?.message || `Analysis failed: ${response.status}`);
+    const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
+    throw new Error(error.error?.message || `Analysis failed: ${response.status}`)
   }
 
-  return response.json();
+  return response.json()
 }
 
 // =============================================================================
@@ -643,18 +634,18 @@ export async function analyzeOpportunity(
 // =============================================================================
 
 export interface AnalysisRunSummary {
-  id: string;
-  createdAt: string;
-  recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO';
-  gatesSummary: string;
-  allCriticalPassed: boolean;
+  id: string
+  createdAt: string
+  recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO'
+  gatesSummary: string
+  allCriticalPassed: boolean
 }
 
 export interface OpportunityWithAnalysis extends OpportunityDetail {
-  operatorInputs?: OperatorInputs | null;
-  gates?: ComputedGates | null;
-  currentAnalysisRun?: AnalysisRunSummary | null;
-  inputsChangedSinceAnalysis?: boolean;
+  operatorInputs?: OperatorInputs | null
+  gates?: ComputedGates | null
+  currentAnalysisRun?: AnalysisRunSummary | null
+  inputsChangedSinceAnalysis?: boolean
 }
 
 /**
@@ -670,8 +661,8 @@ export async function updateOperatorInputs(
       method: 'PATCH',
       body: JSON.stringify(inputs),
     }
-  );
-  return parseOpportunityData(response.data) as OpportunityWithAnalysis;
+  )
+  return parseOpportunityData(response.data) as OpportunityWithAnalysis
 }
 
 /**
@@ -679,61 +670,61 @@ export async function updateOperatorInputs(
  * Sprint N+3 (#54): This now calls dfg-analyst AND persists the result.
  * Returns the full analysis including AI analysis for immediate display.
  */
-export async function triggerAnalysis(
-  opportunityId: string
-): Promise<{ analysisRun: AnalysisRunSummary & { aiAnalysis?: AnalysisResult | null }; delta: unknown }> {
+export async function triggerAnalysis(opportunityId: string): Promise<{
+  analysisRun: AnalysisRunSummary & { aiAnalysis?: AnalysisResult | null }
+  delta: unknown
+}> {
   // The API returns { analysisRun: {...}, delta: {...} } directly (not wrapped in data)
   const response = await fetchApi<{
     analysisRun: {
-      id: string;
-      opportunityId: string;
-      createdAt: string;
-      recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO';
+      id: string
+      opportunityId: string
+      createdAt: string
+      recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO'
       derived?: {
-        aiVerdict?: string;
-        aiMaxBid?: number;
-        repairEstimate?: number;
-        conditionGrade?: string;
-      };
+        aiVerdict?: string
+        aiMaxBid?: number
+        repairEstimate?: number
+        conditionGrade?: string
+      }
       gates?: {
-        allCriticalCleared?: boolean;
-        criticalOpen?: number;
-      };
-      aiAnalysis?: AnalysisResult | null;
-    };
-    delta: unknown;
-  }>(
-    `/api/opportunities/${encodeURIComponent(opportunityId)}/analyze`,
-    {
-      method: 'POST',
+        allCriticalCleared?: boolean
+        criticalOpen?: number
+      }
+      aiAnalysis?: AnalysisResult | null
     }
-  );
+    delta: unknown
+  }>(`/api/opportunities/${encodeURIComponent(opportunityId)}/analyze`, {
+    method: 'POST',
+  })
   return {
     analysisRun: {
       id: response.analysisRun.id,
       createdAt: response.analysisRun.createdAt,
       recommendation: response.analysisRun.recommendation,
       gatesSummary: '', // Not critical for display, gates are shown separately
-      allCriticalPassed: response.analysisRun.gates?.allCriticalCleared ?? (response.analysisRun.recommendation === 'BID'),
+      allCriticalPassed:
+        response.analysisRun.gates?.allCriticalCleared ??
+        response.analysisRun.recommendation === 'BID',
       // Sprint N+3: Include full AI analysis for immediate display
       aiAnalysis: response.analysisRun.aiAnalysis,
     },
     delta: response.delta,
-  };
+  }
 }
 
 /**
  * Check if an opportunity's analysis is stale
  */
 export function checkStaleness(opportunity: OpportunityWithAnalysis): {
-  isStale: boolean;
-  reasons: StalenessReason[];
+  isStale: boolean
+  reasons: StalenessReason[]
 } {
-  const reasons: StalenessReason[] = [];
+  const reasons: StalenessReason[] = []
 
   // If no analysis run exists, not stale (just needs initial analysis)
   if (!opportunity.currentAnalysisRun) {
-    return { isStale: false, reasons: [] };
+    return { isStale: false, reasons: [] }
   }
 
   // If inputs changed since analysis, it's stale
@@ -743,41 +734,41 @@ export function checkStaleness(opportunity: OpportunityWithAnalysis): {
       field: 'inputs',
       from: null,
       to: 'updated',
-    });
+    })
   }
 
   return {
     isStale: reasons.length > 0,
     reasons,
-  };
+  }
 }
 
 // =============================================================================
 // MVC EVENTS (#187, #188)
 // =============================================================================
 
-import type { MvcEvent, MvcEventType, MvcEventPayload, DecisionMadePayload } from '@dfg/types';
+import type { MvcEvent, MvcEventType, MvcEventPayload, DecisionMadePayload } from '@dfg/types'
 
 export interface CreateEventParams {
-  opportunity_id: string;
-  event_type: MvcEventType;
-  payload: MvcEventPayload;
-  emitted_at?: string;
+  opportunity_id: string
+  event_type: MvcEventType
+  payload: MvcEventPayload
+  emitted_at?: string
 }
 
 export async function createEvent(params: CreateEventParams): Promise<MvcEvent> {
   const response = await fetchApi<ApiResponse<MvcEvent>>('/api/events', {
     method: 'POST',
     body: JSON.stringify(params),
-  });
-  return response.data;
+  })
+  return response.data
 }
 
 export async function getEvents(opportunityId: string): Promise<MvcEvent[]> {
   const response = await fetchApi<ApiResponse<{ events: MvcEvent[] }>>(
     `/api/events?opportunity_id=${encodeURIComponent(opportunityId)}`
-  );
-  return response.data.events;
+  )
+  return response.data.events
 }
 
 /**
@@ -797,6 +788,6 @@ export async function createDecisionEvent(
       payload,
       emitted_at: new Date().toISOString(),
     }),
-  });
-  return response.data;
+  })
+  return response.data
 }

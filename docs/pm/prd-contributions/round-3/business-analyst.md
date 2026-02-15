@@ -10,25 +10,25 @@
 
 ## Changes from Round 2
 
-1. **Resolved OQ-001 (verdict threshold OR logic) -- promoted to confirmed ADR-006.** All six roles converged on this in Round 2. The PM took a position: BUY requires AND logic (both min_profit AND min_margin met). The Target Customer called it non-negotiable. The Technical Lead listed it as ADR-007 with Option A recommended. This is no longer an open question. Moved from Open Questions to a confirmed business rule (BR-065) and updated US-003 acceptance criteria accordingly. The rule is: BUY requires BOTH thresholds met, WATCH requires EITHER, PASS when neither. *(Triggered by: PM ADR-006, Target Customer #2 priority, Technical Lead ADR-007)*
+1. **Resolved OQ-001 (verdict threshold OR logic) -- promoted to confirmed ADR-006.** All six roles converged on this in Round 2. The PM took a position: BUY requires AND logic (both min*profit AND min_margin met). The Target Customer called it non-negotiable. The Technical Lead listed it as ADR-007 with Option A recommended. This is no longer an open question. Moved from Open Questions to a confirmed business rule (BR-065) and updated US-003 acceptance criteria accordingly. The rule is: BUY requires BOTH thresholds met, WATCH requires EITHER, PASS when neither. *(Triggered by: PM ADR-006, Target Customer #2 priority, Technical Lead ADR-007)\_
 
-2. **Resolved OQ-009 (default analysis tab) -- changed to Summary.** The UX Lead changed the default tab from Report to Summary in their Round 2 revision (Change #9). The Target Customer confirmed: "I want to open an opportunity and know in 3 seconds what I should do." The most actionable data (max bid, margin, profit, verdict reasoning) lives on the Summary tab. Updated AC-002.6 to specify Summary as the default. This is no longer an open question. *(Triggered by: UX Lead Change #9, Target Customer)*
+2. **Resolved OQ-009 (default analysis tab) -- changed to Summary.** The UX Lead changed the default tab from Report to Summary in their Round 2 revision (Change #9). The Target Customer confirmed: "I want to open an opportunity and know in 3 seconds what I should do." The most actionable data (max bid, margin, profit, verdict reasoning) lives on the Summary tab. Updated AC-002.6 to specify Summary as the default. This is no longer an open question. _(Triggered by: UX Lead Change #9, Target Customer)_
 
-3. **Resolved OQ-010 (browser `prompt()` for financial inputs) -- classified as P1 pre-beta blocker, accepted for P0.** The PM, UX Lead, Technical Lead, and Target Customer all flagged this. The UX Lead specified custom modal patterns (Pattern 8: Financial Input Modals) with numeric validation, currency formatting, and confirmation steps. The Target Customer wants this as P0 but accepted that it works for a single financially literate operator today. The PM classified it as Phase 1. Consensus: accept for P0 founder use with full awareness of the risk, require replacement before any external user touches the system. Removed from Open Questions; documented as a confirmed gap with timeline. *(Triggered by: UX Lead Change #2/Pattern 8, PM Phase 1 list, Target Customer #3 priority)*
+3. **Resolved OQ-010 (browser `prompt()` for financial inputs) -- classified as P1 pre-beta blocker, accepted for P0.** The PM, UX Lead, Technical Lead, and Target Customer all flagged this. The UX Lead specified custom modal patterns (Pattern 8: Financial Input Modals) with numeric validation, currency formatting, and confirmation steps. The Target Customer wants this as P0 but accepted that it works for a single financially literate operator today. The PM classified it as Phase 1. Consensus: accept for P0 founder use with full awareness of the risk, require replacement before any external user touches the system. Removed from Open Questions; documented as a confirmed gap with timeline. _(Triggered by: UX Lead Change #2/Pattern 8, PM Phase 1 list, Target Customer #3 priority)_
 
-4. **Resolved OQ-011 ("Verification Needed" label) -- renamed to "Needs Info."** The UX Lead renamed the label to "Needs Info" with subtitle "Missing title, lien, or mileage data" (Change #6). The Target Customer approved the intent but suggested "Needs Title Info" or "Missing Details" as alternatives. Updated BR-041 to reference the new label. The API filter parameter `verification_needed` remains unchanged; this is a UI-only change. *(Triggered by: UX Lead Change #6, Target Customer)*
+4. **Resolved OQ-011 ("Verification Needed" label) -- renamed to "Needs Info."** The UX Lead renamed the label to "Needs Info" with subtitle "Missing title, lien, or mileage data" (Change #6). The Target Customer approved the intent but suggested "Needs Title Info" or "Missing Details" as alternatives. Updated BR-041 to reference the new label. The API filter parameter `verification_needed` remains unchanged; this is a UI-only change. _(Triggered by: UX Lead Change #6, Target Customer)_
 
-5. **Revised EC-013 resolution based on Technical Lead's migration plan.** The Technical Lead wrote migration 0008, which rebuilds the `tuning_events` table with `'status_change'` added to the CHECK constraint. My Round 2 recommendation was to fix the code to use `event_type: 'rejection'` instead. The Technical Lead's approach (expand the constraint) is also valid and has the advantage of being a more honest event type label for status-change events that are not pure rejections. Either fix works. Updated EC-013 to reflect both options with a recommendation to implement whichever ships first. *(Triggered by: Technical Lead migration 0008)*
+5. **Revised EC-013 resolution based on Technical Lead's migration plan.** The Technical Lead wrote migration 0008, which rebuilds the `tuning_events` table with `'status_change'` added to the CHECK constraint. My Round 2 recommendation was to fix the code to use `event_type: 'rejection'` instead. The Technical Lead's approach (expand the constraint) is also valid and has the advantage of being a more honest event type label for status-change events that are not pure rejections. Either fix works. Updated EC-013 to reflect both options with a recommendation to implement whichever ships first. _(Triggered by: Technical Lead migration 0008)_
 
-6. **Added EC-015 for the UX Lead's "Inspect shortcut" auto-advance behavior.** The UX Lead proposed that tapping "Inspect" from `inbox` status auto-advances through `qualifying` to `inspect` in a single server round-trip (two sequential PATCH calls). This creates a new edge case: if the first PATCH (inbox -> qualifying) succeeds but the second (qualifying -> inspect) fails, the opportunity is left in `qualifying` status without the operator's explicit intent. This needs error handling specification. *(Triggered by: UX Lead Change #8)*
+6. **Added EC-015 for the UX Lead's "Inspect shortcut" auto-advance behavior.** The UX Lead proposed that tapping "Inspect" from `inbox` status auto-advances through `qualifying` to `inspect` in a single server round-trip (two sequential PATCH calls). This creates a new edge case: if the first PATCH (inbox -> qualifying) succeeds but the second (qualifying -> inspect) fails, the opportunity is left in `qualifying` status without the operator's explicit intent. This needs error handling specification. _(Triggered by: UX Lead Change #8)_
 
-7. **Revised the gaps table to reflect cross-role priority convergence.** Round 2 had some priority disagreements between roles. Round 3 reflects the final consensus: scout failure alerting is P0 (unanimous), verdict threshold fix is P0 (PM decided), `tuning_events` CHECK fix is P0 (Technical Lead wrote migration), IronPlanet capture rate is P0 per PM (fix or disable), `prompt()` replacement is P1 pre-beta blocker (consensus). *(Triggered by: all roles)*
+7. **Revised the gaps table to reflect cross-role priority convergence.** Round 2 had some priority disagreements between roles. Round 3 reflects the final consensus: scout failure alerting is P0 (unanimous), verdict threshold fix is P0 (PM decided), `tuning_events` CHECK fix is P0 (Technical Lead wrote migration), IronPlanet capture rate is P0 per PM (fix or disable), `prompt()` replacement is P1 pre-beta blocker (consensus). _(Triggered by: all roles)_
 
-8. **Added BR-065 through BR-068 for newly confirmed rules from cross-role convergence.** BR-065 formalizes the AND-logic verdict threshold. BR-066 formalizes the gate-only fallback visual indicator requested by the Target Customer. BR-067 formalizes the Inspect shortcut behavior from inbox. BR-068 formalizes the Results footer bar data source. *(Triggered by: PM ADR-006, Target Customer, UX Lead Changes #8/#10)*
+8. **Added BR-065 through BR-068 for newly confirmed rules from cross-role convergence.** BR-065 formalizes the AND-logic verdict threshold. BR-066 formalizes the gate-only fallback visual indicator requested by the Target Customer. BR-067 formalizes the Inspect shortcut behavior from inbox. BR-068 formalizes the Results footer bar data source. _(Triggered by: PM ADR-006, Target Customer, UX Lead Changes #8/#10)_
 
-9. **Closed OQ-008 (inbox-to-bid shortcut) as deferred.** The Target Customer retracted the request for direct inbox-to-bid after understanding the state machine constraints and MVC event requirements. The UX Lead proposed the "Inspect shortcut" as a compromise (inbox -> qualifying -> inspect in one user action). The PM listed "direct inbox-to-bid transition" as explicitly NOT in Phase 0. This is resolved for MVP scope. *(Triggered by: Target Customer Change #4, UX Lead Change #8, PM Phase 0 exclusions)*
+9. **Closed OQ-008 (inbox-to-bid shortcut) as deferred.** The Target Customer retracted the request for direct inbox-to-bid after understanding the state machine constraints and MVC event requirements. The UX Lead proposed the "Inspect shortcut" as a compromise (inbox -> qualifying -> inspect in one user action). The PM listed "direct inbox-to-bid transition" as explicitly NOT in Phase 0. This is resolved for MVP scope. _(Triggered by: Target Customer Change #4, UX Lead Change #8, PM Phase 0 exclusions)_
 
-10. **Incorporated the PM's `sold_price` field addition into US-009 and the traceability matrix.** The PM's ADR-003 revision adds `sold_price` to the opportunities table, enabling minimum viable outcome measurement. Updated US-009 acceptance criteria and the success metrics traceability to reflect this. *(Triggered by: PM ADR-003 revision)*
+10. **Incorporated the PM's `sold_price` field addition into US-009 and the traceability matrix.** The PM's ADR-003 revision adds `sold_price` to the opportunities table, enabling minimum viable outcome measurement. Updated US-009 acceptance criteria and the success metrics traceability to reflect this. _(Triggered by: PM ADR-003 revision)_
 
 ---
 
@@ -46,10 +46,10 @@
 
 - [ ] AC-001.1: Given the operator opens the dashboard, when new opportunities have been ingested in the last 24 hours, then opportunities with status `inbox` are displayed sorted by `auction_ends_at ASC` (soonest-ending first, NULLs last).
 - [ ] AC-001.2: Given an opportunity is in `inbox` status, when it has a `buy_box_score >= 70` and `last_analyzed_at IS NOT NULL` and auction ends within 48 hours or was created within last 12 hours, then it appears in the Strike Zone count on the stats endpoint.
-- [ ] AC-001.3: Given the opportunity list is loaded, when the operator views it on iOS Safari, then each opportunity card displays: title, current bid (formatted as USD), auction end time (relative), distance in miles, buy_box_score, primary image thumbnail, and a "Last updated X min ago" label (amber when data is older than 15 minutes). All interactive elements meet 44x44px minimum touch targets. *(Ref: UX Lead, CLAUDE.md iOS patterns, UX Lead Change #3)*
+- [ ] AC-001.3: Given the opportunity list is loaded, when the operator views it on iOS Safari, then each opportunity card displays: title, current bid (formatted as USD), auction end time (relative), distance in miles, buy*box_score, primary image thumbnail, and a "Last updated X min ago" label (amber when data is older than 15 minutes). All interactive elements meet 44x44px minimum touch targets. *(Ref: UX Lead, CLAUDE.md iOS patterns, UX Lead Change #3)\_
 - [ ] AC-001.4: Given the operator applies a status filter, when `status=inbox` is selected, then only inbox opportunities are returned and the total count reflects the filtered set.
 - [ ] AC-001.5: Given the opportunity list, when the total exceeds 50 items, then pagination via `limit` and `offset` query parameters returns correct subsets and the `total` count remains accurate.
-- [ ] AC-001.6: Given the API response, then the list endpoint responds in < 200ms at p95. *(Ref: Technical Lead NFR)*
+- [ ] AC-001.6: Given the API response, then the list endpoint responds in < 200ms at p95. _(Ref: Technical Lead NFR)_
 
 **Business Rules:**
 
@@ -77,12 +77,12 @@
 
 - [ ] AC-002.1: Given an opportunity exists, when the operator navigates to `/opportunities/:id`, then the detail page displays all fields from the `GET /api/opportunities/:id` response including: title, description, source, status, current_bid, max_bid_low, max_bid_high, auction_ends_at, distance_miles, photos array, score_breakdown, analysis_summary, operator_inputs, gates, and action history.
 - [ ] AC-002.2: Given the opportunity has a `current_analysis_run_id`, when the detail page loads, then the persisted AI analysis (from `analysis_runs.ai_analysis_json`) is displayed in the tabbed analysis interface without requiring a new AI call.
-- [ ] AC-002.3: Given the opportunity has photos, when the operator taps a photo thumbnail, then a full-screen lightbox appears with swipe-left/right navigation between photos. Tapping outside the lightbox or pressing Escape closes it. *(Revised per UX Lead Change #4)*
+- [ ] AC-002.3: Given the opportunity has photos, when the operator taps a photo thumbnail, then a full-screen lightbox appears with swipe-left/right navigation between photos. Tapping outside the lightbox or pressing Escape closes it. _(Revised per UX Lead Change #4)_
 - [ ] AC-002.4: Given the opportunity has `source_url`, when the operator taps "View Listing", then the original auction listing opens in a new browser tab.
 - [ ] AC-002.5: Given the opportunity has active alerts, when the detail page loads, then alerts are displayed sorted by severity (critical > high > medium > low) with dismiss buttons.
-- [ ] AC-002.6: Given the tabbed analysis interface, when the operator views it, then the default tab is **Summary** (not Report), showing max bid range, retail estimate, expected profit, margin percentage, and all-in acquisition cost breakdown. The most actionable information (verdict, max bid, margin) is immediately visible without requiring tab navigation. *(Resolved: UX Lead Change #9, Target Customer confirmation)*
-- [ ] AC-002.7: Given the detail page, then the API response completes in < 300ms at p95. *(Ref: Technical Lead NFR)*
-- [ ] AC-002.8: Given the detail page header, then a "Last updated X min ago" label is displayed, turning amber when data is older than 15 minutes. *(Added per UX Lead Change #3)*
+- [ ] AC-002.6: Given the tabbed analysis interface, when the operator views it, then the default tab is **Summary** (not Report), showing max bid range, retail estimate, expected profit, margin percentage, and all-in acquisition cost breakdown. The most actionable information (verdict, max bid, margin) is immediately visible without requiring tab navigation. _(Resolved: UX Lead Change #9, Target Customer confirmation)_
+- [ ] AC-002.7: Given the detail page, then the API response completes in < 300ms at p95. _(Ref: Technical Lead NFR)_
+- [ ] AC-002.8: Given the detail page header, then a "Last updated X min ago" label is displayed, turning amber when data is older than 15 minutes. _(Added per UX Lead Change #3)_
 
 **Business Rules:**
 
@@ -109,15 +109,15 @@
 **Acceptance Criteria:**
 
 - [ ] AC-003.1: Given the operator taps the "Analyze" button, when the API call to `POST /api/opportunities/:id/analyze` succeeds, then an `analysis_runs` record is created with `recommendation` (BID/WATCH/PASS/NEEDS_INFO), `derived_json`, `gates_json`, and `ai_analysis_json` persisted.
-- [ ] AC-003.2: Given the analyst worker returns an `investor_lens.verdict` of `STRONG_BUY` or `BUY`, when all critical gates are cleared AND both the category's `min_profit` AND `min_margin` thresholds are met (BR-065), then the analysis run recommendation is set to `BID`. *(Revised per ADR-006: AND logic for BUY)*
+- [ ] AC-003.2: Given the analyst worker returns an `investor_lens.verdict` of `STRONG_BUY` or `BUY`, when all critical gates are cleared AND both the category's `min_profit` AND `min_margin` thresholds are met (BR-065), then the analysis run recommendation is set to `BID`. _(Revised per ADR-006: AND logic for BUY)_
 - [ ] AC-003.3: Given the analyst worker returns `STRONG_BUY` or `BUY`, when critical gates are NOT cleared, then the recommendation is `WATCH` (not `BID`), ensuring gate compliance.
 - [ ] AC-003.4: Given the analyst worker returns `MARGINAL`, then the recommendation is `WATCH` regardless of gate status.
 - [ ] AC-003.5: Given the analyst worker returns `PASS`, then the recommendation is `PASS` regardless of gate status.
-- [ ] AC-003.6: Given the analyst worker is unavailable or times out (25-second timeout), then the analysis completes with `aiAnalysisResult = null` and a gate-based fallback recommendation is used. The UI displays a visible indicator distinguishing "AI-powered" analysis from "Gates only (AI unavailable)" analysis (BR-066). *(Revised per Target Customer: "I need to know what I'm looking at")*
+- [ ] AC-003.6: Given the analyst worker is unavailable or times out (25-second timeout), then the analysis completes with `aiAnalysisResult = null` and a gate-based fallback recommendation is used. The UI displays a visible indicator distinguishing "AI-powered" analysis from "Gates only (AI unavailable)" analysis (BR-066). _(Revised per Target Customer: "I need to know what I'm looking at")_
 - [ ] AC-003.7: Given a previous analysis run exists, when a new analysis is run, then a `delta` object is returned showing the change in recommendation and max bid from the previous run.
 - [ ] AC-003.8: Given concurrent modifications occur, when the optimistic lock check fails (`updated_at` mismatch), then a 409 Conflict is returned and the orphaned `analysis_runs` record is cleaned up.
 - [ ] AC-003.9: Given an analysis is triggered, when it completes successfully, then `last_analyzed_at` and `last_operator_review_at` are both updated on the opportunity (clears STALE badge).
-- [ ] AC-003.10: Given an analysis is triggered, then the full analysis (including AI call) completes in < 30s at p95. Without AI, it completes in < 500ms at p95. End-to-end pipeline (listing to scored opportunity) completes in < 45s at p95. *(Ref: Technical Lead NFR -- clarified two-tier target)*
+- [ ] AC-003.10: Given an analysis is triggered, then the full analysis (including AI call) completes in < 30s at p95. Without AI, it completes in < 500ms at p95. End-to-end pipeline (listing to scored opportunity) completes in < 45s at p95. _(Ref: Technical Lead NFR -- clarified two-tier target)_
 
 **Business Rules:**
 
@@ -126,8 +126,8 @@
 - BR-009: For Sierra Auction source, buyer premium must use the canonical `SIERRA_FEE_SCHEDULE` from `@dfg/money-math` (tiered schedule with flat fees, percent fees, and caps).
 - BR-010: `max_bid_low` is calculated as `investor_lens.max_bid * 0.9` (90% of AI max bid) and `max_bid_high` is `investor_lens.max_bid` (100%).
 - BR-011: AI analysis p95 latency target is < 45 seconds from listing to scored opportunity.
-- BR-065: **Verdict threshold logic uses AND for BUY, OR for WATCH.** `applyVerdictThresholds` must require BOTH `min_profit` AND `min_margin` to be met for a BUY verdict. Meeting EITHER (but not both) triggers WATCH. Meeting neither triggers PASS. This replaces the previous OR logic that allowed a deal with $600 profit but 5% margin to receive a BUY recommendation. *(Confirmed: PM ADR-006, Target Customer non-negotiable, Technical Lead ADR-007 Option A)* **Requires backtest against historical opportunities before deployment.**
-- BR-066: **Gate-only fallback must be visually distinguishable.** When analysis completes without AI (timeout, unavailability), the UI must display a visible indicator (e.g., "Analysis: Gates only -- AI unavailable") so the operator knows the recommendation was not AI-evaluated. *(Confirmed: Target Customer: "If I'm looking at a recommendation and it was generated without the AI, I need a visible indicator.")*
+- BR-065: **Verdict threshold logic uses AND for BUY, OR for WATCH.** `applyVerdictThresholds` must require BOTH `min_profit` AND `min_margin` to be met for a BUY verdict. Meeting EITHER (but not both) triggers WATCH. Meeting neither triggers PASS. This replaces the previous OR logic that allowed a deal with $600 profit but 5% margin to receive a BUY recommendation. _(Confirmed: PM ADR-006, Target Customer non-negotiable, Technical Lead ADR-007 Option A)_ **Requires backtest against historical opportunities before deployment.**
+- BR-066: **Gate-only fallback must be visually distinguishable.** When analysis completes without AI (timeout, unavailability), the UI must display a visible indicator (e.g., "Analysis: Gates only -- AI unavailable") so the operator knows the recommendation was not AI-evaluated. _(Confirmed: Target Customer: "If I'm looking at a recommendation and it was generated without the AI, I need a visible indicator.")_
 
 **Out of Scope:**
 
@@ -153,7 +153,7 @@
 - [ ] AC-004.5: Given any status transition, then an `operator_actions` record with `action_type='status_change'` is created with `from_status`, `to_status`, and `payload`.
 - [ ] AC-004.6: Given a transition to `bid`, then an MVC event of type `decision_made` with `decision='BID'` must be emitted BEFORE the status change. If event emission fails, the transition is blocked.
 - [ ] AC-004.7: Given a transition to `rejected`, then an MVC event of type `decision_made` with `decision='PASS'` must be emitted BEFORE the status change. If event emission fails, the transition is blocked.
-- [ ] AC-004.8: Given the bottom action bar on the detail page, when the opportunity is in a given status, then only contextually valid actions are shown per the state machine. For `inbox` status, an "Inspect" shortcut button is available alongside Qualify/Watch/Reject (BR-067). *(Revised per UX Lead Change #8)*
+- [ ] AC-004.8: Given the bottom action bar on the detail page, when the opportunity is in a given status, then only contextually valid actions are shown per the state machine. For `inbox` status, an "Inspect" shortcut button is available alongside Qualify/Watch/Reject (BR-067). _(Revised per UX Lead Change #8)_
 
 **Business Rules:**
 
@@ -170,7 +170,7 @@
 - BR-013: Every status change creates both an `operator_actions` record AND an MVC event for auditable, immutable history.
 - BR-014: The `watch` -> `qualifying` transition exists (backward movement is allowed from watch for re-evaluation).
 - BR-059: The state machine does NOT allow `inbox` -> `bid` directly. The minimum path to bid is `inbox` -> `qualifying` -> `inspect` -> `bid` (3 transitions). This is a deliberate constraint enforcing disciplined evaluation per Product Principle #3 (conservative over optimistic).
-- BR-067: **Inspect shortcut from inbox.** The UI provides an "Inspect" button on `inbox` status items that auto-advances through `qualifying` to `inspect` via two sequential server-side PATCH calls in a single user action. This reduces the operator's tap count from 3 to 2 for urgent items. The shortcut does NOT bypass the state machine -- both transitions are executed in sequence with full audit records. If the first transition succeeds but the second fails, the opportunity remains in `qualifying` status and the UI displays an error. *(Confirmed: UX Lead Change #8, Target Customer Change #4 retraction of inbox-to-bid request)*
+- BR-067: **Inspect shortcut from inbox.** The UI provides an "Inspect" button on `inbox` status items that auto-advances through `qualifying` to `inspect` via two sequential server-side PATCH calls in a single user action. This reduces the operator's tap count from 3 to 2 for urgent items. The shortcut does NOT bypass the state machine -- both transitions are executed in sequence with full audit records. If the first transition succeeds but the second fails, the opportunity remains in `qualifying` status and the UI displays an error. _(Confirmed: UX Lead Change #8, Target Customer Change #4 retraction of inbox-to-bid request)_
 
 **Out of Scope:**
 
@@ -204,7 +204,7 @@
 - BR-015: Watch triggers are: `ending_soon`, `time_window`, `manual`.
 - BR-016: `watch_cycle` is monotonically increasing per opportunity; it never resets. This ensures alert dismissal keys remain unique across multiple watch cycles.
 - BR-017: Watch-fired alerts use the key format `watch_fired:{watch_cycle}` for dismissal tracking.
-- BR-060: Watch triggers are checked via cron every 5 minutes. An alert may fire up to 5 minutes after the trigger condition is met. The default 4-hour `hours_before` threshold provides sufficient buffer for this latency. *(Ref: Technical Lead R8)*
+- BR-060: Watch triggers are checked via cron every 5 minutes. An alert may fire up to 5 minutes after the trigger condition is met. The default 4-hour `hours_before` threshold provides sufficient buffer for this latency. _(Ref: Technical Lead R8)_
 
 **Out of Scope:**
 
@@ -226,7 +226,7 @@
 - [ ] AC-006.1: Given the operator initiates rejection, when no `rejection_reason` is provided, then the API returns `MISSING_FIELD` error (400).
 - [ ] AC-006.2: Given the operator selects `rejection_reason='other'`, when no `rejection_note` is provided, then the API returns `MISSING_FIELD` error (400).
 - [ ] AC-006.3: Given a valid rejection, then a `tuning_events` record with `event_type='rejection'` is created, capturing `reason_code`, `buy_box_score`, and `time_in_pipeline_hours`.
-- [ ] AC-006.4: Given the rejection modal on mobile, when the operator opens it, then a streamlined grid of 6 common reason codes is presented (too_far, too_expensive, wrong_category, poor_condition, missing_info, other) with 44px+ tap targets. An expandable "More reasons" toggle reveals the full 13-code decision taxonomy. The legacy single-select dropdown is removed. *(Revised per Target Customer, UX Lead Change #1, PM ADR-007)*
+- [ ] AC-006.4: Given the rejection modal on mobile, when the operator opens it, then a streamlined grid of 6 common reason codes is presented (too*far, too_expensive, wrong_category, poor_condition, missing_info, other) with 44px+ tap targets. An expandable "More reasons" toggle reveals the full 13-code decision taxonomy. The legacy single-select dropdown is removed. *(Revised per Target Customer, UX Lead Change #1, PM ADR-007)\_
 - [ ] AC-006.5: Given the rejection is confirmed, then an MVC event of type `decision_made` with `decision='PASS'` and `decision_reason` (array of reason codes) is logged.
 - [ ] AC-006.6: Given the operator rejects from the `inspect` status, when the opportunity was analyzed with a `BID` recommendation, then the `analyst_verdict` is included in the decision event payload (for disagreement tracking).
 
@@ -236,7 +236,7 @@
 - BR-019: The decision reason taxonomy (#188) includes 13 codes across 8 categories: `price_too_high`, `price_no_margin`, `condition_major`, `condition_unknown`, `location_too_far`, `location_restricted`, `timing_ending`, `timing_pickup`, `title_issues`, `category_mismatch`, `competition_concern`, `market_soft`, `other`.
 - BR-020: Rejection tuning events feed the scoring algorithm. The `buy_box_score` at time of rejection, combined with the reason code, provides a training signal for false-positive reduction.
 - BR-021: If the operator's rejection disagrees with an AI `BID` recommendation, this is tracked as a false positive for the success metric "False positive rate <= 30%".
-- BR-061: The reject modal must be completable in 2 taps on mobile: (1) select a reason code, (2) confirm rejection. The "other" code requiring a note is the only exception. The legacy single-select dropdown is removed; the multi-select taxonomy grid is the sole rejection reason mechanism. Backend mapping from taxonomy codes to the legacy `rejection_reason` field is handled server-side. *(Confirmed: Target Customer "one tap, one reason code, done," UX Lead Change #1, PM ADR-007)*
+- BR-061: The reject modal must be completable in 2 taps on mobile: (1) select a reason code, (2) confirm rejection. The "other" code requiring a note is the only exception. The legacy single-select dropdown is removed; the multi-select taxonomy grid is the sole rejection reason mechanism. Backend mapping from taxonomy codes to the legacy `rejection_reason` field is handled server-side. _(Confirmed: Target Customer "one tap, one reason code, done," UX Lead Change #1, PM ADR-007)_
 
 **Out of Scope:**
 
@@ -268,7 +268,7 @@
 - BR-023: Maximum batch size is 50 items per request.
 - BR-024: Batch operations are NOT atomic -- they process sequentially. Partial success is a valid outcome.
 - BR-025: Each item in a batch operation gets its own `operator_actions` audit record with `action_type='batch_reject'` or `action_type='batch_archive'`.
-- BR-062: Batch reject applies a single `rejection_reason` (and optional `rejection_note`) to all items in the batch. Per-item reason codes are not supported. This is confirmed by the API design: `rejection_reason` is a top-level field on the batch request body, not nested per item. *(Confirmed by codebase: `opportunities.ts` line 873)*
+- BR-062: Batch reject applies a single `rejection_reason` (and optional `rejection_note`) to all items in the batch. Per-item reason codes are not supported. This is confirmed by the API design: `rejection_reason` is a top-level field on the batch request body, not nested per item. _(Confirmed by codebase: `opportunities.ts` line 873)_
 
 **Out of Scope:**
 
@@ -292,7 +292,7 @@
 - [ ] AC-008.3: Given auto-rejection triggers, when the opportunity is already in a terminal state (`won`, `lost`, `rejected`, `archived`), then no status change occurs -- only the inputs are updated.
 - [ ] AC-008.4: Given operator inputs are saved, then an `operator_actions` record with `action_type='augmentation'` is created.
 - [ ] AC-008.5: Given operator inputs change after an analysis run exists, then `inputsChangedSinceAnalysis` is set to `true` in the response, signaling the operator should re-analyze.
-- [ ] AC-008.6: Given the verification needed filter, when an opportunity has `operator_inputs_json IS NULL` or any of `titleStatus`, `titleInHand`, `lienStatus`, or `odometerMiles` has `verificationLevel='unverified'` or is NULL, then the opportunity appears in the "Needs Info" count (UI label revised from "Verification Needed"). *(Revised per UX Lead Change #6)*
+- [ ] AC-008.6: Given the verification needed filter, when an opportunity has `operator_inputs_json IS NULL` or any of `titleStatus`, `titleInHand`, `lienStatus`, or `odometerMiles` has `verificationLevel='unverified'` or is NULL, then the opportunity appears in the "Needs Info" count (UI label revised from "Verification Needed"). _(Revised per UX Lead Change #6)_
 - [ ] AC-008.7: Given auto-rejection from a hard gate failure, when the system creates a tuning_events record, then the `event_type` must be `'rejection'` (not `'status_change'`). Alternatively, if migration 0008 is deployed first, `'status_change'` is acceptable. See EC-013 for the current bug and resolution options.
 
 **Business Rules:**
@@ -301,7 +301,7 @@
 - BR-027: Operator inputs use a deep merge strategy: submitting `{ title: { vin: { value: "1HGCM..." } } }` does NOT erase previously saved `titleStatus`.
 - BR-028: Auto-rejection from hard gate failures creates both an `operator_actions` record (status_change) and a `tuning_events` record with `auto_rejected: true`.
 - BR-029: The gated economics system applies a 20% haircut to max bid when gates are NOT cleared (bid readiness = `NOT_BID_READY`), giving the operator a decision: verify and use full max bid, or accept the haircut.
-- BR-063: The Kill Switch Banner for hard gate failures must NOT auto-redirect the operator away from the detail page. The banner shows the disqualification reason inline, provides a "Confirmed -- reject this opportunity" button and a "This info may be wrong -- edit inputs" link. The operator stays on the page. *(Confirmed: Target Customer, UX Lead Change #7)*
+- BR-063: The Kill Switch Banner for hard gate failures must NOT auto-redirect the operator away from the detail page. The banner shows the disqualification reason inline, provides a "Confirmed -- reject this opportunity" button and a "This info may be wrong -- edit inputs" link. The operator stays on the page. _(Confirmed: Target Customer, UX Lead Change #7)_
 
 **Out of Scope:**
 
@@ -325,7 +325,7 @@
 - [ ] AC-009.3: Given a `won` outcome, then `final_price` is stored on the opportunity and can be retrieved via `GET /api/opportunities/:id`.
 - [ ] AC-009.4: Given the `outcomes` table schema exists, when outcome tracking UI is built (P1 remaining gap), then `purchase_price`, `repair_cost_parts`, `repair_cost_labor`, `sold_price`, `fees`, `net_profit`, and `days_held` can be recorded.
 - [ ] AC-009.5: Given a `won` transition, when the operator is prompted for `final_price`, then the input mechanism must validate for positive numeric values (no currency symbols, no commas, no negative values). For MVP, browser `prompt()` is accepted for founder use. For Phase 1, the custom financial input modal (UX Lead Pattern 8) is required.
-- [ ] AC-009.6: Given a `sold_price` field exists on the opportunity (per PM ADR-003 revision), when the operator records a sale price, then minimum viable realized margin can be computed as `(sold_price - acquisition_cost) / acquisition_cost * 100` where `acquisition_cost = final_price * (1 + buyer_premium_pct/100) + estimated_transport + estimated_repairs`. *(Added per PM ADR-003)*
+- [ ] AC-009.6: Given a `sold_price` field exists on the opportunity (per PM ADR-003 revision), when the operator records a sale price, then minimum viable realized margin can be computed as `(sold_price - acquisition_cost) / acquisition_cost * 100` where `acquisition_cost = final_price * (1 + buyer_premium_pct/100) + estimated_transport + estimated_repairs`. _(Added per PM ADR-003)_
 
 **Business Rules:**
 
@@ -356,13 +356,13 @@
 - [ ] AC-010.1: Given the stats endpoint, then `last_scout_run` returns the timestamp of the most recent successful scout run (currently returns null -- P0 gap, must implement).
 - [ ] AC-010.2: Given opportunities exist where `auction_ends_at` is in the past and status is still in an active state, then the "ending soon" filters correctly exclude expired auctions (using `datetime(auction_ends_at) > datetime('now')`).
 - [ ] AC-010.3: Given the Scout pipeline runs on a 15-minute cron, when 95% of scheduled runs complete successfully (per MVP success metric), then the operator can trust data freshness.
-- [ ] AC-010.4: Given the dashboard, when the last successful scout run is older than 30 minutes, then a red warning banner is displayed: "Scout has not run since [time]. Deal flow may be stale." *(Added per Target Customer, Technical Lead observability NFR)*
+- [ ] AC-010.4: Given the dashboard, when the last successful scout run is older than 30 minutes, then a red warning banner is displayed: "Scout has not run since [time]. Deal flow may be stale." _(Added per Target Customer, Technical Lead observability NFR)_
 
 **Business Rules:**
 
 - BR-034: Scout uptime target is >= 95% of scheduled runs completing successfully.
 - BR-035: Scout failure alerting is a **P0 gap** (unanimous across all 6 roles). The minimum viable implementation for Phase 0 is: (a) populate `last_scout_run` on the stats endpoint, and (b) display a visual warning on the dashboard when the last successful run is older than 30 minutes. Push notification for scout failures (SMS/webhook) is Phase 1 per PM ADR-002 Part A, though the PM classified ADR-002 Part A as P0 -- the in-app banner is the minimum; outbound notification is the stretch goal.
-- BR-036: IronPlanet capture rate is currently ~17% (vs Sierra at higher rates). The PM has elevated this to P0: either fix the adapter to >= 80% capture rate or disable the source and remove it from the Sources page. Showing a source as "active" when it captures 17% is deceptive. *(Ref: PM Change #2, Target Customer Change #6, Competitor Analyst Uncomfortable Truth #3)*
+- BR-036: IronPlanet capture rate is currently ~17% (vs Sierra at higher rates). The PM has elevated this to P0: either fix the adapter to >= 80% capture rate or disable the source and remove it from the Sources page. Showing a source as "active" when it captures 17% is deceptive. _(Ref: PM Change #2, Target Customer Change #6, Competitor Analyst Uncomfortable Truth #3)_
 
 **Out of Scope:**
 
@@ -416,15 +416,15 @@
 - [ ] AC-012.2: Given strike zone criteria, then an opportunity qualifies when: status is `inbox` or `qualifying`, score >= 70, analysis exists (`last_analyzed_at IS NOT NULL`), and either auction ends within 48 hours or was created within last 12 hours.
 - [ ] AC-012.3: Given needs_attention count, then it equals `watch_alerts_fired + stale_qualifying.over_24h`.
 - [ ] AC-012.4: Given the dashboard on iOS Safari, then all counts are visible without horizontal scrolling and tap targets for drill-down are >= 44x44px.
-- [ ] AC-012.5: Given the Attention Required list, when the operator taps the inline "Pass" action on an item, then the action uses a non-"other" default reason code to avoid the `rejection_note` validation requirement. Recommended default: `missing_info`. *(Revised per EC-014 resolution)*
-- [ ] AC-012.6: Given the dashboard Results footer bar, then it displays the count of won opportunities and the sum of `final_price` for all won opportunities. *(Added per UX Lead Change #10, BR-068)*
+- [ ] AC-012.5: Given the Attention Required list, when the operator taps the inline "Pass" action on an item, then the action uses a non-"other" default reason code to avoid the `rejection_note` validation requirement. Recommended default: `missing_info`. _(Revised per EC-014 resolution)_
+- [ ] AC-012.6: Given the dashboard Results footer bar, then it displays the count of won opportunities and the sum of `final_price` for all won opportunities. _(Added per UX Lead Change #10, BR-068)_
 
 **Business Rules:**
 
 - BR-040: Strike zone is the primary triage mechanism. These are the highest-value items requiring immediate operator attention.
-- BR-041: "Needs Info" (renamed from "Verification Needed") reflects opportunities with unverified or missing operator inputs across four critical fields: titleStatus, titleInHand, lienStatus, odometerMiles. The API filter parameter remains `verification_needed`; only the UI label changes. *(Revised per UX Lead Change #6)*
+- BR-041: "Needs Info" (renamed from "Verification Needed") reflects opportunities with unverified or missing operator inputs across four critical fields: titleStatus, titleInHand, lienStatus, odometerMiles. The API filter parameter remains `verification_needed`; only the UI label changes. _(Revised per UX Lead Change #6)_
 - BR-042: The operator response time success metric targets median < 4 hours from inbox to qualifying/rejected.
-- BR-068: **Results footer bar data source.** The dashboard Results footer bar displays `COUNT(*)` and `SUM(final_price)` from opportunities where `status = 'won'`. This is not realized profit -- it is total acquisition value. Full P&L visibility requires the `sold_price` field (PM ADR-003) and is Phase 1. *(Added per UX Lead Change #10, Target Customer request)*
+- BR-068: **Results footer bar data source.** The dashboard Results footer bar displays `COUNT(*)` and `SUM(final_price)` from opportunities where `status = 'won'`. This is not realized profit -- it is total acquisition value. Full P&L visibility requires the `sold_price` field (PM ADR-003) and is Phase 1. _(Added per UX Lead Change #10, Target Customer request)_
 
 **Out of Scope:**
 
@@ -444,80 +444,80 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ### Financial Rules (Non-Negotiable)
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-008 | Profit = Net Proceeds - Acquisition Cost. Margin % = (Profit / Acquisition Cost) * 100. | CLAUDE.md, canonical money math |
-| BR-009 | Sierra Auction buyer premium uses `SIERRA_FEE_SCHEDULE` from `@dfg/money-math` (tiered: flat fees, percent fees, caps). | `calculation-spine.ts` line 106-108 |
-| BR-010 | `max_bid_low` = AI max bid * 0.9; `max_bid_high` = AI max bid * 1.0. | `opportunities.ts` line 1558-1561 |
-| BR-029 | Gated economics: 20% haircut on max bid when gates NOT cleared (`NOT_BID_READY`). | `calculation-spine.ts` line 279 |
-| BR-030 | `final_price` must be positive (> 0) for `won` transitions. | `opportunities.ts` line 810-813 |
-| BR-032 | Realized margin = (net_profit / acquisition_cost) * 100. Listing fees are SELLING COSTS ONLY, never included in acquisition cost. | CLAUDE.md |
+| ID     | Rule                                                                                                                                                                               | Source                                              |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| BR-008 | Profit = Net Proceeds - Acquisition Cost. Margin % = (Profit / Acquisition Cost) \* 100.                                                                                           | CLAUDE.md, canonical money math                     |
+| BR-009 | Sierra Auction buyer premium uses `SIERRA_FEE_SCHEDULE` from `@dfg/money-math` (tiered: flat fees, percent fees, caps).                                                            | `calculation-spine.ts` line 106-108                 |
+| BR-010 | `max_bid_low` = AI max bid _ 0.9; `max_bid_high` = AI max bid _ 1.0.                                                                                                               | `opportunities.ts` line 1558-1561                   |
+| BR-029 | Gated economics: 20% haircut on max bid when gates NOT cleared (`NOT_BID_READY`).                                                                                                  | `calculation-spine.ts` line 279                     |
+| BR-030 | `final_price` must be positive (> 0) for `won` transitions.                                                                                                                        | `opportunities.ts` line 810-813                     |
+| BR-032 | Realized margin = (net_profit / acquisition_cost) \* 100. Listing fees are SELLING COSTS ONLY, never included in acquisition cost.                                                 | CLAUDE.md                                           |
 | BR-065 | **Verdict thresholds use AND for BUY.** Both `min_profit` AND `min_margin` must be met for BUY. EITHER triggers WATCH. Neither triggers PASS. Requires backtest before deployment. | PM ADR-006, Target Customer, Technical Lead ADR-007 |
 
 ### Category Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-043 | Trailers (default): min_profit=$600, min_margin=40%, max_acquisition=$6,000, target_days_to_sell=14, max_distance=100mi. | `category-config.ts` |
-| BR-044 | Fleet Trucks: min_profit=$1,500, min_margin=20%, max_acquisition=$15,000, target_days_to_sell=21, max_distance=150mi. | `category-config.ts` |
-| BR-045 | Power Tools: min_profit=$40, min_margin=30%, max_acquisition=$500, target_days_to_sell=7, max_distance=50mi. | `category-config.ts` |
+| ID     | Rule                                                                                                                                     | Source                                    |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| BR-043 | Trailers (default): min_profit=$600, min_margin=40%, max_acquisition=$6,000, target_days_to_sell=14, max_distance=100mi.                 | `category-config.ts`                      |
+| BR-044 | Fleet Trucks: min_profit=$1,500, min_margin=20%, max_acquisition=$15,000, target_days_to_sell=21, max_distance=150mi.                    | `category-config.ts`                      |
+| BR-045 | Power Tools: min_profit=$40, min_margin=30%, max_acquisition=$500, target_days_to_sell=7, max_distance=50mi.                             | `category-config.ts`                      |
 | BR-046 | Category detection falls through: explicit category_id match > vehicle keyword match > vehicle make/model title match > default trailer. | `category-config.ts` detectCategoryType() |
 
 ### Workflow Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-012 | State machine transitions are enforced server-side. Invalid transitions return 400. | `@dfg/types` STATE_TRANSITIONS |
-| BR-013 | Every status change creates an `operator_actions` record AND an MVC event. | `opportunities.ts` |
-| BR-014 | `watch` -> `qualifying` backward transition is allowed. | `@dfg/types` STATE_TRANSITIONS |
-| BR-022 | Batch operations: reject and archive only, max 50 items, sequential (not atomic). | `opportunities.ts` batchOperation() |
-| BR-026 | Hard gate auto-rejection: title `salvage` or `missing` (verified). | `opportunities.ts` updateOperatorInputs() |
-| BR-047 | Optimistic locking on analysis runs: `updated_at` mismatch returns 409 Conflict and cleans up orphaned records. | `opportunities.ts` line 1611-1665 |
-| BR-059 | State machine does not allow `inbox` -> `bid`. Minimum path is 3 transitions. This is by design. | `@dfg/types` STATE_TRANSITIONS |
-| BR-062 | Batch reject uses a single `rejection_reason` for all items. | `opportunities.ts` line 873 |
-| BR-063 | Kill Switch Banner must not auto-redirect away from detail page. | Target Customer, UX Lead Change #7 |
-| BR-067 | Inspect shortcut from inbox: two sequential PATCH calls (inbox->qualifying, qualifying->inspect) in one user action. Both create full audit records. Failure on second call leaves opportunity in qualifying. | UX Lead Change #8 |
+| ID     | Rule                                                                                                                                                                                                          | Source                                    |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| BR-012 | State machine transitions are enforced server-side. Invalid transitions return 400.                                                                                                                           | `@dfg/types` STATE_TRANSITIONS            |
+| BR-013 | Every status change creates an `operator_actions` record AND an MVC event.                                                                                                                                    | `opportunities.ts`                        |
+| BR-014 | `watch` -> `qualifying` backward transition is allowed.                                                                                                                                                       | `@dfg/types` STATE_TRANSITIONS            |
+| BR-022 | Batch operations: reject and archive only, max 50 items, sequential (not atomic).                                                                                                                             | `opportunities.ts` batchOperation()       |
+| BR-026 | Hard gate auto-rejection: title `salvage` or `missing` (verified).                                                                                                                                            | `opportunities.ts` updateOperatorInputs() |
+| BR-047 | Optimistic locking on analysis runs: `updated_at` mismatch returns 409 Conflict and cleans up orphaned records.                                                                                               | `opportunities.ts` line 1611-1665         |
+| BR-059 | State machine does not allow `inbox` -> `bid`. Minimum path is 3 transitions. This is by design.                                                                                                              | `@dfg/types` STATE_TRANSITIONS            |
+| BR-062 | Batch reject uses a single `rejection_reason` for all items.                                                                                                                                                  | `opportunities.ts` line 873               |
+| BR-063 | Kill Switch Banner must not auto-redirect away from detail page.                                                                                                                                              | Target Customer, UX Lead Change #7        |
+| BR-067 | Inspect shortcut from inbox: two sequential PATCH calls (inbox->qualifying, qualifying->inspect) in one user action. Both create full audit records. Failure on second call leaves opportunity in qualifying. | UX Lead Change #8                         |
 
 ### Scoring and Analysis Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-003 | Score bands: high >= 70, medium 40-69, low < 40. | `opportunities.ts` line 209-217 |
-| BR-048 | AI verdict mapping: STRONG_BUY/BUY -> BID (if gates clear AND both thresholds met per BR-065) or WATCH; MARGINAL -> WATCH; PASS -> PASS. *(Revised per BR-065)* | `opportunities.ts` line 1529-1546 |
-| BR-049 | Gate-based fallback: if AI unavailable, allCriticalCleared -> BID, criticalOpen <= 2 -> WATCH, else NEEDS_INFO. | `opportunities.ts` line 1540-1546 |
-| BR-050 | Bid readiness: `DO_NOT_BID` for PASS economics, confirmed deal breakers, or salvage/missing title. `NOT_BID_READY` for missing auction end time or unverified title/mileage. `BID_READY` when economics work and all gates cleared. | `calculation-spine.ts` evaluateBidReadiness() |
-| BR-051 | Confidence breakdown has 4 dimensions: price, title, condition, timing. Each scored independently. Overall score 0-5. | `calculation-spine.ts` evaluateConfidenceBreakdown() |
-| BR-066 | Gate-only fallback analysis must be visually distinguishable from AI-powered analysis in the UI. | Target Customer |
+| ID     | Rule                                                                                                                                                                                                                                | Source                                               |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| BR-003 | Score bands: high >= 70, medium 40-69, low < 40.                                                                                                                                                                                    | `opportunities.ts` line 209-217                      |
+| BR-048 | AI verdict mapping: STRONG*BUY/BUY -> BID (if gates clear AND both thresholds met per BR-065) or WATCH; MARGINAL -> WATCH; PASS -> PASS. *(Revised per BR-065)\_                                                                    | `opportunities.ts` line 1529-1546                    |
+| BR-049 | Gate-based fallback: if AI unavailable, allCriticalCleared -> BID, criticalOpen <= 2 -> WATCH, else NEEDS_INFO.                                                                                                                     | `opportunities.ts` line 1540-1546                    |
+| BR-050 | Bid readiness: `DO_NOT_BID` for PASS economics, confirmed deal breakers, or salvage/missing title. `NOT_BID_READY` for missing auction end time or unverified title/mileage. `BID_READY` when economics work and all gates cleared. | `calculation-spine.ts` evaluateBidReadiness()        |
+| BR-051 | Confidence breakdown has 4 dimensions: price, title, condition, timing. Each scored independently. Overall score 0-5.                                                                                                               | `calculation-spine.ts` evaluateConfidenceBreakdown() |
+| BR-066 | Gate-only fallback analysis must be visually distinguishable from AI-powered analysis in the UI.                                                                                                                                    | Target Customer                                      |
 
 ### Alert Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-052 | Auction ending alerts: < 4 hours = critical, < 24 hours = high, < 48 hours = medium. | `alerts.ts` line 49-101 |
-| BR-053 | Stale qualifying alert fires after 24 hours in qualifying status. Severity upgrades to high after 48 hours. | `alerts.ts` line 106-124 |
-| BR-054 | Bid threshold alert fires when current_bid >= 90% of max_bid_locked. | `alerts.ts` line 127-148 |
-| BR-055 | Alert dismissals are per-key, stored in `operator_actions`. Dismissing an alert does not prevent future alerts of different keys. | `alerts.ts` |
+| ID     | Rule                                                                                                                              | Source                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| BR-052 | Auction ending alerts: < 4 hours = critical, < 24 hours = high, < 48 hours = medium.                                              | `alerts.ts` line 49-101  |
+| BR-053 | Stale qualifying alert fires after 24 hours in qualifying status. Severity upgrades to high after 48 hours.                       | `alerts.ts` line 106-124 |
+| BR-054 | Bid threshold alert fires when current_bid >= 90% of max_bid_locked.                                                              | `alerts.ts` line 127-148 |
+| BR-055 | Alert dismissals are per-key, stored in `operator_actions`. Dismissing an alert does not prevent future alerts of different keys. | `alerts.ts`              |
 
 ### UX/Mobile Rules
 
-| ID | Rule | Source |
-|----|------|--------|
+| ID     | Rule                                                                                                                                          | Source                                         |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | BR-061 | Reject modal completable in 2 taps on mobile (select reason, confirm). Legacy dropdown removed. Multi-select taxonomy grid is sole mechanism. | Target Customer, UX Lead Change #1, PM ADR-007 |
-| BR-064 | Photo lightbox supports swipe gesture between photos (left/right). UX Lead specified touch event handlers with `touch-action: pan-y`. | Target Customer, UX Lead Change #4 |
+| BR-064 | Photo lightbox supports swipe gesture between photos (left/right). UX Lead specified touch event handlers with `touch-action: pan-y`.         | Target Customer, UX Lead Change #4             |
 
 ### Dashboard Rules
 
-| ID | Rule | Source |
-|----|------|--------|
+| ID     | Rule                                                                                                                    | Source                              |
+| ------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | BR-068 | Results footer bar shows won count and `SUM(final_price)` for won opportunities. This is acquisition value, not profit. | UX Lead Change #10, Target Customer |
 
 ### Data Integrity Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-056 | All SQL queries must use `.bind()` parameterization. No template literal interpolation in SQL. | CLAUDE.md |
-| BR-057 | R2 snapshots are immutable. New data creates a new key; existing keys are never overwritten. | CLAUDE.md |
-| BR-058 | MVC events are immutable. Once emitted, events cannot be modified or deleted. | Product Principle #7 |
+| ID     | Rule                                                                                           | Source               |
+| ------ | ---------------------------------------------------------------------------------------------- | -------------------- |
+| BR-056 | All SQL queries must use `.bind()` parameterization. No template literal interpolation in SQL. | CLAUDE.md            |
+| BR-057 | R2 snapshots are immutable. New data creates a new key; existing keys are never overwritten.   | CLAUDE.md            |
+| BR-058 | MVC events are immutable. Once emitted, events cannot be modified or deleted.                  | Product Principle #7 |
 
 ---
 
@@ -543,7 +543,7 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 **Scenario:** The analyst worker times out (25-second limit) and the opportunity has never been analyzed before (no previous analysis run, no existing max_bid values).
 
-**Expected Behavior:** Analysis completes with `aiAnalysisResult = null`. Gate-based fallback recommendation is used. `max_bid_low` and `max_bid_high` remain at their existing values (which may be null if never analyzed). The UI displays the opportunity without max bid values and shows the gate-based recommendation with a visible "Gates only (AI unavailable)" indicator per BR-066. The Next Action Card degrades gracefully when AI analysis is unavailable. *(Revised per Target Customer, UX Lead)*
+**Expected Behavior:** Analysis completes with `aiAnalysisResult = null`. Gate-based fallback recommendation is used. `max_bid_low` and `max_bid_high` remain at their existing values (which may be null if never analyzed). The UI displays the opportunity without max bid values and shows the gate-based recommendation with a visible "Gates only (AI unavailable)" indicator per BR-066. The Next Action Card degrades gracefully when AI analysis is unavailable. _(Revised per Target Customer, UX Lead)_
 
 **Risk:** Medium. Operator has less information for decision-making.
 
@@ -626,12 +626,13 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 **Expected Behavior (CURRENT -- BROKEN):** The INSERT fails because the D1 `tuning_events` table CHECK constraint (migration 0001, line 158-160) only allows: `'rejection', 'win', 'loss', 'score_override', 'time_in_stage'`. The value `'status_change'` is not in this list. Depending on D1 error handling, this either (a) throws an error that may be swallowed by a try/catch, causing the auto-rejection tuning signal to be silently lost, or (b) causes the entire auto-rejection flow to fail.
 
 **Resolution Options (both valid):**
+
 - **Option A (code fix, no migration):** Change the code to use `event_type: 'rejection'` with `auto_rejected: true` in `signal_data`. Semantically correct -- auto-rejection IS a rejection.
 - **Option B (migration fix):** Deploy Technical Lead's migration 0008, which rebuilds `tuning_events` with `'status_change'` added to the CHECK constraint. More honest labeling but requires migration.
 
 **Recommendation:** Implement whichever ships first. Both resolve the silent data loss. Option A is simpler and can be deployed immediately. Option B is part of a broader migration that also adds the `listing_id` UNIQUE constraint (also important).
 
-**Risk:** P0. This is a data integrity bug that silently loses tuning signals for auto-rejections. *(Confirmed by all technical roles)*
+**Risk:** P0. This is a data integrity bug that silently loses tuning signals for auto-rejections. _(Confirmed by all technical roles)_
 
 ### EC-014: Dashboard Quick-Pass Creates Invalid Rejection (RESOLVED)
 
@@ -655,19 +656,19 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ## Open Questions
 
-| ID | Question | Impact | Status |
-|----|----------|--------|--------|
-| OQ-001 | ~~Verdict threshold OR vs AND logic~~ | ~~Critical~~ | **RESOLVED (Round 3).** PM decided AND logic for BUY (ADR-006). Formalized as BR-065. Requires backtest before deployment. |
-| OQ-002 | ~~tuning_events CHECK constraint~~ | ~~P0~~ | **RESOLVED (Round 2).** Promoted to EC-013 (confirmed bug). Technical Lead wrote migration 0008. |
-| OQ-003 | The stats endpoint `last_scout_run` and `last_ingest` are both `null` (TODO). Without these, the operator cannot verify pipeline health from the dashboard. What is the timeline for implementation? | P0 | **PARTIALLY RESOLVED.** All roles agree this is P0. Technical Lead added observability NFRs. Implementation timeline not yet committed. |
-| OQ-004 | The `outcomes` table exists in schema but has no API endpoints or UI. Is `final_price` alone sufficient to validate the "realized margin >= 25%" success metric? | High | **RESOLVED (Round 3).** PM ADR-003 adds `sold_price` field to opportunities table. Combined with `final_price` and source defaults, minimum viable margin can be computed. Full outcomes UI is Phase 1. |
-| OQ-005 | What happens when the operator's location changes? The `max_distance_miles` category config and `distance_miles` on opportunities are static. Does re-analysis update distance? | Low for MVP | **DEFERRED.** Single operator, fixed location for Phase 0. Per-user location preferences are Phase 1. |
-| OQ-006 | The `attention` filter includes analysis_stale items (last_analyzed_at > 7 days ago). Should items that have NEVER been analyzed (`last_analyzed_at IS NULL`) also appear in the attention count? | Medium | **OPEN.** The `analysisStale` filter correctly includes NULL with `(last_analyzed_at IS NULL OR ...)` but `attention` only checks `last_analyzed_at IS NOT NULL AND ...`. Recommend aligning. |
-| OQ-007 | ~~Bid entry uses browser `prompt()`~~ | ~~Medium~~ | **RESOLVED (Round 3).** Accepted for P0 founder use. UX Lead specified custom modal (Pattern 8) for Phase 1. Classified as P1 pre-beta blocker. See OQ-010 for full analysis. |
-| OQ-008 | ~~Should the state machine allow inbox-to-bid shortcut?~~ | ~~High~~ | **RESOLVED (Round 3).** Target Customer retracted request. UX Lead proposed Inspect shortcut (BR-067) as compromise. Direct inbox-to-bid is NOT in Phase 0. |
-| OQ-009 | ~~Default analysis tab should be Summary~~ | ~~Low-Medium~~ | **RESOLVED (Round 3).** UX Lead changed default to Summary. |
-| OQ-010 | ~~`prompt()` for financial inputs~~ | ~~High~~ | **RESOLVED (Round 3).** P1 pre-beta blocker. Accepted for P0 with risk awareness. See UX Lead Pattern 8 for replacement spec. |
-| OQ-011 | ~~"Verification Needed" label rename~~ | ~~Low~~ | **RESOLVED (Round 3).** Renamed to "Needs Info" per UX Lead Change #6. |
+| ID     | Question                                                                                                                                                                                             | Impact         | Status                                                                                                                                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OQ-001 | ~~Verdict threshold OR vs AND logic~~                                                                                                                                                                | ~~Critical~~   | **RESOLVED (Round 3).** PM decided AND logic for BUY (ADR-006). Formalized as BR-065. Requires backtest before deployment.                                                                              |
+| OQ-002 | ~~tuning_events CHECK constraint~~                                                                                                                                                                   | ~~P0~~         | **RESOLVED (Round 2).** Promoted to EC-013 (confirmed bug). Technical Lead wrote migration 0008.                                                                                                        |
+| OQ-003 | The stats endpoint `last_scout_run` and `last_ingest` are both `null` (TODO). Without these, the operator cannot verify pipeline health from the dashboard. What is the timeline for implementation? | P0             | **PARTIALLY RESOLVED.** All roles agree this is P0. Technical Lead added observability NFRs. Implementation timeline not yet committed.                                                                 |
+| OQ-004 | The `outcomes` table exists in schema but has no API endpoints or UI. Is `final_price` alone sufficient to validate the "realized margin >= 25%" success metric?                                     | High           | **RESOLVED (Round 3).** PM ADR-003 adds `sold_price` field to opportunities table. Combined with `final_price` and source defaults, minimum viable margin can be computed. Full outcomes UI is Phase 1. |
+| OQ-005 | What happens when the operator's location changes? The `max_distance_miles` category config and `distance_miles` on opportunities are static. Does re-analysis update distance?                      | Low for MVP    | **DEFERRED.** Single operator, fixed location for Phase 0. Per-user location preferences are Phase 1.                                                                                                   |
+| OQ-006 | The `attention` filter includes analysis_stale items (last_analyzed_at > 7 days ago). Should items that have NEVER been analyzed (`last_analyzed_at IS NULL`) also appear in the attention count?    | Medium         | **OPEN.** The `analysisStale` filter correctly includes NULL with `(last_analyzed_at IS NULL OR ...)` but `attention` only checks `last_analyzed_at IS NOT NULL AND ...`. Recommend aligning.           |
+| OQ-007 | ~~Bid entry uses browser `prompt()`~~                                                                                                                                                                | ~~Medium~~     | **RESOLVED (Round 3).** Accepted for P0 founder use. UX Lead specified custom modal (Pattern 8) for Phase 1. Classified as P1 pre-beta blocker. See OQ-010 for full analysis.                           |
+| OQ-008 | ~~Should the state machine allow inbox-to-bid shortcut?~~                                                                                                                                            | ~~High~~       | **RESOLVED (Round 3).** Target Customer retracted request. UX Lead proposed Inspect shortcut (BR-067) as compromise. Direct inbox-to-bid is NOT in Phase 0.                                             |
+| OQ-009 | ~~Default analysis tab should be Summary~~                                                                                                                                                           | ~~Low-Medium~~ | **RESOLVED (Round 3).** UX Lead changed default to Summary.                                                                                                                                             |
+| OQ-010 | ~~`prompt()` for financial inputs~~                                                                                                                                                                  | ~~High~~       | **RESOLVED (Round 3).** P1 pre-beta blocker. Accepted for P0 with risk awareness. See UX Lead Pattern 8 for replacement spec.                                                                           |
+| OQ-011 | ~~"Verification Needed" label rename~~                                                                                                                                                               | ~~Low~~        | **RESOLVED (Round 3).** Renamed to "Needs Info" per UX Lead Change #6.                                                                                                                                  |
 
 ---
 
@@ -675,73 +676,73 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ### User Stories to Features
 
-| User Story | Feature | API Endpoint(s) | DB Tables | UI Screen(s) (Ref: UX Lead IA) |
-|------------|---------|-----------------|-----------|-------------------------------|
-| US-001 | Inbox review, filtering, pagination | GET /api/opportunities, GET /api/opportunities/stats | opportunities | Dashboard (`/`), Opportunities List (`/opportunities`), Filters (`/opportunities/filters`) |
-| US-002 | Opportunity detail view | GET /api/opportunities/:id | opportunities, analysis_runs, operator_actions, sources | Opportunity Detail (`/opportunities/[id]`) |
-| US-003 | AI analysis on demand | POST /api/opportunities/:id/analyze | analysis_runs, opportunities | Opportunity Detail: Analyze button, TabbedAnalysis (default: Summary), NextActionCard |
-| US-004 | Workflow state machine | PATCH /api/opportunities/:id, POST /api/opportunities/:id/actions, POST /api/events | opportunities, operator_actions, mvc_events | Opportunity Detail: Fixed bottom action bar (with Inspect shortcut for inbox) |
-| US-005 | Watch system | PATCH /api/opportunities/:id (to watch), POST /api/triggers/check | opportunities, operator_actions | Opportunity Detail: Watch action, Dashboard: Watching count |
-| US-006 | Structured rejection | PATCH /api/opportunities/:id (to rejected) | opportunities, operator_actions, tuning_events, mvc_events | Opportunity Detail: Reject modal (streamlined 6-code grid + expandable taxonomy) |
-| US-007 | Batch operations | POST /api/opportunities/batch | opportunities, operator_actions, tuning_events | Opportunities List: Batch action UI |
-| US-008 | Operator inputs / gate clearance | PATCH /api/opportunities/:id/inputs | opportunities, operator_actions | Opportunity Detail: Title Info card, Gates Display card, Kill Switch Banner (inline, no redirect) |
-| US-009 | Outcome tracking | PATCH /api/opportunities/:id (to won/lost) | opportunities, outcomes (Phase 1) | Opportunity Detail: Won/Lost buttons, Financial input modal (Phase 1) |
-| US-010 | Pipeline health monitoring | GET /api/opportunities/stats | sources, scout_runs | Dashboard: Stats, Scout health banner, Sources (`/sources`) |
-| US-011 | Staleness detection | GET /api/opportunities (staleness filters), GET /api/opportunities/:id | opportunities, analysis_runs | Opportunity Detail: Staleness Banner, Dashboard: Attention Required |
-| US-012 | Dashboard attention summary | GET /api/opportunities/stats, GET /api/dashboard/attention | opportunities | Dashboard: Attention Required list, Quick Stats grid, Ending Soon list, Results footer bar |
+| User Story | Feature                             | API Endpoint(s)                                                                     | DB Tables                                                  | UI Screen(s) (Ref: UX Lead IA)                                                                    |
+| ---------- | ----------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| US-001     | Inbox review, filtering, pagination | GET /api/opportunities, GET /api/opportunities/stats                                | opportunities                                              | Dashboard (`/`), Opportunities List (`/opportunities`), Filters (`/opportunities/filters`)        |
+| US-002     | Opportunity detail view             | GET /api/opportunities/:id                                                          | opportunities, analysis_runs, operator_actions, sources    | Opportunity Detail (`/opportunities/[id]`)                                                        |
+| US-003     | AI analysis on demand               | POST /api/opportunities/:id/analyze                                                 | analysis_runs, opportunities                               | Opportunity Detail: Analyze button, TabbedAnalysis (default: Summary), NextActionCard             |
+| US-004     | Workflow state machine              | PATCH /api/opportunities/:id, POST /api/opportunities/:id/actions, POST /api/events | opportunities, operator_actions, mvc_events                | Opportunity Detail: Fixed bottom action bar (with Inspect shortcut for inbox)                     |
+| US-005     | Watch system                        | PATCH /api/opportunities/:id (to watch), POST /api/triggers/check                   | opportunities, operator_actions                            | Opportunity Detail: Watch action, Dashboard: Watching count                                       |
+| US-006     | Structured rejection                | PATCH /api/opportunities/:id (to rejected)                                          | opportunities, operator_actions, tuning_events, mvc_events | Opportunity Detail: Reject modal (streamlined 6-code grid + expandable taxonomy)                  |
+| US-007     | Batch operations                    | POST /api/opportunities/batch                                                       | opportunities, operator_actions, tuning_events             | Opportunities List: Batch action UI                                                               |
+| US-008     | Operator inputs / gate clearance    | PATCH /api/opportunities/:id/inputs                                                 | opportunities, operator_actions                            | Opportunity Detail: Title Info card, Gates Display card, Kill Switch Banner (inline, no redirect) |
+| US-009     | Outcome tracking                    | PATCH /api/opportunities/:id (to won/lost)                                          | opportunities, outcomes (Phase 1)                          | Opportunity Detail: Won/Lost buttons, Financial input modal (Phase 1)                             |
+| US-010     | Pipeline health monitoring          | GET /api/opportunities/stats                                                        | sources, scout_runs                                        | Dashboard: Stats, Scout health banner, Sources (`/sources`)                                       |
+| US-011     | Staleness detection                 | GET /api/opportunities (staleness filters), GET /api/opportunities/:id              | opportunities, analysis_runs                               | Opportunity Detail: Staleness Banner, Dashboard: Attention Required                               |
+| US-012     | Dashboard attention summary         | GET /api/opportunities/stats, GET /api/dashboard/attention                          | opportunities                                              | Dashboard: Attention Required list, Quick Stats grid, Ending Soon list, Results footer bar        |
 
 ### User Stories to Success Metrics
 
-| User Story | Success Metric | Target | Measurement |
-|------------|---------------|--------|-------------|
-| US-001 | Opportunities surfaced per day | >= 15 qualified | Count of non-rejected/archived opportunities created today |
-| US-003, US-006 | Analysis accuracy (operator agreement) | >= 70% BID recs result in operator bid/watch | MVC events: decision_made where analyst_verdict=BID |
-| US-003, US-006 | False positive rate | <= 30% of score > 80 get rejected | Rejection rate of high-score opportunities |
-| US-004, US-012 | Operator response time | Median < 4 hours inbox to qualifying/rejected | status_changed_at delta |
-| US-010 | Scout uptime | >= 95% runs succeed | scout_runs success rate |
-| US-010 | Scout failure detection latency | < 4 hours from failure to operator awareness | Time between last successful scout run and operator notification (PM new metric) |
-| US-003 | Analysis latency | p95 < 45 seconds (end-to-end), < 30s (API call) | listing.created_at to opportunity.last_analyzed_at |
-| US-009 | Won deals per month | >= 2 acquisitions | Opportunities with status=won |
-| US-009 | Realized margin | >= 25% average | `(sold_price - acquisition_cost) / acquisition_cost * 100` using `final_price` + `sold_price` fields (PM ADR-003) |
+| User Story     | Success Metric                         | Target                                          | Measurement                                                                                                       |
+| -------------- | -------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| US-001         | Opportunities surfaced per day         | >= 15 qualified                                 | Count of non-rejected/archived opportunities created today                                                        |
+| US-003, US-006 | Analysis accuracy (operator agreement) | >= 70% BID recs result in operator bid/watch    | MVC events: decision_made where analyst_verdict=BID                                                               |
+| US-003, US-006 | False positive rate                    | <= 30% of score > 80 get rejected               | Rejection rate of high-score opportunities                                                                        |
+| US-004, US-012 | Operator response time                 | Median < 4 hours inbox to qualifying/rejected   | status_changed_at delta                                                                                           |
+| US-010         | Scout uptime                           | >= 95% runs succeed                             | scout_runs success rate                                                                                           |
+| US-010         | Scout failure detection latency        | < 4 hours from failure to operator awareness    | Time between last successful scout run and operator notification (PM new metric)                                  |
+| US-003         | Analysis latency                       | p95 < 45 seconds (end-to-end), < 30s (API call) | listing.created_at to opportunity.last_analyzed_at                                                                |
+| US-009         | Won deals per month                    | >= 2 acquisitions                               | Opportunities with status=won                                                                                     |
+| US-009         | Realized margin                        | >= 25% average                                  | `(sold_price - acquisition_cost) / acquisition_cost * 100` using `final_price` + `sold_price` fields (PM ADR-003) |
 
 ### User Stories to Business Rules
 
-| User Story | Business Rules |
-|------------|---------------|
-| US-001 | BR-001, BR-002, BR-003 |
-| US-002 | BR-004, BR-005, BR-006 |
-| US-003 | BR-007, BR-008, BR-009, BR-010, BR-011, BR-047, BR-048, BR-049, BR-065, BR-066 |
-| US-004 | BR-012, BR-013, BR-014, BR-059, BR-067 |
-| US-005 | BR-015, BR-016, BR-017, BR-060 |
-| US-006 | BR-018, BR-019, BR-020, BR-021, BR-061 |
-| US-007 | BR-022, BR-023, BR-024, BR-025, BR-062 |
-| US-008 | BR-026, BR-027, BR-028, BR-029, BR-063 |
-| US-009 | BR-030, BR-031, BR-032, BR-033 |
-| US-010 | BR-034, BR-035, BR-036 |
-| US-011 | BR-037, BR-038, BR-039 |
-| US-012 | BR-040, BR-041, BR-042, BR-068 |
+| User Story | Business Rules                                                                 |
+| ---------- | ------------------------------------------------------------------------------ |
+| US-001     | BR-001, BR-002, BR-003                                                         |
+| US-002     | BR-004, BR-005, BR-006                                                         |
+| US-003     | BR-007, BR-008, BR-009, BR-010, BR-011, BR-047, BR-048, BR-049, BR-065, BR-066 |
+| US-004     | BR-012, BR-013, BR-014, BR-059, BR-067                                         |
+| US-005     | BR-015, BR-016, BR-017, BR-060                                                 |
+| US-006     | BR-018, BR-019, BR-020, BR-021, BR-061                                         |
+| US-007     | BR-022, BR-023, BR-024, BR-025, BR-062                                         |
+| US-008     | BR-026, BR-027, BR-028, BR-029, BR-063                                         |
+| US-009     | BR-030, BR-031, BR-032, BR-033                                                 |
+| US-010     | BR-034, BR-035, BR-036                                                         |
+| US-011     | BR-037, BR-038, BR-039                                                         |
+| US-012     | BR-040, BR-041, BR-042, BR-068                                                 |
 
 ### User Stories to Kill Criteria
 
-| Kill Criterion | Related User Stories | Detection Method | Measurability Status |
-|---------------|---------------------|-----------------|---------------------|
-| Zero profitable acquisitions in 90 days | US-009 | `SELECT COUNT(*) FROM opportunities WHERE status='won' AND created_at > datetime('now', '-90 days')` | Measurable now |
-| Sustained negative margins < 10% | US-009 | `(sold_price - acquisition_cost) / acquisition_cost * 100` using final_price + sold_price | Measurable after `sold_price` field added (PM ADR-003) |
-| Operator abandonment | US-001, US-004 | `SELECT COUNT(*) FROM operator_actions WHERE created_at > datetime('now', '-7 days')` -- activity-based, not login-based (hardcoded auth has no session tracking) | Measurable now via operator_actions (PM revision) |
-| Scout data staleness > 50% expired on first view | US-010 | Compare `auction_ends_at` to first `operator_actions` timestamp per opportunity | Measurable now |
-| Analysis disagreement > 60% over 60 days | US-003, US-006 | MVC events: `decision_made` where analyst_verdict=BID but operator decision=PASS | Measurable now |
-| Scout failure goes undetected > 4 hours (NEW) | US-010 | Time between last successful scout run and operator notification | Measurable after scout failure alerting implemented (P0) |
+| Kill Criterion                                   | Related User Stories | Detection Method                                                                                                                                                  | Measurability Status                                     |
+| ------------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Zero profitable acquisitions in 90 days          | US-009               | `SELECT COUNT(*) FROM opportunities WHERE status='won' AND created_at > datetime('now', '-90 days')`                                                              | Measurable now                                           |
+| Sustained negative margins < 10%                 | US-009               | `(sold_price - acquisition_cost) / acquisition_cost * 100` using final_price + sold_price                                                                         | Measurable after `sold_price` field added (PM ADR-003)   |
+| Operator abandonment                             | US-001, US-004       | `SELECT COUNT(*) FROM operator_actions WHERE created_at > datetime('now', '-7 days')` -- activity-based, not login-based (hardcoded auth has no session tracking) | Measurable now via operator_actions (PM revision)        |
+| Scout data staleness > 50% expired on first view | US-010               | Compare `auction_ends_at` to first `operator_actions` timestamp per opportunity                                                                                   | Measurable now                                           |
+| Analysis disagreement > 60% over 60 days         | US-003, US-006       | MVC events: `decision_made` where analyst_verdict=BID but operator decision=PASS                                                                                  | Measurable now                                           |
+| Scout failure goes undetected > 4 hours (NEW)    | US-010               | Time between last successful scout run and operator notification                                                                                                  | Measurable after scout failure alerting implemented (P0) |
 
 ### User Stories to Technical Risks (Ref: Technical Lead)
 
-| User Story | Technical Risks |
-|------------|----------------|
-| US-003 | R2 (Analyst timeout under Claude API load), R1 (D1 concurrent write -- optimistic lock handles analysis path), R11 (tuning_events CHECK constraint -- P0 fix) |
-| US-004 | R1 (D1 concurrent write -- PATCH endpoint lacks optimistic lock; accept for single-operator MVP), R9 (prompt() for bid entry -- P1 pre-beta blocker) |
-| US-005 | R8 (Watch trigger latency -- up to 5 min late; acceptable with 4-hour default threshold) |
-| US-009 | R9 (prompt() for won entry -- P1 pre-beta blocker) |
-| US-010 | R6 (Auction data freshness -- up to 15 min stale from scout cron interval), R10 (Platform access revocation -- IronPlanet/RB Global risk) |
-| US-001, US-002 | R5 (No rate limiting -- accept for MVP with single operator) |
+| User Story     | Technical Risks                                                                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| US-003         | R2 (Analyst timeout under Claude API load), R1 (D1 concurrent write -- optimistic lock handles analysis path), R11 (tuning_events CHECK constraint -- P0 fix) |
+| US-004         | R1 (D1 concurrent write -- PATCH endpoint lacks optimistic lock; accept for single-operator MVP), R9 (prompt() for bid entry -- P1 pre-beta blocker)          |
+| US-005         | R8 (Watch trigger latency -- up to 5 min late; acceptable with 4-hour default threshold)                                                                      |
+| US-009         | R9 (prompt() for won entry -- P1 pre-beta blocker)                                                                                                            |
+| US-010         | R6 (Auction data freshness -- up to 15 min stale from scout cron interval), R10 (Platform access revocation -- IronPlanet/RB Global risk)                     |
+| US-001, US-002 | R5 (No rate limiting -- accept for MVP with single operator)                                                                                                  |
 
 ---
 
@@ -749,24 +750,24 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 The following gaps were identified through codebase analysis and three rounds of cross-role review. Priorities reflect final consensus across all 6 roles.
 
-| Gap | Priority | User Story | Impact | Status |
-|-----|----------|-----------|--------|--------|
-| `tuning_events` CHECK constraint rejects `'status_change'` inserts (EC-013) | **P0** | US-008 | Auto-rejection tuning signals silently lost | Technical Lead wrote migration 0008. Either migration or code fix resolves. |
-| Scout failure alerting absent | **P0** | US-010 | Operator discovers stale data by observation only | Unanimous across all roles. Minimum: in-app banner when last run > 30 min. |
-| `last_scout_run` returns null on stats | **P0** | US-010 | Cannot monitor pipeline health from dashboard | Must implement to enable scout health banner. |
-| Verdict threshold uses OR logic (OQ-001 / BR-065) | **P0** | US-003 | BUY recommendations on low-margin deals | PM decided AND logic (ADR-006). Requires backtest + code change. |
-| IronPlanet capture rate ~17% -- fix or disable | **P0** | US-010 | Deceptive "active" source at 17% capture | PM: fix to >= 80% or disable source and remove from Sources page. |
-| Auth on analyst endpoints (Issue #123) | **P0** | N/A (security) | API bill exposure from unauthenticated analyst calls | PM/Technical Lead: verify ANALYST_SERVICE_SECRET enforcement. |
-| Add `sold_price` field to opportunities | **P1** | US-009 | Cannot validate realized margin success metric in-app | PM ADR-003: simple migration, minimal effort. |
-| Bid/Won entry uses browser `prompt()` | **P1** (pre-beta blocker) | US-004, US-009 | No input validation for most consequential financial inputs | UX Lead Pattern 8 specifies replacement. Required before Phase 1. |
-| Dashboard quick-pass uses 'other' reason (EC-014) | **P1** | US-012 | Inline reject action fails backend validation | Change default reason to `missing_info` or similar. |
-| Outcome tracking has no UI | **P1** | US-009 | Cannot track P&L in-app (spreadsheet acceptable for P0) | PM: Phase 1 feature. |
-| Reject flow dual-select (legacy + taxonomy) | **P1** | US-006 | Unnecessary complexity, operator confusion | PM ADR-007: remove legacy dropdown. Phase 1 or opportunistic. |
-| Auth is hardcoded | **P1** (pre-beta blocker) | N/A (security) | No session tracking for kill criteria | PM: Clerk + Stripe for Phase 1. |
-| `attention` filter excludes never-analyzed items (OQ-006) | **P2** | US-011, US-012 | Items that have never been analyzed are missed in attention count | Align `attention` filter to include `last_analyzed_at IS NULL`. |
-| No frontend tests | **P2** | All UI stories | UI regressions undetected | Technical Lead: accept for founder-only use. |
-| Checkbox touch targets below 44px on Filters page | **P2** | US-001 | iOS Safari touch target violation | Label wrapper provides mitigation. |
-| 3 failing scout tests | **P2** | US-010 | Tech debt | Technical Lead: fix before adding more tests. |
+| Gap                                                                         | Priority                  | User Story     | Impact                                                            | Status                                                                      |
+| --------------------------------------------------------------------------- | ------------------------- | -------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `tuning_events` CHECK constraint rejects `'status_change'` inserts (EC-013) | **P0**                    | US-008         | Auto-rejection tuning signals silently lost                       | Technical Lead wrote migration 0008. Either migration or code fix resolves. |
+| Scout failure alerting absent                                               | **P0**                    | US-010         | Operator discovers stale data by observation only                 | Unanimous across all roles. Minimum: in-app banner when last run > 30 min.  |
+| `last_scout_run` returns null on stats                                      | **P0**                    | US-010         | Cannot monitor pipeline health from dashboard                     | Must implement to enable scout health banner.                               |
+| Verdict threshold uses OR logic (OQ-001 / BR-065)                           | **P0**                    | US-003         | BUY recommendations on low-margin deals                           | PM decided AND logic (ADR-006). Requires backtest + code change.            |
+| IronPlanet capture rate ~17% -- fix or disable                              | **P0**                    | US-010         | Deceptive "active" source at 17% capture                          | PM: fix to >= 80% or disable source and remove from Sources page.           |
+| Auth on analyst endpoints (Issue #123)                                      | **P0**                    | N/A (security) | API bill exposure from unauthenticated analyst calls              | PM/Technical Lead: verify ANALYST_SERVICE_SECRET enforcement.               |
+| Add `sold_price` field to opportunities                                     | **P1**                    | US-009         | Cannot validate realized margin success metric in-app             | PM ADR-003: simple migration, minimal effort.                               |
+| Bid/Won entry uses browser `prompt()`                                       | **P1** (pre-beta blocker) | US-004, US-009 | No input validation for most consequential financial inputs       | UX Lead Pattern 8 specifies replacement. Required before Phase 1.           |
+| Dashboard quick-pass uses 'other' reason (EC-014)                           | **P1**                    | US-012         | Inline reject action fails backend validation                     | Change default reason to `missing_info` or similar.                         |
+| Outcome tracking has no UI                                                  | **P1**                    | US-009         | Cannot track P&L in-app (spreadsheet acceptable for P0)           | PM: Phase 1 feature.                                                        |
+| Reject flow dual-select (legacy + taxonomy)                                 | **P1**                    | US-006         | Unnecessary complexity, operator confusion                        | PM ADR-007: remove legacy dropdown. Phase 1 or opportunistic.               |
+| Auth is hardcoded                                                           | **P1** (pre-beta blocker) | N/A (security) | No session tracking for kill criteria                             | PM: Clerk + Stripe for Phase 1.                                             |
+| `attention` filter excludes never-analyzed items (OQ-006)                   | **P2**                    | US-011, US-012 | Items that have never been analyzed are missed in attention count | Align `attention` filter to include `last_analyzed_at IS NULL`.             |
+| No frontend tests                                                           | **P2**                    | All UI stories | UI regressions undetected                                         | Technical Lead: accept for founder-only use.                                |
+| Checkbox touch targets below 44px on Filters page                           | **P2**                    | US-001         | iOS Safari touch target violation                                 | Label wrapper provides mitigation.                                          |
+| 3 failing scout tests                                                       | **P2**                    | US-010         | Tech debt                                                         | Technical Lead: fix before adding more tests.                               |
 
 ---
 
@@ -774,56 +775,56 @@ The following gaps were identified through codebase analysis and three rounds of
 
 This index maps concerns raised by other roles across all 3 rounds to the business analysis artifacts that address them.
 
-| Role | Concern | Addressed In | Resolution Status |
-|------|---------|-------------|------------------|
-| Target Customer | Reject flow too heavy | BR-061, US-006 AC-006.4, PM ADR-007 | Resolved: multi-select grid only, legacy dropdown removed |
-| Target Customer | Cannot jump from inbox to bid | BR-059, BR-067, US-004 AC-004.8 | Resolved: Inspect shortcut compromise; direct inbox-to-bid deferred |
-| Target Customer | Scout failure alerting should be P0 | BR-035, US-010 AC-010.4 | Resolved: P0 (unanimous), in-app banner specified |
-| Target Customer | IronPlanet capture rate unacceptable | BR-036, EC-010 | Resolved: PM elevated to P0 (fix or disable) |
-| Target Customer | "Verification Needed" label unclear | BR-041 revised | Resolved: renamed "Needs Info" (UX Lead) |
-| Target Customer | Photo swipe gesture missing | BR-064, US-002 AC-002.3 | Resolved: UX Lead specified swipe lightbox |
-| Target Customer | Kill Switch Banner should not auto-redirect | BR-063, US-008 | Resolved: inline banner, no redirect (UX Lead) |
-| Target Customer | Batch reject with single reason for all items | BR-062 | Confirmed: existing behavior, documented |
-| Target Customer | Verdict threshold OR logic produces bad recs | BR-065, PM ADR-006 | Resolved: AND logic confirmed |
-| Target Customer | `prompt()` for financial inputs | US-009 AC-009.5 | Resolved: P1 pre-beta blocker, accepted for P0 |
-| Target Customer | Gate-only fallback should be visually distinct | BR-066, US-003 AC-003.6 | Resolved: visible indicator required |
-| Target Customer | Wants profit visibility on dashboard | BR-068, US-012 AC-012.6 | Resolved: Results footer bar with won count + value |
-| UX Lead | Default analysis tab should be Summary | US-002 AC-002.6 | Resolved: Summary is default |
-| UX Lead | `prompt()` for financial inputs is a design risk | US-009 AC-009.5, gaps table | Resolved: P1 pre-beta blocker |
-| UX Lead | Dashboard quick-pass uses "other" reason with no note | EC-014, US-012 AC-012.5 | Resolved: change default to non-"other" reason |
-| UX Lead | No undo for destructive actions | Out of scope | Deferred: accept risk for founder use |
-| UX Lead | Checkbox touch targets below 44px | Gaps table (P2) | Tracked: label wrapper mitigates |
-| UX Lead | "Last updated" timestamp needed | US-001 AC-001.3, US-002 AC-002.8 | Resolved: added to cards and detail header |
-| UX Lead | Inspect shortcut from inbox | BR-067, US-004 AC-004.8, EC-015 | Resolved: two-step auto-advance with error handling |
-| UX Lead | Results footer bar for won deals | BR-068, US-012 AC-012.6 | Resolved: added to dashboard IA |
-| Technical Lead | Performance budgets as testable criteria | AC-001.6, AC-002.7, AC-003.10 | Resolved: embedded in acceptance criteria |
-| Technical Lead | Watch trigger latency (5-min cron) | BR-060 | Documented: acceptable with 4-hour default |
-| Technical Lead | D1 concurrent write risks | Technical Risks table | Documented: accept for single-operator MVP |
-| Technical Lead | No optimistic lock on PATCH endpoint | Technical Risks table | Documented: accept for MVP, add before Phase 1 |
-| Technical Lead | tuning_events CHECK constraint (migration 0008) | EC-013 | Resolved: migration written, P0 |
-| Technical Lead | listing_id UNIQUE constraint (migration 0008) | Ingest behavior change documented | Resolved: migration written |
-| Technical Lead | Two-tier analysis latency target | US-003 AC-003.10, BR-011 | Resolved: 30s API + 45s end-to-end |
-| Technical Lead | D1 binding name inconsistency | Noted in architecture context | Informational: not a bug |
-| Technical Lead | Outcomes table schema ownership (ADR-006) | US-009 BR-031 | Resolved: Option C for MVP, Option A for Phase 1 |
-| Competitor Analyst | Alert speed gap (15-min cron) | Out of scope for MVP | Accepted: auction timescales make 15-min adequate |
-| Competitor Analyst | Native app UX advantage | Out of scope (CLAUDE.md: web app on iOS Safari) | Accepted: deliberate architectural choice |
-| Competitor Analyst | Shallow moat / replicable technology | Noted for PM strategic awareness | Accepted: moat is operational knowledge + business rules |
-| Competitor Analyst | Swoopa Dealers convergence | Noted for PM strategic awareness | Accepted: DFG's niche (trailers/equipment, auction platforms) remains distinct for now |
-| Competitor Analyst | Platform access revocation risk | Technical Lead R10, BR-036 | Documented: adapter architecture isolates risk; diversify sources in Phase 1 |
-| PM | ADR-003 outcome tracking depth | US-009, BR-031, AC-009.6 | Resolved: add `sold_price` field for minimum viable outcome tracking |
-| PM | ADR-006 verdict threshold logic | BR-065 | Resolved: AND logic confirmed |
-| PM | ADR-007 reject flow simplification | BR-061, US-006 AC-006.4 | Resolved: remove legacy dropdown, use taxonomy grid |
-| PM | Kill criteria detection methods | Kill Criteria table (revised) | Resolved: activity-based measurement instead of login-based |
-| PM | Scout failure detection latency metric | Success Metrics table (added) | Added: < 4 hours, measurable after alerting implemented |
+| Role               | Concern                                               | Addressed In                                    | Resolution Status                                                                      |
+| ------------------ | ----------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Target Customer    | Reject flow too heavy                                 | BR-061, US-006 AC-006.4, PM ADR-007             | Resolved: multi-select grid only, legacy dropdown removed                              |
+| Target Customer    | Cannot jump from inbox to bid                         | BR-059, BR-067, US-004 AC-004.8                 | Resolved: Inspect shortcut compromise; direct inbox-to-bid deferred                    |
+| Target Customer    | Scout failure alerting should be P0                   | BR-035, US-010 AC-010.4                         | Resolved: P0 (unanimous), in-app banner specified                                      |
+| Target Customer    | IronPlanet capture rate unacceptable                  | BR-036, EC-010                                  | Resolved: PM elevated to P0 (fix or disable)                                           |
+| Target Customer    | "Verification Needed" label unclear                   | BR-041 revised                                  | Resolved: renamed "Needs Info" (UX Lead)                                               |
+| Target Customer    | Photo swipe gesture missing                           | BR-064, US-002 AC-002.3                         | Resolved: UX Lead specified swipe lightbox                                             |
+| Target Customer    | Kill Switch Banner should not auto-redirect           | BR-063, US-008                                  | Resolved: inline banner, no redirect (UX Lead)                                         |
+| Target Customer    | Batch reject with single reason for all items         | BR-062                                          | Confirmed: existing behavior, documented                                               |
+| Target Customer    | Verdict threshold OR logic produces bad recs          | BR-065, PM ADR-006                              | Resolved: AND logic confirmed                                                          |
+| Target Customer    | `prompt()` for financial inputs                       | US-009 AC-009.5                                 | Resolved: P1 pre-beta blocker, accepted for P0                                         |
+| Target Customer    | Gate-only fallback should be visually distinct        | BR-066, US-003 AC-003.6                         | Resolved: visible indicator required                                                   |
+| Target Customer    | Wants profit visibility on dashboard                  | BR-068, US-012 AC-012.6                         | Resolved: Results footer bar with won count + value                                    |
+| UX Lead            | Default analysis tab should be Summary                | US-002 AC-002.6                                 | Resolved: Summary is default                                                           |
+| UX Lead            | `prompt()` for financial inputs is a design risk      | US-009 AC-009.5, gaps table                     | Resolved: P1 pre-beta blocker                                                          |
+| UX Lead            | Dashboard quick-pass uses "other" reason with no note | EC-014, US-012 AC-012.5                         | Resolved: change default to non-"other" reason                                         |
+| UX Lead            | No undo for destructive actions                       | Out of scope                                    | Deferred: accept risk for founder use                                                  |
+| UX Lead            | Checkbox touch targets below 44px                     | Gaps table (P2)                                 | Tracked: label wrapper mitigates                                                       |
+| UX Lead            | "Last updated" timestamp needed                       | US-001 AC-001.3, US-002 AC-002.8                | Resolved: added to cards and detail header                                             |
+| UX Lead            | Inspect shortcut from inbox                           | BR-067, US-004 AC-004.8, EC-015                 | Resolved: two-step auto-advance with error handling                                    |
+| UX Lead            | Results footer bar for won deals                      | BR-068, US-012 AC-012.6                         | Resolved: added to dashboard IA                                                        |
+| Technical Lead     | Performance budgets as testable criteria              | AC-001.6, AC-002.7, AC-003.10                   | Resolved: embedded in acceptance criteria                                              |
+| Technical Lead     | Watch trigger latency (5-min cron)                    | BR-060                                          | Documented: acceptable with 4-hour default                                             |
+| Technical Lead     | D1 concurrent write risks                             | Technical Risks table                           | Documented: accept for single-operator MVP                                             |
+| Technical Lead     | No optimistic lock on PATCH endpoint                  | Technical Risks table                           | Documented: accept for MVP, add before Phase 1                                         |
+| Technical Lead     | tuning_events CHECK constraint (migration 0008)       | EC-013                                          | Resolved: migration written, P0                                                        |
+| Technical Lead     | listing_id UNIQUE constraint (migration 0008)         | Ingest behavior change documented               | Resolved: migration written                                                            |
+| Technical Lead     | Two-tier analysis latency target                      | US-003 AC-003.10, BR-011                        | Resolved: 30s API + 45s end-to-end                                                     |
+| Technical Lead     | D1 binding name inconsistency                         | Noted in architecture context                   | Informational: not a bug                                                               |
+| Technical Lead     | Outcomes table schema ownership (ADR-006)             | US-009 BR-031                                   | Resolved: Option C for MVP, Option A for Phase 1                                       |
+| Competitor Analyst | Alert speed gap (15-min cron)                         | Out of scope for MVP                            | Accepted: auction timescales make 15-min adequate                                      |
+| Competitor Analyst | Native app UX advantage                               | Out of scope (CLAUDE.md: web app on iOS Safari) | Accepted: deliberate architectural choice                                              |
+| Competitor Analyst | Shallow moat / replicable technology                  | Noted for PM strategic awareness                | Accepted: moat is operational knowledge + business rules                               |
+| Competitor Analyst | Swoopa Dealers convergence                            | Noted for PM strategic awareness                | Accepted: DFG's niche (trailers/equipment, auction platforms) remains distinct for now |
+| Competitor Analyst | Platform access revocation risk                       | Technical Lead R10, BR-036                      | Documented: adapter architecture isolates risk; diversify sources in Phase 1           |
+| PM                 | ADR-003 outcome tracking depth                        | US-009, BR-031, AC-009.6                        | Resolved: add `sold_price` field for minimum viable outcome tracking                   |
+| PM                 | ADR-006 verdict threshold logic                       | BR-065                                          | Resolved: AND logic confirmed                                                          |
+| PM                 | ADR-007 reject flow simplification                    | BR-061, US-006 AC-006.4                         | Resolved: remove legacy dropdown, use taxonomy grid                                    |
+| PM                 | Kill criteria detection methods                       | Kill Criteria table (revised)                   | Resolved: activity-based measurement instead of login-based                            |
+| PM                 | Scout failure detection latency metric                | Success Metrics table (added)                   | Added: < 4 hours, measurable after alerting implemented                                |
 
 ---
 
 ## Unresolved Issues
 
-| ID | Issue | Impact | Owner | Notes |
-|----|-------|--------|-------|-------|
-| UI-001 | OQ-006: The `attention` filter does not include opportunities that have NEVER been analyzed (`last_analyzed_at IS NULL`). The `analysisStale` filter includes them, but `attention` does not. This means a new opportunity that sits in qualifying for 24+ hours without ever being analyzed will show in `analysisStale` but not in `attention`. | Medium -- missed items in the highest-priority dashboard view | Engineering (API) | Recommend aligning `attention` to include `last_analyzed_at IS NULL` items. Simple SQL change. No business rule conflict. |
-| UI-002 | The Inspect shortcut (BR-067) executes two sequential server calls. There is no specification for what happens if the user navigates away mid-sequence (e.g., taps back during the 2-step transition). Should the UI block navigation during the auto-advance? | Low -- edge case for a fast operation | Engineering (Frontend) | Recommend disabling the back button / navigation during the auto-advance sequence and showing a loading state. |
-| UI-003 | The PM and Target Customer disagree on the priority of scout failure push notification (outbound SMS/webhook). The PM lists ADR-002 Part A as P0 (outbound notification within 15 minutes of failure). The Target Customer says the in-app banner is sufficient for P0 and push can wait for Phase 1. The Technical Lead's observability NFRs only cover the in-app indicator. | Medium -- the in-app banner only works if the operator opens the app. If the scout fails on a Friday evening and the operator does not open the app until Monday, the in-app banner does not help. | PM (decision needed) | The PM should clarify whether P0 scope includes outbound notification or only the in-app banner. The Target Customer's "red banner on dashboard" request is the minimum. The PM's "notification within 15 minutes" implies outbound. These are different implementation scopes. |
-| UI-004 | The Results footer bar (BR-068) shows `SUM(final_price)` for won deals, which is total acquisition cost, not profit. The Target Customer asked for "Total Profit: $X,XXX" which requires `sold_price` data that does not exist yet. There is a risk the operator misinterprets the "total won value" number as profit. | Low -- the operator understands the difference, but the label must be unambiguous | Engineering (Frontend) | The label must say "Total Won Value" or "Total Acquisitions" -- not "Total Profit." The UX Lead's spec says "Won count and total won value" which is correct. Verify the frontend label matches. |
-| UI-005 | The backtest requirement for BR-065 (AND-logic verdict thresholds) has no owner or timeline. The PM, Target Customer, and Technical Lead all agree the change should happen, but all three also say it requires backtesting against historical data before deployment. Who runs the backtest, on what dataset, and what is the pass criterion? | High -- this is a P0 item that cannot deploy without the backtest | PM + Engineering | Recommend: (1) query all historical `analysis_runs` where recommendation was BID, (2) recompute recommendation using AND logic, (3) identify deals that would have been downgraded from BID to WATCH, (4) check if any of those were won deals with positive outcomes. If fewer than 10% of historically won deals would have been missed, the change is safe. |
+| ID     | Issue                                                                                                                                                                                                                                                                                                                                                                          | Impact                                                                                                                                                                                             | Owner                  | Notes                                                                                                                                                                                                                                                                                                                                                          |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI-001 | OQ-006: The `attention` filter does not include opportunities that have NEVER been analyzed (`last_analyzed_at IS NULL`). The `analysisStale` filter includes them, but `attention` does not. This means a new opportunity that sits in qualifying for 24+ hours without ever being analyzed will show in `analysisStale` but not in `attention`.                              | Medium -- missed items in the highest-priority dashboard view                                                                                                                                      | Engineering (API)      | Recommend aligning `attention` to include `last_analyzed_at IS NULL` items. Simple SQL change. No business rule conflict.                                                                                                                                                                                                                                      |
+| UI-002 | The Inspect shortcut (BR-067) executes two sequential server calls. There is no specification for what happens if the user navigates away mid-sequence (e.g., taps back during the 2-step transition). Should the UI block navigation during the auto-advance?                                                                                                                 | Low -- edge case for a fast operation                                                                                                                                                              | Engineering (Frontend) | Recommend disabling the back button / navigation during the auto-advance sequence and showing a loading state.                                                                                                                                                                                                                                                 |
+| UI-003 | The PM and Target Customer disagree on the priority of scout failure push notification (outbound SMS/webhook). The PM lists ADR-002 Part A as P0 (outbound notification within 15 minutes of failure). The Target Customer says the in-app banner is sufficient for P0 and push can wait for Phase 1. The Technical Lead's observability NFRs only cover the in-app indicator. | Medium -- the in-app banner only works if the operator opens the app. If the scout fails on a Friday evening and the operator does not open the app until Monday, the in-app banner does not help. | PM (decision needed)   | The PM should clarify whether P0 scope includes outbound notification or only the in-app banner. The Target Customer's "red banner on dashboard" request is the minimum. The PM's "notification within 15 minutes" implies outbound. These are different implementation scopes.                                                                                |
+| UI-004 | The Results footer bar (BR-068) shows `SUM(final_price)` for won deals, which is total acquisition cost, not profit. The Target Customer asked for "Total Profit: $X,XXX" which requires `sold_price` data that does not exist yet. There is a risk the operator misinterprets the "total won value" number as profit.                                                         | Low -- the operator understands the difference, but the label must be unambiguous                                                                                                                  | Engineering (Frontend) | The label must say "Total Won Value" or "Total Acquisitions" -- not "Total Profit." The UX Lead's spec says "Won count and total won value" which is correct. Verify the frontend label matches.                                                                                                                                                               |
+| UI-005 | The backtest requirement for BR-065 (AND-logic verdict thresholds) has no owner or timeline. The PM, Target Customer, and Technical Lead all agree the change should happen, but all three also say it requires backtesting against historical data before deployment. Who runs the backtest, on what dataset, and what is the pass criterion?                                 | High -- this is a P0 item that cannot deploy without the backtest                                                                                                                                  | PM + Engineering       | Recommend: (1) query all historical `analysis_runs` where recommendation was BID, (2) recompute recommendation using AND logic, (3) identify deals that would have been downgraded from BID to WATCH, (4) check if any of those were won deals with positive outcomes. If fewer than 10% of historically won deals would have been missed, the change is safe. |
