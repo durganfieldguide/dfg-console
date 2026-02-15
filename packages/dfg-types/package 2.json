@@ -20,9 +20,7 @@
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "license": "UNLICENSED",
   "private": true
 }

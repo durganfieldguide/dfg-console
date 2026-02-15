@@ -5,12 +5,7 @@
  * All calls go through the /api/github proxy route.
  */
 
-import type {
-  QueueType,
-  WorkQueueCard,
-  AllQueues,
-  GitHubQueueResponse,
-} from '@/types/github';
+import type { QueueType, WorkQueueCard, AllQueues, GitHubQueueResponse } from '@/types/github'
 
 /**
  * Fetch a single work queue from GitHub.
@@ -19,22 +14,18 @@ import type {
  * @returns Array of WorkQueueCard items
  * @throws Error if the API call fails
  */
-export async function fetchWorkQueue(
-  queue: QueueType
-): Promise<WorkQueueCard[]> {
-  const response = await fetch(`/api/github?queue=${queue}`);
+export async function fetchWorkQueue(queue: QueueType): Promise<WorkQueueCard[]> {
+  const response = await fetch(`/api/github?queue=${queue}`)
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({
       error: { message: 'Unknown error' },
-    }));
-    throw new Error(
-      error.error?.message || `Failed to fetch ${queue} queue`
-    );
+    }))
+    throw new Error(error.error?.message || `Failed to fetch ${queue} queue`)
   }
 
-  const data: GitHubQueueResponse = await response.json();
-  return data.cards;
+  const data: GitHubQueueResponse = await response.json()
+  return data.cards
 }
 
 /**
@@ -44,14 +35,13 @@ export async function fetchWorkQueue(
  * @throws Error if any queue fails to fetch
  */
 export async function fetchAllQueues(): Promise<AllQueues> {
-  const [needsQa, needsPm, devQueue, readyToMerge, inFlight] =
-    await Promise.all([
-      fetchWorkQueue('needs-qa'),
-      fetchWorkQueue('needs-pm'),
-      fetchWorkQueue('dev-queue'),
-      fetchWorkQueue('ready-to-merge'),
-      fetchWorkQueue('in-flight'),
-    ]);
+  const [needsQa, needsPm, devQueue, readyToMerge, inFlight] = await Promise.all([
+    fetchWorkQueue('needs-qa'),
+    fetchWorkQueue('needs-pm'),
+    fetchWorkQueue('dev-queue'),
+    fetchWorkQueue('ready-to-merge'),
+    fetchWorkQueue('in-flight'),
+  ])
 
   return {
     needsQa,
@@ -59,7 +49,7 @@ export async function fetchAllQueues(): Promise<AllQueues> {
     devQueue,
     readyToMerge,
     inFlight,
-  };
+  }
 }
 
 /**
@@ -69,22 +59,18 @@ export async function fetchAllQueues(): Promise<AllQueues> {
  * @returns Array of WorkQueueCard items
  * @throws Error if the API call fails
  */
-export async function refreshQueue(
-  queue: QueueType
-): Promise<WorkQueueCard[]> {
+export async function refreshQueue(queue: QueueType): Promise<WorkQueueCard[]> {
   // Add cache-busting timestamp to force fresh fetch
-  const timestamp = Date.now();
-  const response = await fetch(`/api/github?queue=${queue}&_t=${timestamp}`);
+  const timestamp = Date.now()
+  const response = await fetch(`/api/github?queue=${queue}&_t=${timestamp}`)
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({
       error: { message: 'Unknown error' },
-    }));
-    throw new Error(
-      error.error?.message || `Failed to refresh ${queue} queue`
-    );
+    }))
+    throw new Error(error.error?.message || `Failed to refresh ${queue} queue`)
   }
 
-  const data: GitHubQueueResponse = await response.json();
-  return data.cards;
+  const data: GitHubQueueResponse = await response.json()
+  return data.cards
 }

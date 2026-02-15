@@ -77,12 +77,12 @@
 
 ### Layer Architecture
 
-| Layer | Service | Responsibility | Runtime | D1 Binding |
-|-------|---------|----------------|---------|------------|
-| Presentation | dfg-app | Operator console, iOS Safari optimized | Next.js 14 on Vercel | N/A |
-| API Gateway | dfg-api | Auth, CRUD, state machine, ingest orchestration, watch cron | CF Worker | `DB` |
-| Intelligence | dfg-analyst | AI-powered condition assessment + profit analysis | CF Worker | N/A |
-| Collection | dfg-scout | Auction scraping, normalization, category routing | CF Worker | `DFG_DB` |
+| Layer        | Service     | Responsibility                                              | Runtime              | D1 Binding |
+| ------------ | ----------- | ----------------------------------------------------------- | -------------------- | ---------- |
+| Presentation | dfg-app     | Operator console, iOS Safari optimized                      | Next.js 14 on Vercel | N/A        |
+| API Gateway  | dfg-api     | Auth, CRUD, state machine, ingest orchestration, watch cron | CF Worker            | `DB`       |
+| Intelligence | dfg-analyst | AI-powered condition assessment + profit analysis           | CF Worker            | N/A        |
+| Collection   | dfg-scout   | Auction scraping, normalization, category routing           | CF Worker            | `DFG_DB`   |
 
 **Key architectural fact:** dfg-api and dfg-scout use different binding names (`DB` vs `DFG_DB`) but point to the same D1 database instance (`dfg-scout-db` in production, ID `08c267b8-b252-422a-8381-891d12917b33`; `dfg-scout-db-preview` in development, ID `e6af9d25-b031-4958-a3b2-455bafdff5f1`). This is confirmed in both `wrangler.toml` files. Migration runbooks must reference the correct binding name per worker.
 
@@ -120,19 +120,19 @@ The schema below reflects what is currently deployed (migrations 0001 through 00
 
 ### Migration Lineage
 
-| Migration | Description | Owner | Status |
-|-----------|-------------|-------|--------|
-| 0001 | opportunities, operator_actions, tuning_events, sources + seeds | dfg-api | Deployed |
-| 0002 | Drop alert_dismissals (folded into operator_actions) | dfg-api | Deployed |
-| 0003 | analysis_runs + operator_inputs_json + current_analysis_run_id | dfg-api | Deployed |
-| 0004 | staleness columns (last_operator_review_at, exit_price) | dfg-api | Deployed |
-| 0005 | Standardize Sierra source ID | dfg-api | Deployed |
-| 0006 | mvc_events table | dfg-api | Deployed |
-| 0007 | ai_analysis_json on analysis_runs | dfg-api | Deployed |
-| **0008** | **listing_id UNIQUE constraint on opportunities** | **dfg-api** | **Required -- Phase 0** |
-| **0008b** | **Fix tuning_events CHECK constraint (belt-and-suspenders)** | **dfg-api** | **Required -- Phase 0** |
-| **0009** | **Formalize analysis_runs snapshot columns** | **dfg-api** | **Required -- Phase 0** |
-| **0010** | **Add sold_price to opportunities** | **dfg-api** | **Required -- Phase 0** |
+| Migration | Description                                                     | Owner       | Status                  |
+| --------- | --------------------------------------------------------------- | ----------- | ----------------------- |
+| 0001      | opportunities, operator_actions, tuning_events, sources + seeds | dfg-api     | Deployed                |
+| 0002      | Drop alert_dismissals (folded into operator_actions)            | dfg-api     | Deployed                |
+| 0003      | analysis_runs + operator_inputs_json + current_analysis_run_id  | dfg-api     | Deployed                |
+| 0004      | staleness columns (last_operator_review_at, exit_price)         | dfg-api     | Deployed                |
+| 0005      | Standardize Sierra source ID                                    | dfg-api     | Deployed                |
+| 0006      | mvc_events table                                                | dfg-api     | Deployed                |
+| 0007      | ai_analysis_json on analysis_runs                               | dfg-api     | Deployed                |
+| **0008**  | **listing_id UNIQUE constraint on opportunities**               | **dfg-api** | **Required -- Phase 0** |
+| **0008b** | **Fix tuning_events CHECK constraint (belt-and-suspenders)**    | **dfg-api** | **Required -- Phase 0** |
+| **0009**  | **Formalize analysis_runs snapshot columns**                    | **dfg-api** | **Required -- Phase 0** |
+| **0010**  | **Add sold_price to opportunities**                             | **dfg-api** | **Required -- Phase 0** |
 
 ### Core Tables
 
@@ -543,17 +543,17 @@ inbox --> qualifying --> watch --> inspect --> bid --> won
 
 Valid transitions (from `STATE_TRANSITIONS` in `@dfg/types`, file: `packages/dfg-types/src/index.ts`):
 
-| From | Allowed To |
-|------|-----------|
-| inbox | qualifying, watch, rejected, archived |
-| qualifying | watch, inspect, rejected, archived |
-| watch | qualifying, inspect, rejected, archived |
-| inspect | bid, rejected, archived |
-| bid | won, lost, rejected, archived |
-| won | archived |
-| lost | archived |
-| rejected | archived |
-| archived | (terminal) |
+| From       | Allowed To                              |
+| ---------- | --------------------------------------- |
+| inbox      | qualifying, watch, rejected, archived   |
+| qualifying | watch, inspect, rejected, archived      |
+| watch      | qualifying, inspect, rejected, archived |
+| inspect    | bid, rejected, archived                 |
+| bid        | won, lost, rejected, archived           |
+| won        | archived                                |
+| lost       | archived                                |
+| rejected   | archived                                |
+| archived   | (terminal)                              |
 
 **Design note on workflow friction (final position):** The Target Customer retracted the inbox-to-bid shortcut request in Round 2, acknowledging that the progressive evaluation stages protect against impulsive bidding. The UX Lead proposed an "Inspect" shortcut button on the inbox action bar that auto-advances through qualifying. This is a frontend UX pattern, not a state machine change -- the API still receives two sequential PATCH calls (`inbox->qualifying`, `qualifying->inspect`). The state machine in `@dfg/types` is not modified.
 
@@ -569,102 +569,102 @@ All endpoints are served by dfg-api on Cloudflare Workers. Auth is via `Authoriz
 
 ### Public Endpoints
 
-| Method | Path | Response | Notes |
-|--------|------|----------|-------|
-| GET | `/health` | `{ status: "ok", service: "dfg-api", env: string }` | No auth required |
+| Method | Path      | Response                                            | Notes            |
+| ------ | --------- | --------------------------------------------------- | ---------------- |
+| GET    | `/health` | `{ status: "ok", service: "dfg-api", env: string }` | No auth required |
 
 ### Opportunities
 
-| Method | Path | Request | Response | Notes |
-|--------|------|---------|----------|-------|
-| GET | `/api/opportunities` | Query: `status`, `category_id`, `ending_within`, `score_band`, `needs_attention`, `stale_qualifying`, `attention`, `stale`, `analysis_stale`, `decision_stale`, `ending_soon`, `strike_zone`, `verification_needed`, `new_today`, `limit` (max 100), `offset`, `sort`, `order` | `{ data: { opportunities: [...], total }, meta: { limit, offset } }` | Comma-separated status values supported |
-| GET | `/api/opportunities/:id` | -- | `{ data: { ...opportunity, source_defaults, actions, alerts, operatorInputs, currentAnalysisRun, gates, inputsChangedSinceAnalysis } }` | Full detail view with computed gates and alerts |
-| PATCH | `/api/opportunities/:id` | `{ status?, rejection_reason?, rejection_note?, watch_trigger?, watch_threshold?, max_bid_locked?, bid_strategy?, final_price?, sold_price?, observed_facts?, outcome_notes? }` | Updated opportunity | State machine enforced. `sold_price` added in migration 0010. |
-| POST | `/api/opportunities/:id/actions` | `{ action_type, payload }` | `{ data: { id, action_type, created_at } }` | Audit log entry |
-| PATCH | `/api/opportunities/:id/inputs` | `{ title?: TitleInputsV1, overrides?: OperatorOverrides }` | `{ success, operatorInputs, inputsChangedSinceAnalysis, autoRejected, hardGateFailures? }` | Deep-merges with existing; triggers auto-reject on hard gate failures |
-| POST | `/api/opportunities/:id/analyze` | `{ assumptions?, skipAiAnalysis? }` | `{ analysisRun: { id, recommendation, derived, gates, aiAnalysis }, delta? }` | Calls dfg-analyst via service binding; 25s timeout; optimistic lock (409 on conflict) |
-| POST | `/api/opportunities/:id/touch` | -- | 204 (dedupe) or 200 (recorded) | 60-second dedupe window |
-| POST | `/api/opportunities/batch` | `{ opportunity_ids: string[], action: "reject"\|"archive", rejection_reason?, rejection_note? }` | `{ data: { processed, failed, results } }` | Max 50 per batch |
-| GET | `/api/opportunities/stats` | -- | `{ data: { by_status, strike_zone, verification_needed, ending_soon, new_today, stale_qualifying, watch_alerts_fired, needs_attention, last_scout_run, pipeline_stale } }` | Dashboard summary counts. `last_scout_run` and `pipeline_stale` are P0 implementations. |
+| Method | Path                             | Request                                                                                                                                                                                                                                                                        | Response                                                                                                                                                                   | Notes                                                                                   |
+| ------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| GET    | `/api/opportunities`             | Query: `status`, `category_id`, `ending_within`, `score_band`, `needs_attention`, `stale_qualifying`, `attention`, `stale`, `analysis_stale`, `decision_stale`, `ending_soon`, `strike_zone`, `verification_needed`, `new_today`, `limit` (max 100), `offset`, `sort`, `order` | `{ data: { opportunities: [...], total }, meta: { limit, offset } }`                                                                                                       | Comma-separated status values supported                                                 |
+| GET    | `/api/opportunities/:id`         | --                                                                                                                                                                                                                                                                             | `{ data: { ...opportunity, source_defaults, actions, alerts, operatorInputs, currentAnalysisRun, gates, inputsChangedSinceAnalysis } }`                                    | Full detail view with computed gates and alerts                                         |
+| PATCH  | `/api/opportunities/:id`         | `{ status?, rejection_reason?, rejection_note?, watch_trigger?, watch_threshold?, max_bid_locked?, bid_strategy?, final_price?, sold_price?, observed_facts?, outcome_notes? }`                                                                                                | Updated opportunity                                                                                                                                                        | State machine enforced. `sold_price` added in migration 0010.                           |
+| POST   | `/api/opportunities/:id/actions` | `{ action_type, payload }`                                                                                                                                                                                                                                                     | `{ data: { id, action_type, created_at } }`                                                                                                                                | Audit log entry                                                                         |
+| PATCH  | `/api/opportunities/:id/inputs`  | `{ title?: TitleInputsV1, overrides?: OperatorOverrides }`                                                                                                                                                                                                                     | `{ success, operatorInputs, inputsChangedSinceAnalysis, autoRejected, hardGateFailures? }`                                                                                 | Deep-merges with existing; triggers auto-reject on hard gate failures                   |
+| POST   | `/api/opportunities/:id/analyze` | `{ assumptions?, skipAiAnalysis? }`                                                                                                                                                                                                                                            | `{ analysisRun: { id, recommendation, derived, gates, aiAnalysis }, delta? }`                                                                                              | Calls dfg-analyst via service binding; 25s timeout; optimistic lock (409 on conflict)   |
+| POST   | `/api/opportunities/:id/touch`   | --                                                                                                                                                                                                                                                                             | 204 (dedupe) or 200 (recorded)                                                                                                                                             | 60-second dedupe window                                                                 |
+| POST   | `/api/opportunities/batch`       | `{ opportunity_ids: string[], action: "reject"\|"archive", rejection_reason?, rejection_note? }`                                                                                                                                                                               | `{ data: { processed, failed, results } }`                                                                                                                                 | Max 50 per batch                                                                        |
+| GET    | `/api/opportunities/stats`       | --                                                                                                                                                                                                                                                                             | `{ data: { by_status, strike_zone, verification_needed, ending_soon, new_today, stale_qualifying, watch_alerts_fired, needs_attention, last_scout_run, pipeline_stale } }` | Dashboard summary counts. `last_scout_run` and `pipeline_stale` are P0 implementations. |
 
 ### Alerts
 
-| Method | Path | Request | Response | Notes |
-|--------|------|---------|----------|-------|
-| POST | `/api/opportunities/:id/alerts/dismiss` | `{ alert_key }` | `{ data: { success, dismissed } }` | Legacy endpoint |
-| POST | `/api/alerts/dismiss` | `{ opportunity_id, alert_key }` | `{ data: { success, dismissed } }` | Spec-compliant |
-| POST | `/api/alerts/dismiss/batch` | `{ dismissals: [{ opportunity_id, alert_key }] }` | `{ data: { processed, failed, results } }` | Max 50 |
+| Method | Path                                    | Request                                           | Response                                   | Notes           |
+| ------ | --------------------------------------- | ------------------------------------------------- | ------------------------------------------ | --------------- |
+| POST   | `/api/opportunities/:id/alerts/dismiss` | `{ alert_key }`                                   | `{ data: { success, dismissed } }`         | Legacy endpoint |
+| POST   | `/api/alerts/dismiss`                   | `{ opportunity_id, alert_key }`                   | `{ data: { success, dismissed } }`         | Spec-compliant  |
+| POST   | `/api/alerts/dismiss/batch`             | `{ dismissals: [{ opportunity_id, alert_key }] }` | `{ data: { processed, failed, results } }` | Max 50          |
 
 ### Dashboard
 
-| Method | Path | Response | Notes |
-|--------|------|----------|-------|
-| GET | `/api/dashboard/attention` | `{ items: [...], total_count }` | Priority-sorted attention queue with reason tags |
+| Method | Path                       | Response                        | Notes                                            |
+| ------ | -------------------------- | ------------------------------- | ------------------------------------------------ |
+| GET    | `/api/dashboard/attention` | `{ items: [...], total_count }` | Priority-sorted attention queue with reason tags |
 
 ### Sources
 
-| Method | Path | Request | Response |
-|--------|------|---------|----------|
-| GET | `/api/sources` | -- | `{ data: { sources: [...] } }` |
-| GET | `/api/sources/:id` | -- | `{ data: { ...source } }` |
-| PATCH | `/api/sources/:id` | `{ enabled?, display_name?, default_buyer_premium_pct?, default_pickup_days? }` | Updated source |
+| Method | Path               | Request                                                                         | Response                       |
+| ------ | ------------------ | ------------------------------------------------------------------------------- | ------------------------------ |
+| GET    | `/api/sources`     | --                                                                              | `{ data: { sources: [...] } }` |
+| GET    | `/api/sources/:id` | --                                                                              | `{ data: { ...source } }`      |
+| PATCH  | `/api/sources/:id` | `{ enabled?, display_name?, default_buyer_premium_pct?, default_pickup_days? }` | Updated source                 |
 
 ### Categories
 
-| Method | Path | Response |
-|--------|------|----------|
-| GET | `/api/categories` | `{ data: [...category_defs] }` |
-| GET | `/api/categories/:id` | `{ data: { ...category_def } }` |
+| Method | Path                  | Response                        |
+| ------ | --------------------- | ------------------------------- |
+| GET    | `/api/categories`     | `{ data: [...category_defs] }`  |
+| GET    | `/api/categories/:id` | `{ data: { ...category_def } }` |
 
 ### Ingest
 
-| Method | Path | Request | Response | Notes |
-|--------|------|---------|----------|-------|
-| POST | `/api/ingest` | `{ listings: IngestListing[], source? }` | `{ data: { created, updated, skipped, errors } }` | Max 100 per batch. After migration 0008, duplicate `listing_id` inserts must be caught and counted as `skipped`, not as errors. |
-| POST | `/api/ingest/sync` | -- | `{ data: { created, updated, skipped, errors, photos_synced } }` | Pulls candidates from listings table |
-| POST | `/api/ingest/sync-photos` | -- | `{ data: { updated, skipped, errors } }` | Syncs photos from listings to opportunities |
+| Method | Path                      | Request                                  | Response                                                         | Notes                                                                                                                           |
+| ------ | ------------------------- | ---------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/ingest`             | `{ listings: IngestListing[], source? }` | `{ data: { created, updated, skipped, errors } }`                | Max 100 per batch. After migration 0008, duplicate `listing_id` inserts must be caught and counted as `skipped`, not as errors. |
+| POST   | `/api/ingest/sync`        | --                                       | `{ data: { created, updated, skipped, errors, photos_synced } }` | Pulls candidates from listings table                                                                                            |
+| POST   | `/api/ingest/sync-photos` | --                                       | `{ data: { updated, skipped, errors } }`                         | Syncs photos from listings to opportunities                                                                                     |
 
 ### Events (MVC Audit)
 
-| Method | Path | Request | Response | Notes |
-|--------|------|---------|----------|-------|
-| POST | `/api/events` | `{ opportunity_id, event_type, payload, emitted_at? }` | `{ data: { id, ..., idempotent: bool } }` | Idempotent via sequence number |
-| GET | `/api/events?opportunity_id=X` | -- | `{ data: { events: [...] } }` | Ordered by sequence_number ASC |
+| Method | Path                           | Request                                                | Response                                  | Notes                          |
+| ------ | ------------------------------ | ------------------------------------------------------ | ----------------------------------------- | ------------------------------ |
+| POST   | `/api/events`                  | `{ opportunity_id, event_type, payload, emitted_at? }` | `{ data: { id, ..., idempotent: bool } }` | Idempotent via sequence number |
+| GET    | `/api/events?opportunity_id=X` | --                                                     | `{ data: { events: [...] } }`             | Ordered by sequence_number ASC |
 
 ### Triggers
 
-| Method | Path | Response |
-|--------|------|----------|
-| POST | `/api/triggers/check` | `{ data: { checked, fired, timestamp } }` |
+| Method | Path                  | Response                                  |
+| ------ | --------------------- | ----------------------------------------- |
+| POST   | `/api/triggers/check` | `{ data: { checked, fired, timestamp } }` |
 
 ### Scout Operations
 
-| Method | Path | Request | Response |
-|--------|------|---------|----------|
-| POST | `/api/scout/run` | `{ source?, dryRun? }` | `{ data: { triggered, method, source, dryRun, result? } }` |
+| Method | Path             | Request                | Response                                                   |
+| ------ | ---------------- | ---------------------- | ---------------------------------------------------------- |
+| POST   | `/api/scout/run` | `{ source?, dryRun? }` | `{ data: { triggered, method, source, dryRun, result? } }` |
 
 ### dfg-analyst Endpoints (Internal, service-binding only in production)
 
-| Method | Path | Request | Response | Auth |
-|--------|------|---------|----------|------|
-| GET | `/health` | -- | `{ status: "ok" }` | None |
-| POST | `/analyze` | `ListingData` | `DualLensReport` | Bearer ANALYST_SERVICE_SECRET (URL access); bypassed via service binding |
-| POST | `/analyze/justifications` | Justification request | Justification response | Bearer ANALYST_SERVICE_SECRET |
+| Method | Path                      | Request               | Response               | Auth                                                                     |
+| ------ | ------------------------- | --------------------- | ---------------------- | ------------------------------------------------------------------------ |
+| GET    | `/health`                 | --                    | `{ status: "ok" }`     | None                                                                     |
+| POST   | `/analyze`                | `ListingData`         | `DualLensReport`       | Bearer ANALYST_SERVICE_SECRET (URL access); bypassed via service binding |
+| POST   | `/analyze/justifications` | Justification request | Justification response | Bearer ANALYST_SERVICE_SECRET                                            |
 
 ### dfg-scout Endpoints (Internal, service-binding only in production)
 
-| Method | Path | Auth |
-|--------|------|------|
-| GET | `/health` | None |
-| GET | `/ops/run` | OPS_TOKEN |
-| GET | `/ops/stats` | OPS_TOKEN |
-| GET | `/ops/listings` | OPS_TOKEN |
-| GET | `/ops/listings/:id` | OPS_TOKEN |
-| GET | `/ops/analysis/:id` | OPS_TOKEN |
-| POST | `/ops/analysis` | OPS_TOKEN |
-| POST | `/ops/hydrate-backfill` | OPS_TOKEN |
-| GET | `/ops/photo-stats` | OPS_TOKEN |
-| GET | `/ops/verify-snapshots` | OPS_TOKEN |
+| Method | Path                    | Auth      |
+| ------ | ----------------------- | --------- |
+| GET    | `/health`               | None      |
+| GET    | `/ops/run`              | OPS_TOKEN |
+| GET    | `/ops/stats`            | OPS_TOKEN |
+| GET    | `/ops/listings`         | OPS_TOKEN |
+| GET    | `/ops/listings/:id`     | OPS_TOKEN |
+| GET    | `/ops/analysis/:id`     | OPS_TOKEN |
+| POST   | `/ops/analysis`         | OPS_TOKEN |
+| POST   | `/ops/hydrate-backfill` | OPS_TOKEN |
+| GET    | `/ops/photo-stats`      | OPS_TOKEN |
+| GET    | `/ops/verify-snapshots` | OPS_TOKEN |
 
 ---
 
@@ -672,26 +672,26 @@ All endpoints are served by dfg-api on Cloudflare Workers. Auth is via `Authoriz
 
 ### Performance Budgets
 
-| Metric | Target | Rationale |
-|--------|--------|-----------|
-| API response (list endpoints) | < 200ms p95 | D1 SQLite queries; simple JOINs; indexed |
-| API response (single opportunity GET) | < 300ms p95 | Includes 3 queries (opportunity + actions + alerts computation) |
-| API response (analyze with AI) | < 30s p95 | Claude API call dominates; 25s timeout + overhead |
-| API response (analyze without AI) | < 500ms p95 | Gate-only refresh, no external call |
-| End-to-end analysis pipeline | < 45s p95 | From listing ingestion to scored opportunity |
-| Ingest batch (50 listings) | < 5s p95 | Sequential D1 inserts; consider D1 batch API for improvement |
-| Scout scrape cycle | < 60s p95 | Runs every 15 minutes via cron |
-| Frontend LCP (iOS Safari) | < 2.5s | Next.js SSR + API fetch |
-| Frontend INP (iOS Safari) | < 200ms | Touch interactions must feel instant; Target Customer: "Next Action Card within 1 second" |
+| Metric                                | Target      | Rationale                                                                                 |
+| ------------------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| API response (list endpoints)         | < 200ms p95 | D1 SQLite queries; simple JOINs; indexed                                                  |
+| API response (single opportunity GET) | < 300ms p95 | Includes 3 queries (opportunity + actions + alerts computation)                           |
+| API response (analyze with AI)        | < 30s p95   | Claude API call dominates; 25s timeout + overhead                                         |
+| API response (analyze without AI)     | < 500ms p95 | Gate-only refresh, no external call                                                       |
+| End-to-end analysis pipeline          | < 45s p95   | From listing ingestion to scored opportunity                                              |
+| Ingest batch (50 listings)            | < 5s p95    | Sequential D1 inserts; consider D1 batch API for improvement                              |
+| Scout scrape cycle                    | < 60s p95   | Runs every 15 minutes via cron                                                            |
+| Frontend LCP (iOS Safari)             | < 2.5s      | Next.js SSR + API fetch                                                                   |
+| Frontend INP (iOS Safari)             | < 200ms     | Touch interactions must feel instant; Target Customer: "Next Action Card within 1 second" |
 
 ### Reliability Targets
 
-| Metric | Target | Notes |
-|--------|--------|-------|
-| API availability | 99.5% monthly | Cloudflare Workers SLA; single region |
-| Scout cron success rate | > 95% | External auction sites may be flaky |
-| Analysis success rate | > 90% | Claude API may timeout or rate-limit |
-| Data loss tolerance | Zero for opportunities, operator_actions, mvc_events | D1 provides durable storage; R2 snapshots are immutable |
+| Metric                  | Target                                               | Notes                                                   |
+| ----------------------- | ---------------------------------------------------- | ------------------------------------------------------- |
+| API availability        | 99.5% monthly                                        | Cloudflare Workers SLA; single region                   |
+| Scout cron success rate | > 95%                                                | External auction sites may be flaky                     |
+| Analysis success rate   | > 90%                                                | Claude API may timeout or rate-limit                    |
+| Data loss tolerance     | Zero for opportunities, operator_actions, mvc_events | D1 provides durable storage; R2 snapshots are immutable |
 
 ### Scout Health Observability (Phase 0 Implementation)
 
@@ -735,48 +735,48 @@ dfg-app (Dashboard)
 
 ### Capacity Limits (MVP)
 
-| Resource | Limit | Source |
-|----------|-------|--------|
-| D1 database size | 10 GB | Cloudflare D1 free/pro tier |
-| D1 rows read per query | 5,000,000 | D1 limit per request |
-| D1 rows written per request | 100,000 | D1 limit |
-| Worker CPU time | 30s (paid) / 10ms (free) | CF Workers limit |
-| Worker subrequests | 50 per request | CF Workers limit |
-| R2 object size | 5 GB max | R2 limit |
-| Batch operation size | 50 items | Application-enforced |
-| Ingest batch size | 100 listings | Application-enforced |
+| Resource                    | Limit                    | Source                      |
+| --------------------------- | ------------------------ | --------------------------- |
+| D1 database size            | 10 GB                    | Cloudflare D1 free/pro tier |
+| D1 rows read per query      | 5,000,000                | D1 limit per request        |
+| D1 rows written per request | 100,000                  | D1 limit                    |
+| Worker CPU time             | 30s (paid) / 10ms (free) | CF Workers limit            |
+| Worker subrequests          | 50 per request           | CF Workers limit            |
+| R2 object size              | 5 GB max                 | R2 limit                    |
+| Batch operation size        | 50 items                 | Application-enforced        |
+| Ingest batch size           | 100 listings             | Application-enforced        |
 
 ### Security Requirements
 
-| Requirement | Implementation | Status |
-|-------------|---------------|--------|
-| No wildcard CORS | Origin allowlist in `http.ts` (3 origins) | Implemented |
-| No exposed debug endpoints | 404 for unmatched routes; no `/debug/*` in production | Implemented |
-| SQL injection prevention | All queries use `.bind()` parameterization | Implemented |
-| Auth on all API endpoints | Bearer OPS_TOKEN check before route dispatch | Implemented |
-| Auth on analyst endpoints | ANALYST_SERVICE_SECRET required for URL-based calls; service bindings trusted | Implemented (needs integration test) |
-| R2 snapshot immutability | New key per snapshot; no overwrites | Implemented |
-| Secrets not in source control | Wrangler secrets for OPS_TOKEN, ANTHROPIC_API_KEY, ANALYST_SERVICE_SECRET | Implemented |
-| Input validation at boundaries | JSON parse with null fallback; field-level validation | Partial -- some endpoints do not validate payload shapes |
+| Requirement                    | Implementation                                                                | Status                                                   |
+| ------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------- |
+| No wildcard CORS               | Origin allowlist in `http.ts` (3 origins)                                     | Implemented                                              |
+| No exposed debug endpoints     | 404 for unmatched routes; no `/debug/*` in production                         | Implemented                                              |
+| SQL injection prevention       | All queries use `.bind()` parameterization                                    | Implemented                                              |
+| Auth on all API endpoints      | Bearer OPS_TOKEN check before route dispatch                                  | Implemented                                              |
+| Auth on analyst endpoints      | ANALYST_SERVICE_SECRET required for URL-based calls; service bindings trusted | Implemented (needs integration test)                     |
+| R2 snapshot immutability       | New key per snapshot; no overwrites                                           | Implemented                                              |
+| Secrets not in source control  | Wrangler secrets for OPS_TOKEN, ANTHROPIC_API_KEY, ANALYST_SERVICE_SECRET     | Implemented                                              |
+| Input validation at boundaries | JSON parse with null fallback; field-level validation                         | Partial -- some endpoints do not validate payload shapes |
 
 ---
 
 ## Technical Risks
 
-| # | Risk | Severity | Likelihood | Mitigation | Status |
-|---|------|----------|------------|------------|--------|
-| R1 | **D1 concurrent write conflicts** -- `PATCH /api/opportunities/:id` does not use optimistic locking. Two requests updating the same opportunity simultaneously could cause lost updates. | High | Low (single operator) | Accept for MVP. Add `updated_at` optimistic lock to PATCH before Phase 1. | Accepted |
-| R2 | **Analyst timeout under Claude API load** -- 25-second timeout may be exceeded during peak periods. | Medium | Medium | Gate-only fallback already implemented. UI must indicate when recommendation is gate-only vs AI-powered. | Accepted; UI indicator needed |
-| R3 | **Shared D1 schema coupling** -- dfg-scout and dfg-api share the same D1 with different binding names (`DFG_DB` vs `DB`). Schema changes require coordination. | High | Medium | Schema ownership matrix (see Appendix) documents who owns what. Migrations live in owner's directory. | Documented |
-| R4 | **Thread-local CORS pattern** -- `setCurrentRequest()` stores request in module-level variable. If CF Workers process concurrent requests in same isolate, CORS headers could leak. | Medium | Low | CF Workers use one-request-per-isolate. Document assumption. | Accepted |
-| R5 | **No rate limiting on API** -- Compromised OPS_TOKEN or runaway client could exhaust D1 quotas. | Medium | Low | Add per-IP rate limiting via CF WAF in Phase 1. | Accepted |
-| R6 | **Auction data freshness** -- Scout runs every 15 minutes. Prices and lot status can be up to 15 minutes stale. | Medium | High | Display "last updated" timestamp prominently (per UX Lead Change #3). On-demand refresh in Phase 1. | Accepted |
-| R7 | **Ingest idempotency** -- Duplicate listings could create duplicate opportunities. | Medium | Low | **Fixed in Phase 0 by migration 0008** (UNIQUE constraint on listing_id). Ingest endpoint must handle constraint violations gracefully. | Fix in progress |
-| R8 | **Watch trigger latency** -- 5-minute cron means alerts can fire up to 5 minutes late. | Low | High | 4-hour default threshold provides buffer. Durable Objects alarms for sub-minute precision in Phase 1. | Accepted |
-| R9 | **Browser `prompt()` for financial inputs** -- No validation, no formatting, no confirmation step for the most consequential dollar amounts. | Medium | Medium | Accept for current founder-only deployment. Replace with custom modal component before Phase 1 private beta. Frontend change only. | Tracked, P0-adjacent |
-| R10 | **Platform access revocation** -- IronPlanet (Ritchie Bros/RB Global) could restrict scraping access. GovDeals investing in buyer tools. | High | Medium | Adapter architecture isolates platform logic. Rate limiting and polite headers implemented. GovPlanet adapter seeded for Phase 1. If platform blocks, disable source transparently. | Accepted |
-| R11 | **tuning_events CHECK constraint failure** -- Auto-rejection code inserts `event_type = 'status_change'` but CHECK constraint does not allow it. Silent data loss. | High | High | **Fix via code change:** use `event_type: 'rejection'` with `auto_rejected: true` in signal_data. Migration 0008b adds `status_change` as belt-and-suspenders. | Fix in progress |
-| R12 | **Verdict threshold OR logic** -- `applyVerdictThresholds` uses OR logic, allowing low-margin deals to receive BUY recommendation. Violates Product Principle #3. | High | High | **Fix via code change:** change OR to AND at `category-config.ts` line 258. Backtest against historical data required. | Fix in progress |
+| #   | Risk                                                                                                                                                                                     | Severity | Likelihood            | Mitigation                                                                                                                                                                          | Status                        |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| R1  | **D1 concurrent write conflicts** -- `PATCH /api/opportunities/:id` does not use optimistic locking. Two requests updating the same opportunity simultaneously could cause lost updates. | High     | Low (single operator) | Accept for MVP. Add `updated_at` optimistic lock to PATCH before Phase 1.                                                                                                           | Accepted                      |
+| R2  | **Analyst timeout under Claude API load** -- 25-second timeout may be exceeded during peak periods.                                                                                      | Medium   | Medium                | Gate-only fallback already implemented. UI must indicate when recommendation is gate-only vs AI-powered.                                                                            | Accepted; UI indicator needed |
+| R3  | **Shared D1 schema coupling** -- dfg-scout and dfg-api share the same D1 with different binding names (`DFG_DB` vs `DB`). Schema changes require coordination.                           | High     | Medium                | Schema ownership matrix (see Appendix) documents who owns what. Migrations live in owner's directory.                                                                               | Documented                    |
+| R4  | **Thread-local CORS pattern** -- `setCurrentRequest()` stores request in module-level variable. If CF Workers process concurrent requests in same isolate, CORS headers could leak.      | Medium   | Low                   | CF Workers use one-request-per-isolate. Document assumption.                                                                                                                        | Accepted                      |
+| R5  | **No rate limiting on API** -- Compromised OPS_TOKEN or runaway client could exhaust D1 quotas.                                                                                          | Medium   | Low                   | Add per-IP rate limiting via CF WAF in Phase 1.                                                                                                                                     | Accepted                      |
+| R6  | **Auction data freshness** -- Scout runs every 15 minutes. Prices and lot status can be up to 15 minutes stale.                                                                          | Medium   | High                  | Display "last updated" timestamp prominently (per UX Lead Change #3). On-demand refresh in Phase 1.                                                                                 | Accepted                      |
+| R7  | **Ingest idempotency** -- Duplicate listings could create duplicate opportunities.                                                                                                       | Medium   | Low                   | **Fixed in Phase 0 by migration 0008** (UNIQUE constraint on listing_id). Ingest endpoint must handle constraint violations gracefully.                                             | Fix in progress               |
+| R8  | **Watch trigger latency** -- 5-minute cron means alerts can fire up to 5 minutes late.                                                                                                   | Low      | High                  | 4-hour default threshold provides buffer. Durable Objects alarms for sub-minute precision in Phase 1.                                                                               | Accepted                      |
+| R9  | **Browser `prompt()` for financial inputs** -- No validation, no formatting, no confirmation step for the most consequential dollar amounts.                                             | Medium   | Medium                | Accept for current founder-only deployment. Replace with custom modal component before Phase 1 private beta. Frontend change only.                                                  | Tracked, P0-adjacent          |
+| R10 | **Platform access revocation** -- IronPlanet (Ritchie Bros/RB Global) could restrict scraping access. GovDeals investing in buyer tools.                                                 | High     | Medium                | Adapter architecture isolates platform logic. Rate limiting and polite headers implemented. GovPlanet adapter seeded for Phase 1. If platform blocks, disable source transparently. | Accepted                      |
+| R11 | **tuning_events CHECK constraint failure** -- Auto-rejection code inserts `event_type = 'status_change'` but CHECK constraint does not allow it. Silent data loss.                       | High     | High                  | **Fix via code change:** use `event_type: 'rejection'` with `auto_rejected: true` in signal_data. Migration 0008b adds `status_change` as belt-and-suspenders.                      | Fix in progress               |
+| R12 | **Verdict threshold OR logic** -- `applyVerdictThresholds` uses OR logic, allowing low-margin deals to receive BUY recommendation. Violates Product Principle #3.                        | High     | High                  | **Fix via code change:** change OR to AND at `category-config.ts` line 258. Backtest against historical data required.                                                              | Fix in progress               |
 
 ---
 
@@ -786,37 +786,37 @@ This is the concrete implementation sequence for remaining Phase 0 work, derived
 
 ### P0 Items (Must-fix before Phase 0 is considered complete)
 
-| # | Item | Type | Estimated Effort | Dependencies |
-|---|------|------|-----------------|--------------|
-| 1 | Fix auto-rejection tuning event type | Code change | 1 hour | None |
-|   | File: `workers/dfg-api/src/routes/opportunities.ts` line 1278 | | | |
-|   | Change: `event_type: 'status_change'` to `event_type: 'rejection'` | | | |
-| 2 | Run migration 0008b (tuning_events CHECK constraint) | Migration | 30 min | Item 1 deployed first |
-| 3 | Run migration 0008 (listing_id UNIQUE constraint) | Migration | 30 min | None |
-|   | Also: update ingest endpoint to catch UNIQUE violation errors gracefully | | | |
-| 4 | Run migration 0009 (analysis_runs snapshot columns) | Migration | 15 min | None |
-| 5 | Fix verdict threshold logic | Code change | 2 hours | Backtest data review |
-|   | File: `workers/dfg-analyst/src/category-config.ts` line 258 | | | |
-|   | Change: `\|\|` to `&&` for BUY threshold; keep `\|\|` for WATCH threshold | | | |
-| 6 | Implement `last_scout_run` on stats endpoint | Code change | 4 hours | Shared D1 access to scout_runs |
-|   | File: `workers/dfg-api/src/routes/opportunities.ts` (stats handler) | | | |
-|   | Query: `SELECT MAX(completed_at) FROM scout_runs WHERE success = 1` | | | |
-|   | Return: `last_scout_run` (ISO 8601), `pipeline_stale` (boolean) | | | |
-| 7 | Dashboard stale pipeline banner | Frontend change | 2 hours | Item 6 |
-|   | Red banner on dashboard when `pipeline_stale = true` | | | |
-| 8 | IronPlanet capture rate: diagnose and fix or disable | Investigation | 4-8 hours | None |
-|   | If structural (anti-scraping): disable source, remove from Sources page | | | |
-|   | If fixable: fix adapter to >= 80% capture rate | | | |
-| 9 | Verify analyst endpoint auth via service bindings | Test | 1 hour | None |
+| #   | Item                                                                      | Type            | Estimated Effort | Dependencies                   |
+| --- | ------------------------------------------------------------------------- | --------------- | ---------------- | ------------------------------ |
+| 1   | Fix auto-rejection tuning event type                                      | Code change     | 1 hour           | None                           |
+|     | File: `workers/dfg-api/src/routes/opportunities.ts` line 1278             |                 |                  |                                |
+|     | Change: `event_type: 'status_change'` to `event_type: 'rejection'`        |                 |                  |                                |
+| 2   | Run migration 0008b (tuning_events CHECK constraint)                      | Migration       | 30 min           | Item 1 deployed first          |
+| 3   | Run migration 0008 (listing_id UNIQUE constraint)                         | Migration       | 30 min           | None                           |
+|     | Also: update ingest endpoint to catch UNIQUE violation errors gracefully  |                 |                  |                                |
+| 4   | Run migration 0009 (analysis_runs snapshot columns)                       | Migration       | 15 min           | None                           |
+| 5   | Fix verdict threshold logic                                               | Code change     | 2 hours          | Backtest data review           |
+|     | File: `workers/dfg-analyst/src/category-config.ts` line 258               |                 |                  |                                |
+|     | Change: `\|\|` to `&&` for BUY threshold; keep `\|\|` for WATCH threshold |                 |                  |                                |
+| 6   | Implement `last_scout_run` on stats endpoint                              | Code change     | 4 hours          | Shared D1 access to scout_runs |
+|     | File: `workers/dfg-api/src/routes/opportunities.ts` (stats handler)       |                 |                  |                                |
+|     | Query: `SELECT MAX(completed_at) FROM scout_runs WHERE success = 1`       |                 |                  |                                |
+|     | Return: `last_scout_run` (ISO 8601), `pipeline_stale` (boolean)           |                 |                  |                                |
+| 7   | Dashboard stale pipeline banner                                           | Frontend change | 2 hours          | Item 6                         |
+|     | Red banner on dashboard when `pipeline_stale = true`                      |                 |                  |                                |
+| 8   | IronPlanet capture rate: diagnose and fix or disable                      | Investigation   | 4-8 hours        | None                           |
+|     | If structural (anti-scraping): disable source, remove from Sources page   |                 |                  |                                |
+|     | If fixable: fix adapter to >= 80% capture rate                            |                 |                  |                                |
+| 9   | Verify analyst endpoint auth via service bindings                         | Test            | 1 hour           | None                           |
 
 ### P1 Items (Pre-Phase 1 beta blockers)
 
-| # | Item | Type | Estimated Effort |
-|---|------|------|-----------------|
-| 10 | Run migration 0010 (sold_price column) | Migration | 15 min |
-| 11 | Add `sold_price` to PATCH endpoint and opportunity detail response | Code change | 2 hours |
-| 12 | Replace `prompt()` with custom financial input modal | Frontend change | 8 hours |
-| 13 | Dashboard quick-pass action: change default reason from `other` to `missing_info` | Frontend change | 30 min |
+| #   | Item                                                                              | Type            | Estimated Effort |
+| --- | --------------------------------------------------------------------------------- | --------------- | ---------------- |
+| 10  | Run migration 0010 (sold_price column)                                            | Migration       | 15 min           |
+| 11  | Add `sold_price` to PATCH endpoint and opportunity detail response                | Code change     | 2 hours          |
+| 12  | Replace `prompt()` with custom financial input modal                              | Frontend change | 8 hours          |
+| 13  | Dashboard quick-pass action: change default reason from `other` to `missing_info` | Frontend change | 30 min           |
 
 ---
 
@@ -842,6 +842,7 @@ Financial events (decisions, bids, outcomes) use immutable `mvc_events`. Workflo
 Add `sold_price` column to `opportunities` via migration 0010. Combined with `final_price` and source defaults, enables realized margin calculation. The `outcomes` table in dfg-scout's schema.sql remains dormant. Phase 1 creates an API-owned outcomes table keyed on `opportunity_id` with full P&L fields.
 
 **Realized margin formula (using existing + new data):**
+
 ```
 Acquisition Cost = final_price * (1 + source.default_buyer_premium_pct/100)
                    + analysis_runs.assumptions_json.transport_estimate
@@ -878,21 +879,22 @@ For Phase 1: create the outcomes table as a dfg-api migration, keyed on `opportu
 **Status:** Decided (AND logic for BUY)
 
 **Code change required:**
+
 ```typescript
 // File: workers/dfg-analyst/src/category-config.ts, line 258
 // BEFORE (current, incorrect):
 if (profit >= thresholds.buy.min_profit || margin >= thresholds.buy.min_margin) {
-  return 'BUY';
+  return 'BUY'
 }
 
 // AFTER (correct, conservative):
 if (profit >= thresholds.buy.min_profit && margin >= thresholds.buy.min_margin) {
-  return 'BUY';
+  return 'BUY'
 }
 
 // WATCH threshold remains OR logic (unchanged):
 if (profit >= thresholds.watch.min_profit || margin >= thresholds.watch.min_margin) {
-  return 'WATCH';
+  return 'WATCH'
 }
 ```
 
@@ -919,37 +921,37 @@ The analyst worker implements these in `calculation-spine.ts` (file: `workers/df
 
 ## Appendix: Schema Ownership Matrix
 
-| Table | Owner | Migrations In | Binding | Notes |
-|-------|-------|--------------|---------|-------|
-| sources | dfg-api | dfg-api/0001 | DB | Seeded with 3 sources |
-| opportunities | dfg-api | dfg-api/0001, 0003, 0004, 0008, 0010 | DB | Core operator entity. `sold_price` added in 0010. |
-| analysis_runs | dfg-api | dfg-api/0003, 0007, 0009 | DB | Immutable snapshots |
-| operator_actions | dfg-api | dfg-api/0001 | DB | Audit log |
-| mvc_events | dfg-api | dfg-api/0006 | DB | Immutable event log |
-| tuning_events | dfg-api | dfg-api/0001, 0008b | DB | Algorithm tuning signals |
-| category_defs | dfg-scout | dfg-scout/007 | DFG_DB | Shared config, read by both workers |
-| listings | dfg-scout | dfg-scout/001, 004, 008 | DFG_DB | Raw auction data |
-| scout_runs | dfg-scout | dfg-scout/schema | DFG_DB | Pipeline health tracking. Read by dfg-api stats endpoint via shared D1. |
-| failed_operations | dfg-scout | dfg-scout/schema | DFG_DB | Retry queue |
-| outcomes | dfg-scout (dormant) | dfg-scout/schema | DFG_DB | Not used in MVP. Phase 1: rebuild as dfg-api-owned table. |
-| price_guides | dfg-scout | dfg-scout/schema | DFG_DB | Reference data |
+| Table             | Owner               | Migrations In                        | Binding | Notes                                                                   |
+| ----------------- | ------------------- | ------------------------------------ | ------- | ----------------------------------------------------------------------- |
+| sources           | dfg-api             | dfg-api/0001                         | DB      | Seeded with 3 sources                                                   |
+| opportunities     | dfg-api             | dfg-api/0001, 0003, 0004, 0008, 0010 | DB      | Core operator entity. `sold_price` added in 0010.                       |
+| analysis_runs     | dfg-api             | dfg-api/0003, 0007, 0009             | DB      | Immutable snapshots                                                     |
+| operator_actions  | dfg-api             | dfg-api/0001                         | DB      | Audit log                                                               |
+| mvc_events        | dfg-api             | dfg-api/0006                         | DB      | Immutable event log                                                     |
+| tuning_events     | dfg-api             | dfg-api/0001, 0008b                  | DB      | Algorithm tuning signals                                                |
+| category_defs     | dfg-scout           | dfg-scout/007                        | DFG_DB  | Shared config, read by both workers                                     |
+| listings          | dfg-scout           | dfg-scout/001, 004, 008              | DFG_DB  | Raw auction data                                                        |
+| scout_runs        | dfg-scout           | dfg-scout/schema                     | DFG_DB  | Pipeline health tracking. Read by dfg-api stats endpoint via shared D1. |
+| failed_operations | dfg-scout           | dfg-scout/schema                     | DFG_DB  | Retry queue                                                             |
+| outcomes          | dfg-scout (dormant) | dfg-scout/schema                     | DFG_DB  | Not used in MVP. Phase 1: rebuild as dfg-api-owned table.               |
+| price_guides      | dfg-scout           | dfg-scout/schema                     | DFG_DB  | Reference data                                                          |
 
 ---
 
 ## Appendix: Cross-Role Dependency Map
 
-| Technical Decision | Affects Role | How | Final Status |
-|-------------------|-------------|-----|-------------|
-| State machine transitions (no inbox-to-bid) | Target Customer, UX Lead | Constrains action bar buttons per status. UX Lead added "Inspect" shortcut on inbox action bar as a workaround. | Resolved -- Target Customer accepted |
-| 25s analyst timeout with gate fallback | Business Analyst, UX Lead | AC-003.6 handles null AI analysis. Target Customer wants a visual indicator for gate-only vs AI-powered recommendations. | Resolved -- UI indicator needed |
-| Computed alerts (not stored) | UX Lead | Every detail page load recomputes alerts. No push mechanism possible without cron or Web Push API. | Accepted for MVP |
-| D1 CHECK constraints | Business Analyst | EC-013 (tuning_events) is a confirmed bug. Fix via code change + migration 0008b. | Fix in progress |
-| No WebSocket support | UX Lead, Target Customer, Competitor Analyst | Alerts only visible when console is open. 5-minute cron latency for watch triggers. | Accepted for MVP; Web Push in Phase 1 |
-| UNIQUE listing_id constraint (0008) | Business Analyst | Ingest behavior changes: duplicate listing_id now returns UNIQUE violation. Ingest endpoint must handle gracefully. | Fix in progress |
-| `prompt()` for financial inputs | UX Lead, Target Customer | Money math correctness risk. Must be replaced before Phase 1 private beta. | Tracked, P0-adjacent |
-| Verdict threshold AND logic (ADR-007) | Business Analyst, Target Customer | Changes which deals receive BUY recommendation. Requires backtest before deployment. | Fix in progress |
-| `sold_price` column (migration 0010) | PM, Business Analyst | Enables "realized margin >= 25%" success metric measurement. PATCH endpoint must accept `sold_price`. | Migration ready |
-| Scout health on stats endpoint | PM, Target Customer, UX Lead | Enables dashboard stale pipeline banner. Requires cross-worker D1 read of `scout_runs`. | Implementation specified |
+| Technical Decision                          | Affects Role                                 | How                                                                                                                      | Final Status                          |
+| ------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| State machine transitions (no inbox-to-bid) | Target Customer, UX Lead                     | Constrains action bar buttons per status. UX Lead added "Inspect" shortcut on inbox action bar as a workaround.          | Resolved -- Target Customer accepted  |
+| 25s analyst timeout with gate fallback      | Business Analyst, UX Lead                    | AC-003.6 handles null AI analysis. Target Customer wants a visual indicator for gate-only vs AI-powered recommendations. | Resolved -- UI indicator needed       |
+| Computed alerts (not stored)                | UX Lead                                      | Every detail page load recomputes alerts. No push mechanism possible without cron or Web Push API.                       | Accepted for MVP                      |
+| D1 CHECK constraints                        | Business Analyst                             | EC-013 (tuning_events) is a confirmed bug. Fix via code change + migration 0008b.                                        | Fix in progress                       |
+| No WebSocket support                        | UX Lead, Target Customer, Competitor Analyst | Alerts only visible when console is open. 5-minute cron latency for watch triggers.                                      | Accepted for MVP; Web Push in Phase 1 |
+| UNIQUE listing_id constraint (0008)         | Business Analyst                             | Ingest behavior changes: duplicate listing_id now returns UNIQUE violation. Ingest endpoint must handle gracefully.      | Fix in progress                       |
+| `prompt()` for financial inputs             | UX Lead, Target Customer                     | Money math correctness risk. Must be replaced before Phase 1 private beta.                                               | Tracked, P0-adjacent                  |
+| Verdict threshold AND logic (ADR-007)       | Business Analyst, Target Customer            | Changes which deals receive BUY recommendation. Requires backtest before deployment.                                     | Fix in progress                       |
+| `sold_price` column (migration 0010)        | PM, Business Analyst                         | Enables "realized margin >= 25%" success metric measurement. PATCH endpoint must accept `sold_price`.                    | Migration ready                       |
+| Scout health on stats endpoint              | PM, Target Customer, UX Lead                 | Enables dashboard stale pipeline banner. Requires cross-worker D1 read of `scout_runs`.                                  | Implementation specified              |
 
 ---
 

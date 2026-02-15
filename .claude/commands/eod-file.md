@@ -112,6 +112,7 @@ Please provide a session summary:
 ```
 
 Store the user's responses in variables:
+
 - `ACCOMPLISHED`
 - `IN_PROGRESS`
 - `BLOCKED`
@@ -277,6 +278,7 @@ Good work today! 👋
 ## Error Handling
 
 **No active session:**
+
 ```
 ❌ No active session found
 
@@ -284,6 +286,7 @@ Run /sod first to start a session
 ```
 
 **Missing CRANE_CONTEXT_KEY:**
+
 ```
 ❌ CRANE_CONTEXT_KEY not set
 
@@ -292,6 +295,7 @@ Export the key:
 ```
 
 **API error:**
+
 ```
 ❌ Failed to end session
 
@@ -305,6 +309,7 @@ Error: Session not found
 ## Integration with Workflow
 
 **Full Session Flow:**
+
 ```bash
 # Start of day
 /sod
@@ -316,6 +321,7 @@ Error: Session not found
 ```
 
 **Next Day:**
+
 ```bash
 # Start new session
 /sod

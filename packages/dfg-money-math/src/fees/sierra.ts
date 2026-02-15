@@ -1,4 +1,4 @@
-import type { FeeSchedule } from '../types';
+import type { FeeSchedule } from '../types'
 
 /**
  * Sierra Auction buyer premium fee schedule.
@@ -31,4 +31,4 @@ export const SIERRA_FEE_SCHEDULE: FeeSchedule = {
       cap: 150,
     },
   ],
-};
+}

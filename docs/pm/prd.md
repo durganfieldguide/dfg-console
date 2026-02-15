@@ -54,12 +54,14 @@
 **Positioning:** DFG is an operator intelligence tool for physical asset arbitrage at auction. It automates information-gathering and analysis so the operator focuses exclusively on decision-making and execution. DFG's differentiation is (1) accurate, conservative profit analysis that prevents bad acquisitions, and (2) structured workflow that enforces disciplined decision-making. These are harder to replicate than alerts or scraping.
 
 **What DFG IS:**
+
 - A deal flow intelligence engine for physical asset acquisition
 - A conservative financial analysis tool that protects the operator from bad buys
 - A workflow system that enforces disciplined evaluation before bidding
 - A mobile-first operator console designed for on-the-go decision-making (iOS Safari primary, per CLAUDE.md)
 
 **What DFG is NOT:**
+
 - Not a marketplace or auction platform (DFG scrapes platforms; it does not host listings)
 - Not a general-purpose dashboard or analytics tool
 - Not a fully automated bidding bot (the operator makes final decisions -- Principle #6)
@@ -118,11 +120,10 @@ The core problem has three dimensions:
 These are ordered by priority. When principles conflict, the higher-numbered principle wins.
 
 1. **Numbers must be right.** Financial calculations are non-negotiable. A single incorrect margin or double-counted fee destroys operator trust permanently. The canonical money math is the foundation of every product decision:
-
    - Acquisition Cost = Bid + Buyer Premium + Transport + Immediate Repairs
    - Net Proceeds = Sale Price - Listing Fees - Payment Processing
    - Profit = Net Proceeds - Acquisition Cost
-   - Margin % = (Profit / Acquisition Cost) * 100
+   - Margin % = (Profit / Acquisition Cost) \* 100
 
    Listing fees are selling costs only -- never included in acquisition cost. Never double-counted. This principle extends to input mechanisms: browser `prompt()` for entering bid amounts is a numbers-must-be-right issue, not just a UX issue.
 
@@ -144,28 +145,28 @@ These are ordered by priority. When principles conflict, the higher-numbered pri
 
 DFG operates at the intersection of four markets with limited overlap:
 
-| Segment | Players | Relevance to DFG |
-|---------|---------|-------------------|
-| Government/surplus auction platforms | GovDeals, PublicSurplus, GovPlanet | Data sources with increasingly sophisticated buyer tools (alerts via email/SMS/WhatsApp, saved searches). Platform risk if they block scraping. |
-| Equipment auction platforms | IronPlanet/Ritchie Bros, Proxibid, BidSpotter | Data sources with buyer tooling. RB Global owns IronPlanet (DFG's second source at 17% capture) and offers free Rouse Fleet Manager as a buyer funnel. |
-| Dealer/professional sourcing tools | Swoopa Dealers, Swoopa (consumer), Flipify, DealScout | Alert-based sourcing tools for resellers. Swoopa Dealers has moved into valuations and comps, converging toward DFG's territory. DealScout offers a free tier. |
-| Equipment valuation services | Rouse Analytics (RB Global), GSA Auction Pro, AuctionWiser | AI-powered valuation and analytics. Rouse Fleet Manager base tier is now free. GSA Auction Pro provides AI price predictions for government surplus. |
+| Segment                              | Players                                                    | Relevance to DFG                                                                                                                                               |
+| ------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Government/surplus auction platforms | GovDeals, PublicSurplus, GovPlanet                         | Data sources with increasingly sophisticated buyer tools (alerts via email/SMS/WhatsApp, saved searches). Platform risk if they block scraping.                |
+| Equipment auction platforms          | IronPlanet/Ritchie Bros, Proxibid, BidSpotter              | Data sources with buyer tooling. RB Global owns IronPlanet (DFG's second source at 17% capture) and offers free Rouse Fleet Manager as a buyer funnel.         |
+| Dealer/professional sourcing tools   | Swoopa Dealers, Swoopa (consumer), Flipify, DealScout      | Alert-based sourcing tools for resellers. Swoopa Dealers has moved into valuations and comps, converging toward DFG's territory. DealScout offers a free tier. |
+| Equipment valuation services         | Rouse Analytics (RB Global), GSA Auction Pro, AuctionWiser | AI-powered valuation and analytics. Rouse Fleet Manager base tier is now free. GSA Auction Pro provides AI price predictions for government surplus.           |
 
 ### Feature Comparison Matrix
 
-| Feature | DFG (MVP) | Swoopa Dealers | Swoopa | Flipify | DealScout | Rouse Fleet Manager | GSA Auction Pro |
-|---------|-----------|----------------|--------|---------|-----------|--------------------|----|
-| Cross-platform auction scraping | Yes (2 sources) | No (marketplaces) | No (marketplaces) | No (2 marketplaces) | No (1 marketplace) | No (own platforms) | No (GSA only) |
-| AI-powered profit analysis | Yes (Claude, dual-lens) | Basic (comps + margin) | Basic (price compare) | No | No | Yes (ML, institutional) | Yes (price prediction) |
-| Conservative financial modeling | Yes (canonical money math, 58 rules) | No | No | No | No | No (reference values) | No |
-| Category-specific intelligence | Yes (3 tiers) | Vehicles only | No | No | No | Yes (75K+ models) | Yes (by GSA category) |
-| Gate-enforced bid readiness | Yes (critical + confidence gates) | No | No | No | No | No | No |
-| Operator workflow (7-stage lifecycle) | Yes | No | No | No | No | No | No |
-| Push notifications | No (in-app only) | Yes (native) | Yes (native) | Yes (native) | Yes (native) | No | No |
-| Alert speed | 15-min cron | Near-instant | Sub-minute | Seconds | 5 min (premium) | N/A | N/A |
-| Decision audit trail | Yes (MVC events, immutable) | No | No | No | No | No | No |
-| Free tier | No | Free download | 48-hr trial | 5-day trial | Yes (1-hr alerts) | Yes (base tier) | Unknown |
-| Price per month | $149 target | $47-145 | $47-352 | $5-10 | Free-premium | Free-$500+ | Unknown |
+| Feature                               | DFG (MVP)                            | Swoopa Dealers         | Swoopa                | Flipify             | DealScout          | Rouse Fleet Manager     | GSA Auction Pro        |
+| ------------------------------------- | ------------------------------------ | ---------------------- | --------------------- | ------------------- | ------------------ | ----------------------- | ---------------------- |
+| Cross-platform auction scraping       | Yes (2 sources)                      | No (marketplaces)      | No (marketplaces)     | No (2 marketplaces) | No (1 marketplace) | No (own platforms)      | No (GSA only)          |
+| AI-powered profit analysis            | Yes (Claude, dual-lens)              | Basic (comps + margin) | Basic (price compare) | No                  | No                 | Yes (ML, institutional) | Yes (price prediction) |
+| Conservative financial modeling       | Yes (canonical money math, 58 rules) | No                     | No                    | No                  | No                 | No (reference values)   | No                     |
+| Category-specific intelligence        | Yes (3 tiers)                        | Vehicles only          | No                    | No                  | No                 | Yes (75K+ models)       | Yes (by GSA category)  |
+| Gate-enforced bid readiness           | Yes (critical + confidence gates)    | No                     | No                    | No                  | No                 | No                      | No                     |
+| Operator workflow (7-stage lifecycle) | Yes                                  | No                     | No                    | No                  | No                 | No                      | No                     |
+| Push notifications                    | No (in-app only)                     | Yes (native)           | Yes (native)          | Yes (native)        | Yes (native)       | No                      | No                     |
+| Alert speed                           | 15-min cron                          | Near-instant           | Sub-minute            | Seconds             | 5 min (premium)    | N/A                     | N/A                    |
+| Decision audit trail                  | Yes (MVC events, immutable)          | No                     | No                    | No                  | No                 | No                      | No                     |
+| Free tier                             | No                                   | Free download          | 48-hr trial           | 5-day trial         | Yes (1-hr alerts)  | Yes (base tier)         | Unknown                |
+| Price per month                       | $149 target                          | $47-145                | $47-352               | $5-10               | Free-premium       | Free-$500+              | Unknown                |
 
 ### Durable Competitive Advantages
 
@@ -199,6 +200,7 @@ The MVP user journey has two primary flows designed for the interrupt-driven, mo
 
 **Step 1: Open Console (Dashboard)**
 Scott opens the app from his iPhone home screen. The Dashboard loads and immediately shows:
+
 - **Scout Health Banner (topmost element):** Hidden when scout is healthy (last successful run within 30 minutes); red full-width banner when unhealthy: "Scout has not run since [relative time]. Deal flow may be stale." with "Details" link to Sources page. This is the first thing the operator sees to establish trust in data freshness.
 - **Attention Required list:** Priority-sorted items needing action, with inline quick actions for pass/watch/re-analyze.
 - **Quick Stats grid:** Inbox count, Strike Zone count, Needs Info count, Qualifying count, Watching count, Bidding count.
@@ -235,6 +237,7 @@ After triaging, Scott returns to confirm counts have changed and checks if any E
 **Step 5: Check Gates (Bid Readiness).** Gates Display shows critical and confidence gates with pass/fail/unknown status. 20% max-bid haircut when gates are NOT cleared.
 
 **Step 6: Decision.** Based on current status, the action bar shows contextually relevant actions:
+
 - `inbox`: Qualify (primary), Watch (secondary), Reject (danger)
 - `qualifying`: Inspect (primary -- highlighted green when analysis exists with BID/WATCH recommendation), Watch (secondary), Reject (danger)
 - `watch`: Inspect (primary), Qualify (secondary), Reject (danger)
@@ -255,6 +258,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to see all newly surfaced auction opportunities in a prioritized inbox so that I can quickly identify which items deserve further evaluation before their auctions close.
 
 **Acceptance Criteria:**
+
 - AC-001.1: Inbox opportunities displayed sorted by `auction_ends_at ASC` (soonest-ending first, NULLs last).
 - AC-001.2: Strike Zone criteria: status `inbox` or `qualifying`, score >= 70, analysis exists, and auction ends within 48 hours or created within last 12 hours.
 - AC-001.3: Opportunity cards display title, current bid (USD), auction end time (relative), distance, buy_box_score, primary image, and "Last updated X min ago" label (amber when > 15 minutes). All interactive elements meet 44x44px minimum touch targets.
@@ -269,6 +273,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to view comprehensive details of a single opportunity -- including AI-generated analysis, pricing breakdown, photos, timing, and gates status -- so that I can make an informed acquisition decision.
 
 **Acceptance Criteria:**
+
 - AC-002.1: Detail page displays all fields from the GET response including title, description, source, status, pricing, timing, photos, scoring, analysis, operator inputs, gates, and action history.
 - AC-002.2: Persisted AI analysis is displayed from `analysis_runs.ai_analysis_json` without requiring a new AI call.
 - AC-002.3: Photo thumbnails open full-screen lightbox with swipe-left/right navigation. Tap outside or Escape closes it.
@@ -285,6 +290,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to trigger an AI-powered analysis so that I get a dual-lens evaluation with max bid recommendation, repair estimates, and deal readiness assessment.
 
 **Acceptance Criteria:**
+
 - AC-003.1: Analysis creates an `analysis_runs` record with recommendation, derived, gates, and AI analysis persisted.
 - AC-003.2: BUY verdict requires all critical gates cleared AND both `min_profit` AND `min_margin` met (BR-065, AND logic).
 - AC-003.3: If critical gates NOT cleared, recommendation is WATCH (not BID).
@@ -296,13 +302,14 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 - AC-003.9: Both `last_analyzed_at` and `last_operator_review_at` updated on success.
 - AC-003.10: Full analysis (with AI) < 30s p95. Without AI < 500ms p95. End-to-end pipeline < 45s p95.
 
-**Business Rules:** BR-007 (immutable analysis runs), BR-008 (canonical money math), BR-009 (Sierra fee schedule), BR-010 (max_bid_low = AI max bid * 0.9), BR-065 (AND logic for BUY), BR-066 (gate-only fallback visually distinct).
+**Business Rules:** BR-007 (immutable analysis runs), BR-008 (canonical money math), BR-009 (Sierra fee schedule), BR-010 (max_bid_low = AI max bid \* 0.9), BR-065 (AND logic for BUY), BR-066 (gate-only fallback visually distinct).
 
 ### US-004: Advance Opportunity Through Workflow
 
 **Narrative:** As an operator, I want to transition an opportunity through defined workflow stages so that I maintain a disciplined evaluation process and the system captures decisions for algorithm tuning.
 
 **Acceptance Criteria:**
+
 - AC-004.1: "Qualify" from inbox transitions to qualifying with `status_changed_at` updated.
 - AC-004.2: Invalid transitions return `INVALID_TRANSITION` (400).
 - AC-004.3: Transition to `bid` requires `max_bid_locked > 0`.
@@ -319,6 +326,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to place an opportunity on watch with a configurable trigger condition so that I am alerted at the right moment before the auction closes.
 
 **Acceptance Criteria:**
+
 - AC-005.1: `ending_soon` trigger sets `watch_until` to `auction_ends_at - hours_before`.
 - AC-005.2-5.4: Validation for expired auctions, too-short windows, and non-future remind_at.
 - AC-005.5: `watch_cycle` increments, `watch_fired_at` nulled on transition.
@@ -332,6 +340,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to reject with a categorized reason so that the system uses rejection patterns to improve future scoring.
 
 **Acceptance Criteria:**
+
 - AC-006.1: Missing rejection_reason returns 400.
 - AC-006.2: `other` without rejection_note returns 400.
 - AC-006.3: Creates `tuning_events` record with event_type `rejection`.
@@ -346,6 +355,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to batch-reject or batch-archive multiple opportunities to efficiently clear low-quality items.
 
 **Acceptance Criteria:**
+
 - AC-007.1-7.6: Batch applies single reason, max 50 items, partial success, individual results, tuning events per item.
 
 **Business Rules:** BR-022 (reject and archive only), BR-023 (max 50), BR-024 (not atomic, sequential), BR-025 (individual audit records), BR-062 (single reason for all items).
@@ -355,6 +365,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to enter verified title/VIN/condition data so that gates can determine bid readiness and analysis produces more accurate economics.
 
 **Acceptance Criteria:**
+
 - AC-008.1: Deep merge of operator inputs.
 - AC-008.2: `titleStatus='salvage'` (verified) triggers auto-rejection with hard gate failure.
 - AC-008.3: No auto-rejection on terminal states.
@@ -370,6 +381,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to record win/loss and final price so that the system can validate analysis accuracy and track margins.
 
 **Acceptance Criteria:**
+
 - AC-009.1: Won transition stores `final_price`.
 - AC-009.2: Lost transition requires no additional fields.
 - AC-009.3: `final_price` retrievable via GET.
@@ -383,6 +395,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to know when the data pipeline fails so that I can trust I am seeing all available opportunities.
 
 **Acceptance Criteria:**
+
 - AC-010.1: `last_scout_run` on stats endpoint returns timestamp of most recent successful run (currently null -- P0 gap).
 - AC-010.2: Ending soon filters correctly exclude expired auctions.
 - AC-010.3: 95% of scheduled runs complete successfully.
@@ -395,6 +408,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want to know when analysis is stale so I can re-analyze before deciding on outdated information.
 
 **Acceptance Criteria:**
+
 - AC-011.1: `is_stale` after 3 days without operator review.
 - AC-011.2: `is_analysis_stale` after 7 days (or NULL).
 - AC-011.3: `is_decision_stale` for bid/watch within 24 hours of auction end.
@@ -408,6 +422,7 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 **Narrative:** As an operator, I want the dashboard to highlight items needing attention so I can prioritize review time.
 
 **Acceptance Criteria:**
+
 - AC-012.1: Stats includes `by_status`, `strike_zone`, `verification_needed` (UI: "Needs Info"), `ending_soon`, `new_today`, `stale_qualifying`, `watch_alerts_fired`, `needs_attention`.
 - AC-012.2: Strike zone qualifies when: status inbox/qualifying, score >= 70, analysis exists, ending within 48h or created within 12h.
 - AC-012.3: `needs_attention` = watch_alerts_fired + stale_qualifying.over_24h.
@@ -426,15 +441,18 @@ Financial inputs (Set Bid, Won) use custom modals with `inputmode="decimal"`, cu
 Navigation is a sidebar on desktop (w-64, persistent) and a hamburger slide-over menu on mobile (fixed header h-14, slide-in panel w-72 from left).
 
 **Primary navigation items (4):**
+
 1. Dashboard (`/`) -- LayoutDashboard icon
 2. Opportunities (`/opportunities`) -- Search icon
 3. Sources (`/sources`) -- Database icon
 4. Settings (`/settings`) -- Settings icon
 
 #### 1. Login (`/login`)
+
 - DFG Console branding, email + password form (hardcoded, prototype-grade), no registration.
 
 #### 2. Dashboard (`/`)
+
 - **Scout Health Banner (topmost, sticky):** Hidden when healthy; red full-width when last run > 30 min.
 - **Attention Required:** Priority-sorted with inline quick actions (re-analyze, touch, pass, watch). Pass uses `missing_info` default with 5-second undo toast.
 - **Quick Stats grid:** 2-column tappable cards -- Inbox (blue), Strike Zone (orange), Needs Info (purple, subtitle: "Missing title, lien, or mileage data"), Qualifying (amber), Watching (blue), Bidding (green).
@@ -444,15 +462,18 @@ Navigation is a sidebar on desktop (w-64, persistent) and a hamburger slide-over
 - **Results footer bar (sticky):** "Won: N deals / $X,XXX total" using `SUM(final_price)`.
 
 #### 3. Opportunities List (`/opportunities`)
+
 - Signal-first cards with urgency indicators, score tinting, source labels, "Last updated" timestamps.
 - Mobile consolidated filter chips: "Needs Refresh" and "Ending Soon."
 - Batch mode: long-press (mobile) or checkbox (desktop), max 50, single reason code grid.
 
 #### 4. Filters (Mobile Full-Page) (`/opportunities/filters`)
+
 - Dropdown selects (Status, Score, Ending), Quick Filters toggles, Views toggles.
 - Fixed bottom "Apply Filters" button with `pb-safe`.
 
 #### 5. Opportunity Detail (`/opportunities/[id]`)
+
 - **Header** with back button, title, "Last updated" label, Analyze button, View Listing link.
 - **Alerts bar** (red background, severity badges).
 - **Next Action Card:** Verdict (BID/INSPECT/PASS) in large colored text, "Why" bullets, walk triggers, max bid (with haircut note if applicable), analysis source indicator (AI-powered vs. "Estimate only -- AI unavailable" amber badge).
@@ -466,24 +487,26 @@ Navigation is a sidebar on desktop (w-64, persistent) and a hamburger slide-over
 - **Reject Modal:** Bottom-sheet, single-select 6-code grid, 44px+ targets, "other" requires note.
 
 #### 6. Sources (`/sources`)
+
 - Active/Disabled sections, source cards with premium/pickup/last run, "Run Scout" button.
 
 #### 7. Settings (`/settings`)
+
 - Auction sources config, API config, About.
 
 ### Interaction Patterns (Key)
 
-| Pattern | Description |
-|---------|-------------|
-| Pattern 1: Status Transitions | Fixed bottom action bar, contextual per status. Non-optimistic (waits for server response). MVC events block bid/reject transitions. |
-| Pattern 2: Filtering | Desktop inline, mobile full-page. URL-parameter state. Consolidated chips: "Needs Refresh," "Ending Soon." |
-| Pattern 3: AI Analysis | Analyze button, p95 < 45s. Result in Summary tab + Next Action Card. Gate-only fallback with amber indicator. |
-| Pattern 4: Operator Input Save | Deep merge, dirty flag, staleness cascade on save. Kill Switch Banner for hard gate failures. |
-| Pattern 5: Photo Viewing | 96x96 thumbnails, fixed full-screen lightbox, swipe navigation, `touch-action: pan-y`, Escape/arrow keys. |
-| Pattern 6: Attention Dashboard | Priority-sorted, rank badges, inline actions. Pass with `missing_info` default + 5-second undo toast. |
-| Pattern 7: Batch Reject | Long-press activation, single reason code grid, max 50 items, partial success. |
-| Pattern 8: Financial Input Modals | Bottom-sheet, `inputmode="decimal"`, currency preview, input sanitization, positive validation, confirm/cancel. |
-| Pattern 9: Undo Toast | 5-second window, "Rejected [title]. Undo?" Client-side delay approach: API call fires after 5 seconds, cancelled on undo. |
+| Pattern                           | Description                                                                                                                          |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Pattern 1: Status Transitions     | Fixed bottom action bar, contextual per status. Non-optimistic (waits for server response). MVC events block bid/reject transitions. |
+| Pattern 2: Filtering              | Desktop inline, mobile full-page. URL-parameter state. Consolidated chips: "Needs Refresh," "Ending Soon."                           |
+| Pattern 3: AI Analysis            | Analyze button, p95 < 45s. Result in Summary tab + Next Action Card. Gate-only fallback with amber indicator.                        |
+| Pattern 4: Operator Input Save    | Deep merge, dirty flag, staleness cascade on save. Kill Switch Banner for hard gate failures.                                        |
+| Pattern 5: Photo Viewing          | 96x96 thumbnails, fixed full-screen lightbox, swipe navigation, `touch-action: pan-y`, Escape/arrow keys.                            |
+| Pattern 6: Attention Dashboard    | Priority-sorted, rank badges, inline actions. Pass with `missing_info` default + 5-second undo toast.                                |
+| Pattern 7: Batch Reject           | Long-press activation, single reason code grid, max 50 items, partial success.                                                       |
+| Pattern 8: Financial Input Modals | Bottom-sheet, `inputmode="decimal"`, currency preview, input sanitization, positive validation, confirm/cancel.                      |
+| Pattern 9: Undo Toast             | 5-second window, "Rejected [title]. Undo?" Client-side delay approach: API call fires after 5 seconds, cancelled on undo.            |
 
 ---
 
@@ -534,12 +557,12 @@ Navigation is a sidebar on desktop (w-64, persistent) and a hamburger slide-over
 
 ### Layer Architecture
 
-| Layer | Service | Responsibility | Runtime | D1 Binding |
-|-------|---------|----------------|---------|------------|
-| Presentation | dfg-app | Operator console, iOS Safari optimized | Next.js 14 on Vercel | N/A |
-| API Gateway | dfg-api | Auth, CRUD, state machine, ingest orchestration, watch cron | CF Worker | `DB` |
-| Intelligence | dfg-analyst | AI-powered condition assessment + profit analysis | CF Worker | N/A |
-| Collection | dfg-scout | Auction scraping, normalization, category routing | CF Worker | `DFG_DB` |
+| Layer        | Service     | Responsibility                                              | Runtime              | D1 Binding |
+| ------------ | ----------- | ----------------------------------------------------------- | -------------------- | ---------- |
+| Presentation | dfg-app     | Operator console, iOS Safari optimized                      | Next.js 14 on Vercel | N/A        |
+| API Gateway  | dfg-api     | Auth, CRUD, state machine, ingest orchestration, watch cron | CF Worker            | `DB`       |
+| Intelligence | dfg-analyst | AI-powered condition assessment + profit analysis           | CF Worker            | N/A        |
+| Collection   | dfg-scout   | Auction scraping, normalization, category routing           | CF Worker            | `DFG_DB`   |
 
 **Key architectural fact:** dfg-api and dfg-scout use different binding names (`DB` vs `DFG_DB`) but point to the same D1 database instance (`dfg-scout-db` in production, ID `08c267b8-b252-422a-8381-891d12917b33`; `dfg-scout-db-preview` in development, ID `e6af9d25-b031-4958-a3b2-455bafdff5f1`). Migration runbooks must reference the correct binding name per worker.
 
@@ -575,19 +598,19 @@ The schema reflects what is deployed (migrations 0001-0007) plus three required 
 
 ### Migration Lineage
 
-| Migration | Description | Owner | Status |
-|-----------|-------------|-------|--------|
-| 0001 | opportunities, operator_actions, tuning_events, sources + seeds | dfg-api | Deployed |
-| 0002 | Drop alert_dismissals (folded into operator_actions) | dfg-api | Deployed |
-| 0003 | analysis_runs + operator_inputs_json + current_analysis_run_id | dfg-api | Deployed |
-| 0004 | staleness columns (last_operator_review_at, exit_price) | dfg-api | Deployed |
-| 0005 | Standardize Sierra source ID | dfg-api | Deployed |
-| 0006 | mvc_events table | dfg-api | Deployed |
-| 0007 | ai_analysis_json on analysis_runs | dfg-api | Deployed |
-| **0008** | **listing_id UNIQUE constraint on opportunities** | **dfg-api** | **Required -- Phase 0** |
-| **0008b** | **Fix tuning_events CHECK constraint (belt-and-suspenders)** | **dfg-api** | **Required -- Phase 0** |
-| **0009** | **Formalize analysis_runs snapshot columns** | **dfg-api** | **Required -- Phase 0** |
-| **0010** | **Add sold_price to opportunities** | **dfg-api** | **Required -- Phase 0** |
+| Migration | Description                                                     | Owner       | Status                  |
+| --------- | --------------------------------------------------------------- | ----------- | ----------------------- |
+| 0001      | opportunities, operator_actions, tuning_events, sources + seeds | dfg-api     | Deployed                |
+| 0002      | Drop alert_dismissals (folded into operator_actions)            | dfg-api     | Deployed                |
+| 0003      | analysis_runs + operator_inputs_json + current_analysis_run_id  | dfg-api     | Deployed                |
+| 0004      | staleness columns (last_operator_review_at, exit_price)         | dfg-api     | Deployed                |
+| 0005      | Standardize Sierra source ID                                    | dfg-api     | Deployed                |
+| 0006      | mvc_events table                                                | dfg-api     | Deployed                |
+| 0007      | ai_analysis_json on analysis_runs                               | dfg-api     | Deployed                |
+| **0008**  | **listing_id UNIQUE constraint on opportunities**               | **dfg-api** | **Required -- Phase 0** |
+| **0008b** | **Fix tuning_events CHECK constraint (belt-and-suspenders)**    | **dfg-api** | **Required -- Phase 0** |
+| **0009**  | **Formalize analysis_runs snapshot columns**                    | **dfg-api** | **Required -- Phase 0** |
+| **0010**  | **Add sold_price to opportunities**                             | **dfg-api** | **Required -- Phase 0** |
 
 ### Core Tables DDL
 
@@ -878,13 +901,16 @@ CREATE TABLE category_defs (
 ### Required Migrations
 
 **Migration 0008: listing_id uniqueness**
+
 ```sql
 CREATE UNIQUE INDEX IF NOT EXISTS idx_opportunities_listing_id_unique
   ON opportunities(listing_id) WHERE listing_id IS NOT NULL;
 ```
+
 After deployment, the ingest endpoint must handle UNIQUE constraint violations gracefully (catch, log as `skipped`, continue).
 
 **Migration 0008b: tuning_events CHECK constraint fix**
+
 ```sql
 -- Belt-and-suspenders fix for EC-013. Primary fix is code change:
 -- auto-rejection uses event_type='rejection' with auto_rejected=true.
@@ -910,6 +936,7 @@ CREATE INDEX idx_tuning_events_created ON tuning_events(created_at DESC);
 ```
 
 **Migration 0009: analysis_runs snapshot columns**
+
 ```sql
 ALTER TABLE analysis_runs ADD COLUMN snapshot_current_bid REAL;
 ALTER TABLE analysis_runs ADD COLUMN snapshot_photo_count INTEGER;
@@ -917,6 +944,7 @@ ALTER TABLE analysis_runs ADD COLUMN snapshot_end_time TEXT;
 ```
 
 **Migration 0010: sold_price on opportunities**
+
 ```sql
 -- Enables minimum viable outcome tracking per ADR-003.
 -- Realized Margin = (sold_price - acquisition_cost) / acquisition_cost * 100
@@ -938,129 +966,130 @@ inbox --> qualifying --> watch --> inspect --> bid --> won
 
 Valid transitions (from `STATE_TRANSITIONS` in `@dfg/types`):
 
-| From | Allowed To |
-|------|-----------|
-| inbox | qualifying, watch, rejected, archived |
-| qualifying | watch, inspect, rejected, archived |
-| watch | qualifying, inspect, rejected, archived |
-| inspect | bid, rejected, archived |
-| bid | won, lost, rejected, archived |
-| won | archived |
-| lost | archived |
-| rejected | archived |
-| archived | (terminal) |
+| From       | Allowed To                              |
+| ---------- | --------------------------------------- |
+| inbox      | qualifying, watch, rejected, archived   |
+| qualifying | watch, inspect, rejected, archived      |
+| watch      | qualifying, inspect, rejected, archived |
+| inspect    | bid, rejected, archived                 |
+| bid        | won, lost, rejected, archived           |
+| won        | archived                                |
+| lost       | archived                                |
+| rejected   | archived                                |
+| archived   | (terminal)                              |
 
 ### Schema Ownership Matrix
 
-| Table | Owner | Migrations In | Binding |
-|-------|-------|--------------|---------|
-| sources | dfg-api | 0001 | DB |
-| opportunities | dfg-api | 0001, 0003, 0004, 0008, 0010 | DB |
-| analysis_runs | dfg-api | 0003, 0007, 0009 | DB |
-| operator_actions | dfg-api | 0001 | DB |
-| mvc_events | dfg-api | 0006 | DB |
-| tuning_events | dfg-api | 0001, 0008b | DB |
-| category_defs | dfg-scout | scout/007 | DFG_DB |
-| listings | dfg-scout | scout/001, 004, 008 | DFG_DB |
-| scout_runs | dfg-scout | scout/schema | DFG_DB |
-| failed_operations | dfg-scout | scout/schema | DFG_DB |
-| outcomes | dfg-scout (dormant) | scout/schema | DFG_DB |
-| price_guides | dfg-scout | scout/schema | DFG_DB |
+| Table             | Owner               | Migrations In                | Binding |
+| ----------------- | ------------------- | ---------------------------- | ------- |
+| sources           | dfg-api             | 0001                         | DB      |
+| opportunities     | dfg-api             | 0001, 0003, 0004, 0008, 0010 | DB      |
+| analysis_runs     | dfg-api             | 0003, 0007, 0009             | DB      |
+| operator_actions  | dfg-api             | 0001                         | DB      |
+| mvc_events        | dfg-api             | 0006                         | DB      |
+| tuning_events     | dfg-api             | 0001, 0008b                  | DB      |
+| category_defs     | dfg-scout           | scout/007                    | DFG_DB  |
+| listings          | dfg-scout           | scout/001, 004, 008          | DFG_DB  |
+| scout_runs        | dfg-scout           | scout/schema                 | DFG_DB  |
+| failed_operations | dfg-scout           | scout/schema                 | DFG_DB  |
+| outcomes          | dfg-scout (dormant) | scout/schema                 | DFG_DB  |
+| price_guides      | dfg-scout           | scout/schema                 | DFG_DB  |
 
 ---
 
 ## 12. API Surface
 
 All endpoints served by dfg-api on Cloudflare Workers. Auth: `Authorization: Bearer <OPS_TOKEN>`. CORS restricted to three origins (verified in `http.ts`):
+
 - `https://app.durganfieldguide.com`
 - `https://durganfieldguide.com`
 - `http://localhost:3000`
 
 ### Public Endpoints
 
-| Method | Path | Response | Notes |
-|--------|------|----------|-------|
-| GET | `/health` | `{ status: "ok", service: "dfg-api", env }` | No auth |
+| Method | Path      | Response                                    | Notes   |
+| ------ | --------- | ------------------------------------------- | ------- |
+| GET    | `/health` | `{ status: "ok", service: "dfg-api", env }` | No auth |
 
 ### Opportunities
 
-| Method | Path | Request | Response | Notes |
-|--------|------|---------|----------|-------|
-| GET | `/api/opportunities` | Query: `status`, `category_id`, `ending_within`, `score_band`, `needs_attention`, `stale_qualifying`, `attention`, `stale`, `analysis_stale`, `decision_stale`, `ending_soon`, `strike_zone`, `verification_needed`, `new_today`, `limit` (max 100), `offset`, `sort`, `order` | `{ data: { opportunities, total }, meta: { limit, offset } }` | Comma-separated status |
-| GET | `/api/opportunities/:id` | -- | `{ data: { ...opportunity, source_defaults, actions, alerts, operatorInputs, currentAnalysisRun, gates, inputsChangedSinceAnalysis } }` | Full detail with computed gates/alerts |
-| PATCH | `/api/opportunities/:id` | `{ status?, rejection_reason?, rejection_note?, watch_trigger?, watch_threshold?, max_bid_locked?, bid_strategy?, final_price?, sold_price?, observed_facts?, outcome_notes? }` | Updated opportunity | State machine enforced. `sold_price` added in 0010. |
-| POST | `/api/opportunities/:id/actions` | `{ action_type, payload }` | `{ data: { id, action_type, created_at } }` | Audit log |
-| PATCH | `/api/opportunities/:id/inputs` | `{ title?, overrides? }` | `{ success, operatorInputs, inputsChangedSinceAnalysis, autoRejected, hardGateFailures? }` | Deep merge; auto-reject on hard gate |
-| POST | `/api/opportunities/:id/analyze` | `{ assumptions?, skipAiAnalysis? }` | `{ analysisRun: { id, recommendation, derived, gates, aiAnalysis }, delta? }` | 25s timeout; optimistic lock (409) |
-| POST | `/api/opportunities/:id/touch` | -- | 204 (dedupe) or 200 | 60s dedupe window |
-| POST | `/api/opportunities/batch` | `{ opportunity_ids[], action: "reject"\|"archive", rejection_reason?, rejection_note? }` | `{ data: { processed, failed, results } }` | Max 50 |
-| GET | `/api/opportunities/stats` | -- | `{ data: { by_status, strike_zone, verification_needed, ending_soon, new_today, stale_qualifying, watch_alerts_fired, needs_attention, last_scout_run, pipeline_stale } }` | `last_scout_run` and `pipeline_stale` are P0 |
+| Method | Path                             | Request                                                                                                                                                                                                                                                                        | Response                                                                                                                                                                   | Notes                                               |
+| ------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| GET    | `/api/opportunities`             | Query: `status`, `category_id`, `ending_within`, `score_band`, `needs_attention`, `stale_qualifying`, `attention`, `stale`, `analysis_stale`, `decision_stale`, `ending_soon`, `strike_zone`, `verification_needed`, `new_today`, `limit` (max 100), `offset`, `sort`, `order` | `{ data: { opportunities, total }, meta: { limit, offset } }`                                                                                                              | Comma-separated status                              |
+| GET    | `/api/opportunities/:id`         | --                                                                                                                                                                                                                                                                             | `{ data: { ...opportunity, source_defaults, actions, alerts, operatorInputs, currentAnalysisRun, gates, inputsChangedSinceAnalysis } }`                                    | Full detail with computed gates/alerts              |
+| PATCH  | `/api/opportunities/:id`         | `{ status?, rejection_reason?, rejection_note?, watch_trigger?, watch_threshold?, max_bid_locked?, bid_strategy?, final_price?, sold_price?, observed_facts?, outcome_notes? }`                                                                                                | Updated opportunity                                                                                                                                                        | State machine enforced. `sold_price` added in 0010. |
+| POST   | `/api/opportunities/:id/actions` | `{ action_type, payload }`                                                                                                                                                                                                                                                     | `{ data: { id, action_type, created_at } }`                                                                                                                                | Audit log                                           |
+| PATCH  | `/api/opportunities/:id/inputs`  | `{ title?, overrides? }`                                                                                                                                                                                                                                                       | `{ success, operatorInputs, inputsChangedSinceAnalysis, autoRejected, hardGateFailures? }`                                                                                 | Deep merge; auto-reject on hard gate                |
+| POST   | `/api/opportunities/:id/analyze` | `{ assumptions?, skipAiAnalysis? }`                                                                                                                                                                                                                                            | `{ analysisRun: { id, recommendation, derived, gates, aiAnalysis }, delta? }`                                                                                              | 25s timeout; optimistic lock (409)                  |
+| POST   | `/api/opportunities/:id/touch`   | --                                                                                                                                                                                                                                                                             | 204 (dedupe) or 200                                                                                                                                                        | 60s dedupe window                                   |
+| POST   | `/api/opportunities/batch`       | `{ opportunity_ids[], action: "reject"\|"archive", rejection_reason?, rejection_note? }`                                                                                                                                                                                       | `{ data: { processed, failed, results } }`                                                                                                                                 | Max 50                                              |
+| GET    | `/api/opportunities/stats`       | --                                                                                                                                                                                                                                                                             | `{ data: { by_status, strike_zone, verification_needed, ending_soon, new_today, stale_qualifying, watch_alerts_fired, needs_attention, last_scout_run, pipeline_stale } }` | `last_scout_run` and `pipeline_stale` are P0        |
 
 ### Alerts
 
-| Method | Path | Request | Response |
-|--------|------|---------|----------|
-| POST | `/api/opportunities/:id/alerts/dismiss` | `{ alert_key }` | `{ data: { success, dismissed } }` |
-| POST | `/api/alerts/dismiss` | `{ opportunity_id, alert_key }` | `{ data: { success, dismissed } }` |
-| POST | `/api/alerts/dismiss/batch` | `{ dismissals: [{ opportunity_id, alert_key }] }` | `{ data: { processed, failed, results } }` |
+| Method | Path                                    | Request                                           | Response                                   |
+| ------ | --------------------------------------- | ------------------------------------------------- | ------------------------------------------ |
+| POST   | `/api/opportunities/:id/alerts/dismiss` | `{ alert_key }`                                   | `{ data: { success, dismissed } }`         |
+| POST   | `/api/alerts/dismiss`                   | `{ opportunity_id, alert_key }`                   | `{ data: { success, dismissed } }`         |
+| POST   | `/api/alerts/dismiss/batch`             | `{ dismissals: [{ opportunity_id, alert_key }] }` | `{ data: { processed, failed, results } }` |
 
 ### Dashboard
 
-| Method | Path | Response |
-|--------|------|----------|
-| GET | `/api/dashboard/attention` | `{ items: [...], total_count }` |
+| Method | Path                       | Response                        |
+| ------ | -------------------------- | ------------------------------- |
+| GET    | `/api/dashboard/attention` | `{ items: [...], total_count }` |
 
 ### Sources
 
-| Method | Path | Request | Response |
-|--------|------|---------|----------|
-| GET | `/api/sources` | -- | `{ data: { sources } }` |
-| GET | `/api/sources/:id` | -- | `{ data: { ...source } }` |
-| PATCH | `/api/sources/:id` | `{ enabled?, display_name?, default_buyer_premium_pct?, default_pickup_days? }` | Updated source |
+| Method | Path               | Request                                                                         | Response                  |
+| ------ | ------------------ | ------------------------------------------------------------------------------- | ------------------------- |
+| GET    | `/api/sources`     | --                                                                              | `{ data: { sources } }`   |
+| GET    | `/api/sources/:id` | --                                                                              | `{ data: { ...source } }` |
+| PATCH  | `/api/sources/:id` | `{ enabled?, display_name?, default_buyer_premium_pct?, default_pickup_days? }` | Updated source            |
 
 ### Categories
 
-| Method | Path | Response |
-|--------|------|----------|
-| GET | `/api/categories` | `{ data: [...category_defs] }` |
-| GET | `/api/categories/:id` | `{ data: { ...category_def } }` |
+| Method | Path                  | Response                        |
+| ------ | --------------------- | ------------------------------- |
+| GET    | `/api/categories`     | `{ data: [...category_defs] }`  |
+| GET    | `/api/categories/:id` | `{ data: { ...category_def } }` |
 
 ### Ingest
 
-| Method | Path | Request | Response | Notes |
-|--------|------|---------|----------|-------|
-| POST | `/api/ingest` | `{ listings[], source? }` | `{ data: { created, updated, skipped, errors } }` | Max 100. After 0008, duplicate listing_id -> skipped. |
-| POST | `/api/ingest/sync` | -- | `{ data: { created, updated, skipped, errors, photos_synced } }` | Pulls from listings |
-| POST | `/api/ingest/sync-photos` | -- | `{ data: { updated, skipped, errors } }` | Photo sync |
+| Method | Path                      | Request                   | Response                                                         | Notes                                                 |
+| ------ | ------------------------- | ------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
+| POST   | `/api/ingest`             | `{ listings[], source? }` | `{ data: { created, updated, skipped, errors } }`                | Max 100. After 0008, duplicate listing_id -> skipped. |
+| POST   | `/api/ingest/sync`        | --                        | `{ data: { created, updated, skipped, errors, photos_synced } }` | Pulls from listings                                   |
+| POST   | `/api/ingest/sync-photos` | --                        | `{ data: { updated, skipped, errors } }`                         | Photo sync                                            |
 
 ### Events (MVC Audit)
 
-| Method | Path | Request | Response |
-|--------|------|---------|----------|
-| POST | `/api/events` | `{ opportunity_id, event_type, payload, emitted_at? }` | `{ data: { id, ..., idempotent } }` |
-| GET | `/api/events?opportunity_id=X` | -- | `{ data: { events } }` |
+| Method | Path                           | Request                                                | Response                            |
+| ------ | ------------------------------ | ------------------------------------------------------ | ----------------------------------- |
+| POST   | `/api/events`                  | `{ opportunity_id, event_type, payload, emitted_at? }` | `{ data: { id, ..., idempotent } }` |
+| GET    | `/api/events?opportunity_id=X` | --                                                     | `{ data: { events } }`              |
 
 ### Triggers / Scout Operations
 
-| Method | Path | Response |
-|--------|------|----------|
-| POST | `/api/triggers/check` | `{ data: { checked, fired, timestamp } }` |
-| POST | `/api/scout/run` | `{ data: { triggered, method, source, dryRun, result? } }` |
+| Method | Path                  | Response                                                   |
+| ------ | --------------------- | ---------------------------------------------------------- |
+| POST   | `/api/triggers/check` | `{ data: { checked, fired, timestamp } }`                  |
+| POST   | `/api/scout/run`      | `{ data: { triggered, method, source, dryRun, result? } }` |
 
 ### dfg-analyst Endpoints (Internal)
 
-| Method | Path | Auth |
-|--------|------|------|
-| GET | `/health` | None |
-| POST | `/analyze` | Bearer ANALYST_SERVICE_SECRET (URL); bypassed via service binding |
-| POST | `/analyze/justifications` | Bearer ANALYST_SERVICE_SECRET |
+| Method | Path                      | Auth                                                              |
+| ------ | ------------------------- | ----------------------------------------------------------------- |
+| GET    | `/health`                 | None                                                              |
+| POST   | `/analyze`                | Bearer ANALYST_SERVICE_SECRET (URL); bypassed via service binding |
+| POST   | `/analyze/justifications` | Bearer ANALYST_SERVICE_SECRET                                     |
 
 ### dfg-scout Endpoints (Internal)
 
-| Method | Path | Auth |
-|--------|------|------|
-| GET | `/health` | None |
-| GET/POST | `/ops/*` | OPS_TOKEN |
+| Method   | Path      | Auth      |
+| -------- | --------- | --------- |
+| GET      | `/health` | None      |
+| GET/POST | `/ops/*`  | OPS_TOKEN |
 
 ---
 
@@ -1068,26 +1097,26 @@ All endpoints served by dfg-api on Cloudflare Workers. Auth: `Authorization: Bea
 
 ### Performance Budgets
 
-| Metric | Target | Rationale |
-|--------|--------|-----------|
-| API list endpoints | < 200ms p95 | D1 indexed queries |
-| API single opportunity GET | < 300ms p95 | 3 queries (opportunity + actions + alerts) |
-| API analyze with AI | < 30s p95 | Claude API dominates; 25s timeout |
-| API analyze without AI | < 500ms p95 | Gate-only, no external call |
-| End-to-end analysis pipeline | < 45s p95 | Listing to scored opportunity |
-| Ingest batch (50 listings) | < 5s p95 | Sequential D1 inserts |
-| Scout scrape cycle | < 60s p95 | Runs every 15 minutes |
-| Frontend LCP (iOS Safari) | < 2.5s | Next.js SSR + API fetch |
-| Frontend INP (iOS Safari) | < 200ms | Touch interactions |
+| Metric                       | Target      | Rationale                                  |
+| ---------------------------- | ----------- | ------------------------------------------ |
+| API list endpoints           | < 200ms p95 | D1 indexed queries                         |
+| API single opportunity GET   | < 300ms p95 | 3 queries (opportunity + actions + alerts) |
+| API analyze with AI          | < 30s p95   | Claude API dominates; 25s timeout          |
+| API analyze without AI       | < 500ms p95 | Gate-only, no external call                |
+| End-to-end analysis pipeline | < 45s p95   | Listing to scored opportunity              |
+| Ingest batch (50 listings)   | < 5s p95    | Sequential D1 inserts                      |
+| Scout scrape cycle           | < 60s p95   | Runs every 15 minutes                      |
+| Frontend LCP (iOS Safari)    | < 2.5s      | Next.js SSR + API fetch                    |
+| Frontend INP (iOS Safari)    | < 200ms     | Touch interactions                         |
 
 ### Reliability Targets
 
-| Metric | Target |
-|--------|--------|
-| API availability | 99.5% monthly |
-| Scout cron success rate | > 95% |
-| Analysis success rate | > 90% |
-| Data loss tolerance | Zero for opportunities, operator_actions, mvc_events |
+| Metric                  | Target                                               |
+| ----------------------- | ---------------------------------------------------- |
+| API availability        | 99.5% monthly                                        |
+| Scout cron success rate | > 95%                                                |
+| Analysis success rate   | > 90%                                                |
+| Data loss tolerance     | Zero for opportunities, operator_actions, mvc_events |
 
 ### Scout Health Observability (Phase 0 Implementation)
 
@@ -1112,36 +1141,38 @@ dfg-app (Dashboard)
 
 ### Capacity Limits (MVP)
 
-| Resource | Limit |
-|----------|-------|
-| D1 database size | 10 GB |
-| D1 rows read per query | 5,000,000 |
-| Worker CPU time | 30s (paid) |
-| Worker subrequests | 50 per request |
-| Batch operation size | 50 items |
-| Ingest batch size | 100 listings |
+| Resource               | Limit          |
+| ---------------------- | -------------- |
+| D1 database size       | 10 GB          |
+| D1 rows read per query | 5,000,000      |
+| Worker CPU time        | 30s (paid)     |
+| Worker subrequests     | 50 per request |
+| Batch operation size   | 50 items       |
+| Ingest batch size      | 100 listings   |
 
 ### Security Requirements
 
-| Requirement | Status |
-|-------------|--------|
-| No wildcard CORS | Implemented (3 origins) |
-| No exposed debug endpoints | Implemented |
-| SQL injection prevention (`.bind()`) | Implemented |
-| Auth on all API endpoints (Bearer OPS_TOKEN) | Implemented |
+| Requirement                                        | Status                               |
+| -------------------------------------------------- | ------------------------------------ |
+| No wildcard CORS                                   | Implemented (3 origins)              |
+| No exposed debug endpoints                         | Implemented                          |
+| SQL injection prevention (`.bind()`)               | Implemented                          |
+| Auth on all API endpoints (Bearer OPS_TOKEN)       | Implemented                          |
 | Auth on analyst endpoints (ANALYST_SERVICE_SECRET) | Implemented (needs integration test) |
-| R2 snapshot immutability | Implemented |
-| Secrets not in source control | Implemented |
+| R2 snapshot immutability                           | Implemented                          |
+| Secrets not in source control                      | Implemented                          |
 
 ### Money Math Validation Checklist
 
 Any feature touching pricing must validate against:
+
 ```
 Acquisition Cost = Bid + Buyer Premium + Transport + Immediate Repairs
 Net Proceeds     = Sale Price - Listing Fees - Payment Processing
 Profit           = Net Proceeds - Acquisition Cost
 Margin %         = (Profit / Acquisition Cost) * 100
 ```
+
 **Critical invariant:** Listing fees are SELLING COSTS ONLY. Never in acquisition cost. Never double-counted.
 
 The analyst worker implements these in `calculation-spine.ts`. Buyer premium uses `calculateBuyerPremium` from `@dfg/money-math` with `SIERRA_FEE_SCHEDULE` for Sierra source (tiered: flat fees, percent fees, caps).
@@ -1155,6 +1186,7 @@ The analyst worker implements these in `calculation-spine.ts`. Buyer premium use
 **Viewport:** All pages use `min-h-screen` not `h-screen` (dynamic viewport height issues with URL bar).
 
 **Layout pattern (CLAUDE.md):**
+
 ```tsx
 <div className="flex flex-col md:flex-row min-h-screen w-full">
   <Navigation />
@@ -1166,6 +1198,7 @@ The analyst worker implements these in `calculation-spine.ts`. Buyer premium use
 ```
 
 **Fixed positioning:**
+
 - Mobile nav header: `position: fixed`, top 0, h-14 spacer div below.
 - Detail bottom action bar: `position: fixed`, bottom 0, `pb-safe`, content has `pb-24`.
 - No `-webkit-transform: translateZ(0)` on ancestors (breaks fixed positioning).
@@ -1175,6 +1208,7 @@ The analyst worker implements these in `calculation-spine.ts`. Buyer premium use
 **Touch targets:** 44x44px minimum for all interactive elements including action buttons, reason code tiles, confirm/cancel buttons, navigation items (py-3), opportunity cards, filter chips, photo thumbnails (96x96), undo toast button.
 
 **Scroll behavior:**
+
 - Body scroll locked when mobile menu open.
 - Photo strip and analysis tab bar use `overflow-x-auto`.
 - Lightbox swipe: touch event handlers with `touch-action: pan-y`.
@@ -1182,11 +1216,13 @@ The analyst worker implements these in `calculation-spine.ts`. Buyer premium use
 **Animation:** All CSS animations must include `@media (prefers-reduced-motion: reduce)` guard.
 
 **Known iOS Safari gaps:**
+
 1. Checkbox touch targets in Filters page (20x20px) below 44px minimum. Mitigated by label wrapper.
 2. No pull-to-refresh.
 3. No offline support.
 
 ### Desktop (Secondary)
+
 - Persistent sidebar (w-64), responsive breakpoints (`md:`), hover states, inline filter panel.
 
 ---
@@ -1195,30 +1231,30 @@ The analyst worker implements these in `calculation-spine.ts`. Buyer premium use
 
 ### MVP Success Metrics
 
-| Metric | Target | Measurement | Timeframe |
-|--------|--------|-------------|-----------|
-| Opportunities surfaced per day | >= 15 qualified | `COUNT(*) FROM opportunities WHERE status NOT IN ('rejected','archived') AND date(created_at) = date('now')` | Daily avg over 30 days |
-| Analysis accuracy (operator agreement) | >= 70% of BID recs result in bid/watch | MVC events: `decision_made` where `analyst_verdict=BID` | Rolling 30 days |
-| False positive rate | <= 30% of score >= 80 rejected | Rejection rate of high-score opportunities | Rolling 30 days |
-| Operator response time | Median < 4 hours inbox to qualifying/rejected | `status_changed_at` delta | Rolling 30 days |
-| Scout uptime | >= 95% of scheduled runs succeed | `scout_runs` success rate | Weekly |
-| Analysis latency | p95 < 45s listing to scored opportunity | `listing.created_at` to `opportunity.last_analyzed_at` | Rolling 7 days |
-| Won deals per month | >= 2 acquisitions | `COUNT(*) WHERE status='won'` | Monthly |
-| Realized margin on won deals | >= 25% average | `(sold_price - acquisition_cost) / acquisition_cost * 100` | Trailing 90 days |
-| Scout failure detection latency | < 4 hours from failure to awareness | Time between last successful run and banner display | Per-incident |
+| Metric                                 | Target                                        | Measurement                                                                                                  | Timeframe              |
+| -------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| Opportunities surfaced per day         | >= 15 qualified                               | `COUNT(*) FROM opportunities WHERE status NOT IN ('rejected','archived') AND date(created_at) = date('now')` | Daily avg over 30 days |
+| Analysis accuracy (operator agreement) | >= 70% of BID recs result in bid/watch        | MVC events: `decision_made` where `analyst_verdict=BID`                                                      | Rolling 30 days        |
+| False positive rate                    | <= 30% of score >= 80 rejected                | Rejection rate of high-score opportunities                                                                   | Rolling 30 days        |
+| Operator response time                 | Median < 4 hours inbox to qualifying/rejected | `status_changed_at` delta                                                                                    | Rolling 30 days        |
+| Scout uptime                           | >= 95% of scheduled runs succeed              | `scout_runs` success rate                                                                                    | Weekly                 |
+| Analysis latency                       | p95 < 45s listing to scored opportunity       | `listing.created_at` to `opportunity.last_analyzed_at`                                                       | Rolling 7 days         |
+| Won deals per month                    | >= 2 acquisitions                             | `COUNT(*) WHERE status='won'`                                                                                | Monthly                |
+| Realized margin on won deals           | >= 25% average                                | `(sold_price - acquisition_cost) / acquisition_cost * 100`                                                   | Trailing 90 days       |
+| Scout failure detection latency        | < 4 hours from failure to awareness           | Time between last successful run and banner display                                                          | Per-incident           |
 
 ### Kill Criteria
 
 The MVP should be killed or reconsidered if any hold true after 90 days:
 
-| Kill Criterion | Threshold | Measurability |
-|---------------|-----------|---------------|
-| Zero profitable acquisitions | 0 won deals with positive margin in 90 days | Measurable now |
-| Sustained negative margins | Average margin < 10% over 90 days | Requires `sold_price` field (0010) |
-| Operator abandonment | < 5 detail views per week for 4 consecutive weeks | Measurable via `operator_actions` activity |
-| Scout data staleness | > 50% of opportunities expired when first viewed | Measurable now |
-| Analysis disagreement rate | > 60% of BID recommendations rejected over 60 days | Measurable now |
-| Scout failure undetected | Operator discovers outage > 4 hours after start, more than twice | Measurable after scout alerting implemented |
+| Kill Criterion               | Threshold                                                        | Measurability                               |
+| ---------------------------- | ---------------------------------------------------------------- | ------------------------------------------- |
+| Zero profitable acquisitions | 0 won deals with positive margin in 90 days                      | Measurable now                              |
+| Sustained negative margins   | Average margin < 10% over 90 days                                | Requires `sold_price` field (0010)          |
+| Operator abandonment         | < 5 detail views per week for 4 consecutive weeks                | Measurable via `operator_actions` activity  |
+| Scout data staleness         | > 50% of opportunities expired when first viewed                 | Measurable now                              |
+| Analysis disagreement rate   | > 60% of BID recommendations rejected over 60 days               | Measurable now                              |
+| Scout failure undetected     | Operator discovers outage > 4 hours after start, more than twice | Measurable after scout alerting implemented |
 
 ---
 
@@ -1226,39 +1262,39 @@ The MVP should be killed or reconsidered if any hold true after 90 days:
 
 ### Business Risks
 
-| # | Risk | Likelihood | Impact | Mitigation |
-|---|------|-----------|--------|------------|
-| B1 | **Auction platform blocks scraping.** IronPlanet (RB Global) could restrict access. Official API access for government auction platforms is rare. | High | Critical | Multiple source adapters isolate platform logic. Rate limiting and polite headers. If unscrapeable, disable transparently. |
-| B2 | **IronPlanet capture rate remains degraded at 17%.** | High | High | P0: Investigate. Fix to >= 80% or disable with transparent indicator. Accelerate GovPlanet to late Phase 0 / early Phase 1. |
-| B3 | **Swoopa Dealers convergence.** January 2026 launch with instant valuations and margin clarity for vehicle dealers. | Medium | High | DFG's durable advantages are canonical money math and gate enforcement. Invest in calibration data. |
-| B4 | **Market shift reduces trailer margins.** | Medium | High | Category system supports expansion. Outcomes tracking provides early warning. |
-| B5 | **Sole operator dependency.** | High | Medium | Private beta (Phase 1) validates multi-user value. |
-| B6 | **Shallow moat.** Any developer with Claude API access could build comparable analysis. | Medium | Medium | Moat is operational knowledge (fee structures, market economics, prompt engineering) plus structured workflow. Defensibility grows with outcome data. |
-| B7 | **AI analysis advantage erodes at feature level within 12-18 months.** | High | Medium | Durable advantage is calibrated AI with domain prompts, category tiers, and tuning feedback loops. |
+| #   | Risk                                                                                                                                              | Likelihood | Impact   | Mitigation                                                                                                                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | **Auction platform blocks scraping.** IronPlanet (RB Global) could restrict access. Official API access for government auction platforms is rare. | High       | Critical | Multiple source adapters isolate platform logic. Rate limiting and polite headers. If unscrapeable, disable transparently.                            |
+| B2  | **IronPlanet capture rate remains degraded at 17%.**                                                                                              | High       | High     | P0: Investigate. Fix to >= 80% or disable with transparent indicator. Accelerate GovPlanet to late Phase 0 / early Phase 1.                           |
+| B3  | **Swoopa Dealers convergence.** January 2026 launch with instant valuations and margin clarity for vehicle dealers.                               | Medium     | High     | DFG's durable advantages are canonical money math and gate enforcement. Invest in calibration data.                                                   |
+| B4  | **Market shift reduces trailer margins.**                                                                                                         | Medium     | High     | Category system supports expansion. Outcomes tracking provides early warning.                                                                         |
+| B5  | **Sole operator dependency.**                                                                                                                     | High       | Medium   | Private beta (Phase 1) validates multi-user value.                                                                                                    |
+| B6  | **Shallow moat.** Any developer with Claude API access could build comparable analysis.                                                           | Medium     | Medium   | Moat is operational knowledge (fee structures, market economics, prompt engineering) plus structured workflow. Defensibility grows with outcome data. |
+| B7  | **AI analysis advantage erodes at feature level within 12-18 months.**                                                                            | High       | Medium   | Durable advantage is calibrated AI with domain prompts, category tiers, and tuning feedback loops.                                                    |
 
 ### Technical Risks
 
-| # | Risk | Severity | Likelihood | Mitigation | Status |
-|---|------|----------|------------|------------|--------|
-| T1 | **D1 concurrent write conflicts** on PATCH endpoint | High | Low (single operator) | Accept for MVP. Add optimistic lock before Phase 1. | Accepted |
-| T2 | **Analyst timeout under Claude API load** (25s) | Medium | Medium | Gate-only fallback. Visible indicator (BR-066). Exponential backoff. | Accepted; indicator needed |
-| T3 | **Shared D1 schema coupling** between dfg-scout and dfg-api | High | Medium | Schema ownership matrix documents owners. Migrations in owner directories. | Documented |
-| T4 | **Auth is prototype-grade** (hardcoded) | Critical for multi-user | High | Acceptable for Phase 0. Clerk + Stripe for Phase 1. | Accepted |
-| T5 | **Verdict threshold OR logic** produces non-conservative BUY | High | High | **P0 fix:** Change to AND logic. Backtest required. | Fix in progress |
-| T6 | **tuning_events CHECK constraint** rejects `status_change` | High | High | **P0 fix:** Code change to use `rejection` + migration 0008b. | Fix in progress |
-| T7 | **Platform access revocation** by RB Global | High | Medium | Adapter architecture. Diversify sources. Rate limiting. | Accepted |
-| T8 | **Browser `prompt()` for financial inputs** -- no validation | Medium | Medium | Accept for Phase 0 founder. Replace with Pattern 8 modal before Phase 1. | Tracked (P0-adjacent) |
-| T9 | **Ingest idempotency** -- duplicate listings | Medium | Low | **Fixed by migration 0008** (UNIQUE constraint). Ingest handles violations. | Fix in progress |
-| T10 | **Watch trigger latency** -- 5-min cron | Low | High | 4-hour default threshold provides buffer. Durable Objects for Phase 1. | Accepted |
-| T11 | **Verdict threshold backtest** has no defined process | High (blocks P0 fix) | Medium | See Unresolved Issues UI-005. | Needs definition |
+| #   | Risk                                                         | Severity                | Likelihood            | Mitigation                                                                  | Status                     |
+| --- | ------------------------------------------------------------ | ----------------------- | --------------------- | --------------------------------------------------------------------------- | -------------------------- |
+| T1  | **D1 concurrent write conflicts** on PATCH endpoint          | High                    | Low (single operator) | Accept for MVP. Add optimistic lock before Phase 1.                         | Accepted                   |
+| T2  | **Analyst timeout under Claude API load** (25s)              | Medium                  | Medium                | Gate-only fallback. Visible indicator (BR-066). Exponential backoff.        | Accepted; indicator needed |
+| T3  | **Shared D1 schema coupling** between dfg-scout and dfg-api  | High                    | Medium                | Schema ownership matrix documents owners. Migrations in owner directories.  | Documented                 |
+| T4  | **Auth is prototype-grade** (hardcoded)                      | Critical for multi-user | High                  | Acceptable for Phase 0. Clerk + Stripe for Phase 1.                         | Accepted                   |
+| T5  | **Verdict threshold OR logic** produces non-conservative BUY | High                    | High                  | **P0 fix:** Change to AND logic. Backtest required.                         | Fix in progress            |
+| T6  | **tuning_events CHECK constraint** rejects `status_change`   | High                    | High                  | **P0 fix:** Code change to use `rejection` + migration 0008b.               | Fix in progress            |
+| T7  | **Platform access revocation** by RB Global                  | High                    | Medium                | Adapter architecture. Diversify sources. Rate limiting.                     | Accepted                   |
+| T8  | **Browser `prompt()` for financial inputs** -- no validation | Medium                  | Medium                | Accept for Phase 0 founder. Replace with Pattern 8 modal before Phase 1.    | Tracked (P0-adjacent)      |
+| T9  | **Ingest idempotency** -- duplicate listings                 | Medium                  | Low                   | **Fixed by migration 0008** (UNIQUE constraint). Ingest handles violations. | Fix in progress            |
+| T10 | **Watch trigger latency** -- 5-min cron                      | Low                     | High                  | 4-hour default threshold provides buffer. Durable Objects for Phase 1.      | Accepted                   |
+| T11 | **Verdict threshold backtest** has no defined process        | High (blocks P0 fix)    | Medium                | See Unresolved Issues UI-005.                                               | Needs definition           |
 
 ### Execution Risks
 
-| # | Risk | Likelihood | Impact | Mitigation |
-|---|------|-----------|--------|------------|
-| E1 | **Scope creep into multi-tenant SaaS** | Medium | High | PRD scopes to Phase 0. Multi-tenant is Phase 2. |
-| E2 | **Over-engineering scoring algorithm** without outcome data | Medium | Medium | Scoring changes require backtesting. Tuning events capture signals. |
-| E3 | **Native app pressure** from all competitors | Low (Phase 0) | Medium (Phase 1+) | Web app on iOS Safari is deliberate. Web push for Phase 1. Native is Phase 3+. |
+| #   | Risk                                                        | Likelihood    | Impact            | Mitigation                                                                     |
+| --- | ----------------------------------------------------------- | ------------- | ----------------- | ------------------------------------------------------------------------------ |
+| E1  | **Scope creep into multi-tenant SaaS**                      | Medium        | High              | PRD scopes to Phase 0. Multi-tenant is Phase 2.                                |
+| E2  | **Over-engineering scoring algorithm** without outcome data | Medium        | Medium            | Scoring changes require backtesting. Tuning events capture signals.            |
+| E3  | **Native app pressure** from all competitors                | Low (Phase 0) | Medium (Phase 1+) | Web app on iOS Safari is deliberate. Web push for Phase 1. Native is Phase 3+. |
 
 ---
 
@@ -1267,13 +1303,16 @@ The MVP should be killed or reconsidered if any hold true after 90 days:
 ### Decided
 
 **ADR-001: Auth System Selection**
+
 - Decision: Clerk + Stripe. Not yet implemented. Blocker for Phase 1.
 
 **ADR-002: Notification Channels (Split Decision)**
+
 - Part A (P0): In-app red banner when `last_scout_run` exceeds 30 minutes on dashboard. Push notification (Pushover/ntfy.sh/Twilio) when scout cron fails -- stretch P0 goal (see Unresolved Issues UI-003).
 - Part B (Phase 1): Web push notifications for opportunities. SMS as critical-only fallback.
 
 **ADR-003: Outcome Tracking Depth**
+
 - Decision: Add `sold_price` field via migration 0010. Combined with `final_price` and source defaults, enables realized profit/margin. Full P&L UI is Phase 1.
 - Realized Margin formula:
   ```
@@ -1284,12 +1323,15 @@ The MVP should be killed or reconsidered if any hold true after 90 days:
   ```
 
 **ADR-004: Multi-Source Expansion Priority**
+
 - Decision: GovPlanet first (seeded). Elevated to late Phase 0 / early Phase 1 as pipeline insurance.
 
 **ADR-005: Scoring Algorithm Transparency**
+
 - Decision: Deferred (behind P0 items). Surface four scoring dimensions when resources allow.
 
 **ADR-006: Verdict Threshold Logic**
+
 - Status: P0 -- needs implementation.
 - Decision: AND logic for BUY (BOTH min_profit AND min_margin). OR for WATCH. PASS when neither.
 - Code change required at `workers/dfg-analyst/src/category-config.ts` line 258:
@@ -1300,6 +1342,7 @@ The MVP should be killed or reconsidered if any hold true after 90 days:
 - Requires backtest against historical data before deployment.
 
 **ADR-007: Reject Flow Simplification**
+
 - Decision: Single-select 6-code grid as sole mechanism. Legacy dropdown removed. Backend maps to `rejection_reason` field. "Other" requires note. Two-tap completion on mobile.
 
 ### Architecture Decisions (Technical Lead owned)
@@ -1318,6 +1361,7 @@ The MVP should be killed or reconsidered if any hold true after 90 days:
 Phase 0 is largely complete. The system is operational and producing revenue. Remaining work is hardening and gap-filling based on three rounds of cross-role review.
 
 **What is built and working:**
+
 - Scout pipeline with Sierra + IronPlanet adapters (cron every 15 minutes)
 - Three-gate classification (price, negative keywords, positive keywords)
 - Claude-powered dual-lens analysis (investor + buyer perspectives)
@@ -1335,22 +1379,23 @@ Phase 0 is largely complete. The system is operational and producing revenue. Re
 
 **Remaining Phase 0 work (prioritized, stable after three rounds):**
 
-| Item | Priority | Description | Consensus |
-|------|----------|-------------|-----------|
-| Scout failure alerting -- in-app banner | P0 | Red dashboard banner when `last_scout_run` exceeds 30 minutes. Populate on stats endpoint. | All 6 roles |
-| Verdict threshold AND logic | P0 | Change `applyVerdictThresholds` to AND for BUY. Backtest before deploying. | 5 roles |
-| `tuning_events` CHECK constraint fix | P0 | Code: use `event_type: 'rejection'` + migration 0008b. | 3 roles (confirmed bug) |
-| Security: Auth on analyst endpoints | P0 | Verify `ANALYST_SERVICE_SECRET` on all non-health routes. Integration test needed. | 3 roles |
-| IronPlanet capture rate investigation | P0 | Fix to >= 80% or disable. Never show "active" at 17%. | All 6 roles |
-| Dashboard quick-pass default reason fix | P0 | Change from `'other'` to `'missing_info'`. One-line fix. | 3 roles |
-| Gate-only fallback indicator | P0 | Display "Estimate only -- AI unavailable" on Next Action Card when `ai_analysis_json = null`. | 2 roles |
-| Scout failure push notification | P0 (stretch) | Webhook/SMS when cron fails. Notify within 15 minutes. | See UI-003 |
-| Add `sold_price` field | P1 | Migration 0010. Enables realized margin metric. | 2 roles |
-| `last_scout_run` on stats endpoint | P1 | Currently null. Required for dashboard banner. | 2 roles |
-| "Needs Info" label rename | P1 | Frontend text change: "Verification Needed" to "Needs Info." | 3 roles |
-| 3 failing scout tests | P2 | Known tech debt. | TL identified |
+| Item                                    | Priority     | Description                                                                                   | Consensus               |
+| --------------------------------------- | ------------ | --------------------------------------------------------------------------------------------- | ----------------------- |
+| Scout failure alerting -- in-app banner | P0           | Red dashboard banner when `last_scout_run` exceeds 30 minutes. Populate on stats endpoint.    | All 6 roles             |
+| Verdict threshold AND logic             | P0           | Change `applyVerdictThresholds` to AND for BUY. Backtest before deploying.                    | 5 roles                 |
+| `tuning_events` CHECK constraint fix    | P0           | Code: use `event_type: 'rejection'` + migration 0008b.                                        | 3 roles (confirmed bug) |
+| Security: Auth on analyst endpoints     | P0           | Verify `ANALYST_SERVICE_SECRET` on all non-health routes. Integration test needed.            | 3 roles                 |
+| IronPlanet capture rate investigation   | P0           | Fix to >= 80% or disable. Never show "active" at 17%.                                         | All 6 roles             |
+| Dashboard quick-pass default reason fix | P0           | Change from `'other'` to `'missing_info'`. One-line fix.                                      | 3 roles                 |
+| Gate-only fallback indicator            | P0           | Display "Estimate only -- AI unavailable" on Next Action Card when `ai_analysis_json = null`. | 2 roles                 |
+| Scout failure push notification         | P0 (stretch) | Webhook/SMS when cron fails. Notify within 15 minutes.                                        | See UI-003              |
+| Add `sold_price` field                  | P1           | Migration 0010. Enables realized margin metric.                                               | 2 roles                 |
+| `last_scout_run` on stats endpoint      | P1           | Currently null. Required for dashboard banner.                                                | 2 roles                 |
+| "Needs Info" label rename               | P1           | Frontend text change: "Verification Needed" to "Needs Info."                                  | 3 roles                 |
+| 3 failing scout tests                   | P2           | Known tech debt.                                                                              | TL identified           |
 
 **Explicitly NOT in Phase 0:**
+
 - Push notifications for opportunities (Phase 1)
 - New auction source adapters (late Phase 0 / early Phase 1)
 - Outcome tracking UI/dashboard (Phase 1)
@@ -1362,36 +1407,36 @@ Phase 0 is largely complete. The system is operational and producing revenue. Re
 
 ### Phase 0 Implementation Plan (Priority-Ordered)
 
-| # | Item | Type | Effort | Dependencies |
-|---|------|------|--------|--------------|
-| 1 | Fix auto-rejection tuning event type | Code | 1 hr | None |
-| 2 | Run migration 0008b (tuning_events CHECK) | Migration | 30 min | Item 1 deployed first |
-| 3 | Run migration 0008 (listing_id UNIQUE) | Migration | 30 min | None |
-| 4 | Run migration 0009 (analysis_runs snapshots) | Migration | 15 min | None |
-| 5 | Fix verdict threshold logic (OR to AND) | Code | 2 hr | Backtest review |
-| 6 | Implement `last_scout_run` on stats endpoint | Code | 4 hr | Shared D1 access |
-| 7 | Dashboard stale pipeline banner | Frontend | 2 hr | Item 6 |
-| 8 | IronPlanet capture rate investigation | Investigation | 4-8 hr | None |
-| 9 | Verify analyst endpoint auth via service bindings | Test | 1 hr | None |
+| #   | Item                                              | Type          | Effort | Dependencies          |
+| --- | ------------------------------------------------- | ------------- | ------ | --------------------- |
+| 1   | Fix auto-rejection tuning event type              | Code          | 1 hr   | None                  |
+| 2   | Run migration 0008b (tuning_events CHECK)         | Migration     | 30 min | Item 1 deployed first |
+| 3   | Run migration 0008 (listing_id UNIQUE)            | Migration     | 30 min | None                  |
+| 4   | Run migration 0009 (analysis_runs snapshots)      | Migration     | 15 min | None                  |
+| 5   | Fix verdict threshold logic (OR to AND)           | Code          | 2 hr   | Backtest review       |
+| 6   | Implement `last_scout_run` on stats endpoint      | Code          | 4 hr   | Shared D1 access      |
+| 7   | Dashboard stale pipeline banner                   | Frontend      | 2 hr   | Item 6                |
+| 8   | IronPlanet capture rate investigation             | Investigation | 4-8 hr | None                  |
+| 9   | Verify analyst endpoint auth via service bindings | Test          | 1 hr   | None                  |
 
 ### Phase 1: Private Beta Readiness (Target: Feb-Mar 2026)
 
 Phase 1 transforms DFG from a founder tool into a system 3-5 private beta users can access.
 
-| # | Feature | Rationale |
-|---|---------|-----------|
-| 1 | Replace browser `prompt()` with validated financial input modals | Principle #1. Pre-beta blocker. Pattern 8 specified. |
-| 2 | Clerk authentication | Replace hardcoded auth. Required for external users. |
-| 3 | Stripe billing ($149/mo target) | Subscription management. |
-| 4 | GovPlanet adapter | Third source. Pipeline insurance. |
-| 5 | Web push notification system | Competitive table stake. |
-| 6 | Reject flow simplification (ADR-007) | Multi-select grid, remove legacy dropdown. |
-| 7 | Outcome tracking UI | P&L entry for won deals. |
-| 8 | Onboarding flow | Location setup, category preferences. |
-| 9 | Per-user preferences | Different buy boxes. |
-| 10 | Photo lightbox swipe | Target Customer requested. |
-| 11 | Accessibility fixes | Keyboard navigation, focus trapping, touch targets, contrast. |
-| 12 | 5-second undo toast for dashboard quick actions | Safety net for accidental Pass. |
+| #   | Feature                                                          | Rationale                                                     |
+| --- | ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1   | Replace browser `prompt()` with validated financial input modals | Principle #1. Pre-beta blocker. Pattern 8 specified.          |
+| 2   | Clerk authentication                                             | Replace hardcoded auth. Required for external users.          |
+| 3   | Stripe billing ($149/mo target)                                  | Subscription management.                                      |
+| 4   | GovPlanet adapter                                                | Third source. Pipeline insurance.                             |
+| 5   | Web push notification system                                     | Competitive table stake.                                      |
+| 6   | Reject flow simplification (ADR-007)                             | Multi-select grid, remove legacy dropdown.                    |
+| 7   | Outcome tracking UI                                              | P&L entry for won deals.                                      |
+| 8   | Onboarding flow                                                  | Location setup, category preferences.                         |
+| 9   | Per-user preferences                                             | Different buy boxes.                                          |
+| 10  | Photo lightbox swipe                                             | Target Customer requested.                                    |
+| 11  | Accessibility fixes                                              | Keyboard navigation, focus trapping, touch targets, contrast. |
+| 12  | 5-second undo toast for dashboard quick actions                  | Safety net for accidental Pass.                               |
 
 **Not in Phase 1:** Multi-tenant isolation, custom scoring per user, native app, automated bidding, inbox-to-bid fast-track.
 
@@ -1399,57 +1444,57 @@ Phase 1 transforms DFG from a founder tool into a system 3-5 private beta users 
 
 Phase 2 targets 25-30 paying users at approximately $3,700-4,500 MRR.
 
-| Feature | Rationale for Deferral |
-|---------|----------------------|
-| Multi-tenant data isolation | Not needed until user contention |
-| Per-user scoring customization | Needs multi-user outcome data |
-| Additional adapters (GovDeals, Public Surplus) | Breadth after depth |
-| Algorithm auto-tuning from outcomes | Requires sufficient volume |
-| Geographic expansion beyond Phoenix | After per-user location prefs proven |
-| Team/organization support | Solo operators first |
-| Free trial / freemium | Validate pricing with beta first |
-| Optimistic locking on PATCH | Required for concurrent writes |
-| Request queuing for analyst | Needed at scale |
+| Feature                                        | Rationale for Deferral               |
+| ---------------------------------------------- | ------------------------------------ |
+| Multi-tenant data isolation                    | Not needed until user contention     |
+| Per-user scoring customization                 | Needs multi-user outcome data        |
+| Additional adapters (GovDeals, Public Surplus) | Breadth after depth                  |
+| Algorithm auto-tuning from outcomes            | Requires sufficient volume           |
+| Geographic expansion beyond Phoenix            | After per-user location prefs proven |
+| Team/organization support                      | Solo operators first                 |
+| Free trial / freemium                          | Validate pricing with beta first     |
+| Optimistic locking on PATCH                    | Required for concurrent writes       |
+| Request queuing for analyst                    | Needed at scale                      |
 
 ---
 
 ## 19. Glossary
 
-| Term | Definition |
-|------|-----------|
-| **Acquisition Cost** | Bid + Buyer Premium + Transport + Immediate Repairs. The total cost to acquire an asset. Listing fees are NOT included (they are selling costs). |
-| **Analysis Run** | An immutable snapshot of computed analysis for an opportunity, stored in `analysis_runs`. Each execution creates a new record. |
-| **Attention Required** | Dashboard priority list combining watch alerts fired, stale qualifying items, and other items needing operator action. |
-| **Buy Box** | The operator's criteria for what constitutes a viable acquisition: min profit, min margin, max acquisition cost, max distance, target days to sell. Encoded per category in `category_defs`. |
-| **Buyer Premium** | A percentage fee charged by the auction platform on top of the winning bid. Source-specific: Sierra 15% (tiered), IronPlanet 12%. |
-| **Canonical Money Math** | The non-negotiable financial formulas defined in CLAUDE.md: Acquisition Cost, Net Proceeds, Profit, Margin %. All calculations system-wide must use these exact definitions. |
-| **Category Tier** | One of three asset classifications with different analysis prompts, market data, and profit thresholds: Trailers (default), Vehicles, Power Tools. |
-| **Critical Gate** | A verification checkpoint (title status, lien status, mileage) that must pass before the system marks an opportunity as BID_READY. Failure applies a 20% max-bid haircut. |
-| **D1** | Cloudflare's SQLite-based serverless database. Shared instance used by dfg-api (`DB` binding) and dfg-scout (`DFG_DB` binding). |
-| **Dual-Lens Analysis** | Claude-powered evaluation from two perspectives: investor (ROI, acquisition cost, margins) and buyer (target buyer profile, demand, resale potential). |
-| **Gate-Only Fallback** | When the Claude API is unavailable (timeout/error), analysis completes using only the gate system without AI evaluation. Indicated in UI as "Estimate only -- AI unavailable." |
-| **Hard Gate** | A deal-breaker condition (e.g., salvage title confirmed) that triggers automatic rejection. |
-| **Kill Switch Banner** | Red inline banner on the detail page when a hard gate failure is detected. Shows reason, allows operator to confirm rejection or edit inputs. No auto-redirect. |
-| **Margin %** | (Profit / Acquisition Cost) * 100. Must always use Acquisition Cost as denominator, never Sale Price. |
-| **MVC Event** | An immutable event in the `mvc_events` table recording financial decisions (bid, pass) and outcomes (won, lost, sold). |
-| **Needs Info** | Dashboard label (previously "Verification Needed") for opportunities missing title, lien, or mileage data. API filter: `verification_needed`. |
-| **Net Proceeds** | Sale Price - Listing Fees - Payment Processing. The amount received after selling an asset. |
-| **Next Action Card** | The most prominent UI element on the detail page showing verdict, reasoning, max bid, and analysis source indicator. |
-| **Operator Actions** | Audit log entries in `operator_actions` recording every operator interaction (status changes, input updates, alert dismissals). |
-| **P0 / P1 / P2** | Priority tiers for remaining work. P0: must fix before Phase 0 is complete. P1: must fix before Phase 1 beta. P2: tracked tech debt. |
-| **Phase 0** | MVP. Founder-operated. Currently operational. Remaining work is hardening and gap-filling. |
-| **Phase 1** | Private beta. 3-5 users. Auth, billing, notifications, outcome tracking UI. Target: Feb-Mar 2026. |
-| **Phase 2** | Scale. 25-30 users. Multi-tenant, geographic expansion, auto-tuning. Target: Q2-Q3 2026. |
-| **Pipeline Stale** | Boolean on stats endpoint. True when last successful scout run exceeds 30 minutes. Triggers dashboard red banner. |
-| **Profit** | Net Proceeds - Acquisition Cost. The actual financial gain from a flip. |
-| **R2** | Cloudflare's object storage. Used for immutable evidence snapshots of listing photos. |
-| **Score Band** | Opportunity classification by buy_box_score: high (>= 70), medium (40-69), low (< 40). |
-| **Scout** | The dfg-scout worker that scrapes auction platforms on a 15-minute cron cycle and normalizes listings. |
-| **Service Binding** | Cloudflare mechanism for zero-latency worker-to-worker RPC without network egress. Used by dfg-api to call dfg-analyst and dfg-scout. |
-| **State Machine** | The 9-state opportunity lifecycle enforced server-side. Valid transitions defined in `STATE_TRANSITIONS` in `@dfg/types`. |
-| **Strike Zone** | High-priority triage items: score >= 70, analysis exists, inbox/qualifying status, ending soon or new today. |
-| **Tuning Event** | A signal logged to `tuning_events` capturing operator decisions (rejections, wins, losses) for future algorithm calibration. |
-| **Verdict Threshold** | Category-specific profit and margin minimums for BUY/WATCH/PASS recommendations. BUY requires AND (both met). WATCH requires OR (either). PASS when neither. |
+| Term                     | Definition                                                                                                                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Acquisition Cost**     | Bid + Buyer Premium + Transport + Immediate Repairs. The total cost to acquire an asset. Listing fees are NOT included (they are selling costs).                                             |
+| **Analysis Run**         | An immutable snapshot of computed analysis for an opportunity, stored in `analysis_runs`. Each execution creates a new record.                                                               |
+| **Attention Required**   | Dashboard priority list combining watch alerts fired, stale qualifying items, and other items needing operator action.                                                                       |
+| **Buy Box**              | The operator's criteria for what constitutes a viable acquisition: min profit, min margin, max acquisition cost, max distance, target days to sell. Encoded per category in `category_defs`. |
+| **Buyer Premium**        | A percentage fee charged by the auction platform on top of the winning bid. Source-specific: Sierra 15% (tiered), IronPlanet 12%.                                                            |
+| **Canonical Money Math** | The non-negotiable financial formulas defined in CLAUDE.md: Acquisition Cost, Net Proceeds, Profit, Margin %. All calculations system-wide must use these exact definitions.                 |
+| **Category Tier**        | One of three asset classifications with different analysis prompts, market data, and profit thresholds: Trailers (default), Vehicles, Power Tools.                                           |
+| **Critical Gate**        | A verification checkpoint (title status, lien status, mileage) that must pass before the system marks an opportunity as BID_READY. Failure applies a 20% max-bid haircut.                    |
+| **D1**                   | Cloudflare's SQLite-based serverless database. Shared instance used by dfg-api (`DB` binding) and dfg-scout (`DFG_DB` binding).                                                              |
+| **Dual-Lens Analysis**   | Claude-powered evaluation from two perspectives: investor (ROI, acquisition cost, margins) and buyer (target buyer profile, demand, resale potential).                                       |
+| **Gate-Only Fallback**   | When the Claude API is unavailable (timeout/error), analysis completes using only the gate system without AI evaluation. Indicated in UI as "Estimate only -- AI unavailable."               |
+| **Hard Gate**            | A deal-breaker condition (e.g., salvage title confirmed) that triggers automatic rejection.                                                                                                  |
+| **Kill Switch Banner**   | Red inline banner on the detail page when a hard gate failure is detected. Shows reason, allows operator to confirm rejection or edit inputs. No auto-redirect.                              |
+| **Margin %**             | (Profit / Acquisition Cost) \* 100. Must always use Acquisition Cost as denominator, never Sale Price.                                                                                       |
+| **MVC Event**            | An immutable event in the `mvc_events` table recording financial decisions (bid, pass) and outcomes (won, lost, sold).                                                                       |
+| **Needs Info**           | Dashboard label (previously "Verification Needed") for opportunities missing title, lien, or mileage data. API filter: `verification_needed`.                                                |
+| **Net Proceeds**         | Sale Price - Listing Fees - Payment Processing. The amount received after selling an asset.                                                                                                  |
+| **Next Action Card**     | The most prominent UI element on the detail page showing verdict, reasoning, max bid, and analysis source indicator.                                                                         |
+| **Operator Actions**     | Audit log entries in `operator_actions` recording every operator interaction (status changes, input updates, alert dismissals).                                                              |
+| **P0 / P1 / P2**         | Priority tiers for remaining work. P0: must fix before Phase 0 is complete. P1: must fix before Phase 1 beta. P2: tracked tech debt.                                                         |
+| **Phase 0**              | MVP. Founder-operated. Currently operational. Remaining work is hardening and gap-filling.                                                                                                   |
+| **Phase 1**              | Private beta. 3-5 users. Auth, billing, notifications, outcome tracking UI. Target: Feb-Mar 2026.                                                                                            |
+| **Phase 2**              | Scale. 25-30 users. Multi-tenant, geographic expansion, auto-tuning. Target: Q2-Q3 2026.                                                                                                     |
+| **Pipeline Stale**       | Boolean on stats endpoint. True when last successful scout run exceeds 30 minutes. Triggers dashboard red banner.                                                                            |
+| **Profit**               | Net Proceeds - Acquisition Cost. The actual financial gain from a flip.                                                                                                                      |
+| **R2**                   | Cloudflare's object storage. Used for immutable evidence snapshots of listing photos.                                                                                                        |
+| **Score Band**           | Opportunity classification by buy_box_score: high (>= 70), medium (40-69), low (< 40).                                                                                                       |
+| **Scout**                | The dfg-scout worker that scrapes auction platforms on a 15-minute cron cycle and normalizes listings.                                                                                       |
+| **Service Binding**      | Cloudflare mechanism for zero-latency worker-to-worker RPC without network egress. Used by dfg-api to call dfg-analyst and dfg-scout.                                                        |
+| **State Machine**        | The 9-state opportunity lifecycle enforced server-side. Valid transitions defined in `STATE_TRANSITIONS` in `@dfg/types`.                                                                    |
+| **Strike Zone**          | High-priority triage items: score >= 70, analysis exists, inbox/qualifying status, ending soon or new today.                                                                                 |
+| **Tuning Event**         | A signal logged to `tuning_events` capturing operator decisions (rejections, wins, losses) for future algorithm calibration.                                                                 |
+| **Verdict Threshold**    | Category-specific profit and margin minimums for BUY/WATCH/PASS recommendations. BUY requires AND (both met). WATCH requires OR (either). PASS when neither.                                 |
 
 ---
 
@@ -1576,15 +1621,15 @@ Whether RB Global will escalate to active anti-scraping measures is unknown. No 
 
 After three rounds, the following items have universal or near-universal agreement:
 
-| Item | Consensus Level |
-|------|----------------|
-| Scout failure alerting is P0 | All 6 roles |
-| Verdict threshold AND logic is P0 | 5 roles |
-| `tuning_events` CHECK constraint is a bug | 3 roles (confirmed) |
-| Canonical money math is non-negotiable | All 6 roles |
-| IronPlanet at 17% is unacceptable as "active" | All 6 roles |
-| Reject flow needs simplification (ADR-007) | 4 roles |
-| "Verification Needed" rename to "Needs Info" | 3 roles |
-| State machine should NOT allow inbox-to-bid | 4 roles |
-| Native app is not Phase 0 or Phase 1 | All 6 roles |
-| Outcome tracking UI is Phase 1 | 5 roles |
+| Item                                          | Consensus Level     |
+| --------------------------------------------- | ------------------- |
+| Scout failure alerting is P0                  | All 6 roles         |
+| Verdict threshold AND logic is P0             | 5 roles             |
+| `tuning_events` CHECK constraint is a bug     | 3 roles (confirmed) |
+| Canonical money math is non-negotiable        | All 6 roles         |
+| IronPlanet at 17% is unacceptable as "active" | All 6 roles         |
+| Reject flow needs simplification (ADR-007)    | 4 roles             |
+| "Verification Needed" rename to "Needs Info"  | 3 roles             |
+| State machine should NOT allow inbox-to-bid   | 4 roles             |
+| Native app is not Phase 0 or Phase 1          | All 6 roles         |
+| Outcome tracking UI is Phase 1                | 5 roles             |

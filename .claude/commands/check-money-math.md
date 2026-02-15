@@ -5,10 +5,11 @@ description: Verify money math calculations are using canonical formulas
 Review money math calculations across the codebase to ensure they follow canonical DFG formulas:
 
 **Canonical Money Math:**
+
 - Acquisition Cost = Bid + Buyer Premium + Transport + Immediate Repairs
 - Net Proceeds = Sale Price − Listing Fees − Payment Processing
 - Profit = Net Proceeds − Acquisition Cost
-- Margin % = (Profit / Acquisition Cost) * 100
+- Margin % = (Profit / Acquisition Cost) \* 100
 
 **Critical Rule:** Listing fees are SELLING COSTS ONLY. Never include in acquisition cost.
 

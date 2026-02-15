@@ -1,43 +1,43 @@
-'use client';
+'use client'
 
-import { useState, Suspense } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { useState, Suspense } from 'react'
+import { signIn } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
+import { AlertCircle, RefreshCw } from 'lucide-react'
 
 function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
-  const error = searchParams.get('error');
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const error = searchParams.get('error')
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(
     error === 'CredentialsSignin' ? 'Invalid email or password' : null
-  );
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setAuthError(null);
+    e.preventDefault()
+    setLoading(true)
+    setAuthError(null)
 
     const result = await signIn('credentials', {
       email,
       password,
       redirect: false,
       callbackUrl,
-    });
+    })
 
     if (result?.error) {
-      setAuthError('Invalid email or password');
-      setLoading(false);
+      setAuthError('Invalid email or password')
+      setLoading(false)
     } else if (result?.url) {
-      router.push(result.url);
+      router.push(result.url)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
@@ -46,12 +46,7 @@ function LoginForm() {
           {/* Logo/Title */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-blue-600 text-white mb-4">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -60,9 +55,7 @@ function LoginForm() {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              DFG Console
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">DFG Console</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Sign in to access the operator console
             </p>
@@ -116,12 +109,7 @@ function LoginForm() {
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              loading={loading}
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full" loading={loading} disabled={loading}>
               Sign in
             </Button>
           </form>
@@ -132,7 +120,7 @@ function LoginForm() {
         </p>
       </div>
     </div>
-  );
+  )
 }
 
 function LoginLoading() {
@@ -140,7 +128,7 @@ function LoginLoading() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
     </div>
-  );
+  )
 }
 
 export default function LoginPage() {
@@ -148,5 +136,5 @@ export default function LoginPage() {
     <Suspense fallback={<LoginLoading />}>
       <LoginForm />
     </Suspense>
-  );
+  )
 }

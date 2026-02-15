@@ -1,4 +1,4 @@
-import type { ProceedsInput } from './types';
+import type { ProceedsInput } from './types'
 
 /**
  * Calculate net proceeds from a sale.
@@ -9,16 +9,16 @@ import type { ProceedsInput } from './types';
  * @returns Net proceeds in dollars
  */
 export function calculateNetProceeds(input: ProceedsInput): number {
-  const { salePrice, listingFees, paymentProcessing } = input;
+  const { salePrice, listingFees, paymentProcessing } = input
 
   if (salePrice < 0 || listingFees < 0 || paymentProcessing < 0) {
-    throw new Error('All input values must be non-negative');
+    throw new Error('All input values must be non-negative')
   }
 
-  const netProceeds = salePrice - listingFees - paymentProcessing;
+  const netProceeds = salePrice - listingFees - paymentProcessing
 
   // Round to 2 decimal places
-  return Math.round(netProceeds * 100) / 100;
+  return Math.round(netProceeds * 100) / 100
 }
 
 /**
@@ -31,11 +31,11 @@ export function calculateNetProceeds(input: ProceedsInput): number {
  */
 export function calculateListingFee(salePrice: number, feePercent: number): number {
   if (salePrice < 0 || feePercent < 0) {
-    throw new Error('Values must be non-negative');
+    throw new Error('Values must be non-negative')
   }
 
-  const fee = salePrice * feePercent;
-  return Math.round(fee * 100) / 100;
+  const fee = salePrice * feePercent
+  return Math.round(fee * 100) / 100
 }
 
 /**
@@ -53,9 +53,9 @@ export function calculateProcessingFee(
   fixedFee: number = 0
 ): number {
   if (salePrice < 0 || percent < 0 || fixedFee < 0) {
-    throw new Error('Values must be non-negative');
+    throw new Error('Values must be non-negative')
   }
 
-  const fee = salePrice * percent + fixedFee;
-  return Math.round(fee * 100) / 100;
+  const fee = salePrice * percent + fixedFee
+  return Math.round(fee * 100) / 100
 }

@@ -18,14 +18,14 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 
 ### Market Map
 
-| Segment | Players | Relevance to DFG |
-|---------|---------|-------------------|
-| Government/surplus auction platforms | GovDeals, PublicSurplus, Municibid, GovPlanet | DFG scrapes these -- they are data sources, not competitors. But their built-in buyer tools (alerts, notifications) partially overlap. |
-| Equipment auction platforms | IronPlanet/Ritchie Bros, Proxibid, BidSpotter, AuctionZip | Same as above -- data sources with some built-in buyer tooling. |
-| Marketplace deal-finder apps | Swoopa, Flipify, DealScout, Scout | Direct competitors for the "find undervalued items fast" value prop. Different asset classes (consumer goods vs. physical equipment), but the model is identical. |
-| Reseller inventory/profit tools | Flippd, ResellGenius, FlipLytics | Overlap on the profit calculation side. Focused on eBay/Poshmark, not auctions. |
-| Equipment valuation services | Rouse Analytics (RB Global), Ritchie Bros Price Results | Indirect competitor -- provides the pricing intelligence DFG generates internally via AI. |
-| AI auction software | AuctionWriter, Webtron AI, various early-stage | Seller-side tools. Not competing for the same user. |
+| Segment                              | Players                                                   | Relevance to DFG                                                                                                                                                  |
+| ------------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Government/surplus auction platforms | GovDeals, PublicSurplus, Municibid, GovPlanet             | DFG scrapes these -- they are data sources, not competitors. But their built-in buyer tools (alerts, notifications) partially overlap.                            |
+| Equipment auction platforms          | IronPlanet/Ritchie Bros, Proxibid, BidSpotter, AuctionZip | Same as above -- data sources with some built-in buyer tooling.                                                                                                   |
+| Marketplace deal-finder apps         | Swoopa, Flipify, DealScout, Scout                         | Direct competitors for the "find undervalued items fast" value prop. Different asset classes (consumer goods vs. physical equipment), but the model is identical. |
+| Reseller inventory/profit tools      | Flippd, ResellGenius, FlipLytics                          | Overlap on the profit calculation side. Focused on eBay/Poshmark, not auctions.                                                                                   |
+| Equipment valuation services         | Rouse Analytics (RB Global), Ritchie Bros Price Results   | Indirect competitor -- provides the pricing intelligence DFG generates internally via AI.                                                                         |
+| AI auction software                  | AuctionWriter, Webtron AI, various early-stage            | Seller-side tools. Not competing for the same user.                                                                                                               |
 
 ---
 
@@ -38,12 +38,14 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 **Target user:** Resellers and flippers of consumer goods (furniture, electronics, vehicles).
 
 **Pricing:**
+
 - Starts at $47/month
 - Enterprise/premium tiers reportedly up to $352/month
 - Free 48-hour trial
 - Enterprise availability limited per city per niche
 
 **Strengths:**
+
 - Multi-platform scanning (7+ marketplaces)
 - AI price filter that compares asking prices to estimated resale values
 - Sub-minute alert speed on premium plans
@@ -52,6 +54,7 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 - Supports unlimited keyword-based searches with inclusion/exclusion filters
 
 **Weaknesses:**
+
 - Focused on consumer marketplaces, not government/surplus auctions
 - No structured profit analysis (no acquisition cost modeling with buyer premium, transport, repairs)
 - No workflow system (inbox -> qualifying -> bid -> won)
@@ -71,11 +74,13 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 **Target user:** Professional resellers, side hustlers, flippers.
 
 **Pricing:**
+
 - Basic Watchlist: $5/month (10-minute scan interval)
 - Premium Watchlist: faster scanning (1-minute interval), pricing not publicly listed
 - Free 5-day trial (1 basic + 1 premium watchlist)
 
 **Strengths:**
+
 - Very affordable entry point ($5/mo)
 - AI-powered spam/duplicate filtering
 - Unified feed across platforms
@@ -83,6 +88,7 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 - Available on iOS and Android
 
 **Weaknesses:**
+
 - Only covers Facebook Marketplace and Craigslist -- no auction platforms
 - No financial analysis or profit modeling
 - No category-specific intelligence (trailers vs. vehicles vs. tools)
@@ -102,17 +108,20 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 **Target user:** Deal hunters, flippers, collectors.
 
 **Pricing:**
+
 - Free plan: alerts within 1 hour
 - Paid plans: alerts within 5 minutes
 - Three tiers: Fast Finder (3 search terms), Deal Master (5 search terms), Pro Scout (10 search terms)
 - Free 1-week trial
 
 **Strengths:**
+
 - Smart filters to remove spam and irrelevant listings
 - Clean, simple UX
 - Multiple tier options for different user levels
 
 **Weaknesses:**
+
 - Facebook Marketplace only (additional platforms "coming soon")
 - No auction platform support
 - No profit analysis or financial modeling
@@ -131,11 +140,13 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 **Target user:** Equipment dealers, fleet managers, construction companies, institutional buyers.
 
 **Pricing:**
+
 - Price Results Tool: free (basic historical auction data lookup)
 - Rouse Values Lookup: monthly subscription (pricing not public, reportedly $200-500+/mo for enterprise)
 - Fleet Manager: enterprise SaaS (pricing not public)
 
 **Strengths:**
+
 - Massive historical transaction database (millions of sold items)
 - Covers 75,000+ equipment models
 - Market Trends reports with quarterly analysis
@@ -144,6 +155,7 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 - Integrated buying + selling + valuation ecosystem
 
 **Weaknesses:**
+
 - Focused on heavy equipment and construction, not trailers/light equipment at the price points DFG targets ($2K-6K)
 - Valuation tools are for institutional buyers with large fleets, not individual arbitrage operators
 - No "find undervalued items" feature -- it is a valuation reference, not a deal-finding engine
@@ -166,6 +178,7 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 **Pricing:** Free to register. Buyer premium varies by seller (typically 10-15%).
 
 **Built-in buyer features:**
+
 - Email alerts for keyword/category matches
 - SMS/Text and WhatsApp outbid notifications (launched 2024-2025)
 - Category-based browsing and search
@@ -173,12 +186,14 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 - Won/awarded/paid status notifications
 
 **Strengths:**
+
 - Native to the platform (no scraping required)
 - Free alerts and notifications
 - Official data -- no risk of being blocked
 - Large inventory volume
 
 **Weaknesses:**
+
 - Only covers GovDeals listings (single platform)
 - No cross-platform aggregation
 - No profit analysis, margin calculation, or AI valuation
@@ -198,17 +213,20 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 **Target user:** eBay/Poshmark resellers managing inventory across platforms.
 
 **Pricing:**
+
 - Free: up to 20 inventory items
 - Pro: $9.99/month or $99.99/year
 - Unlimited inventory, cross-platform fee calculation, QR label generation
 
 **Strengths:**
+
 - Accurate fee calculation across 15+ platforms
 - Inventory tracking with photos
 - Cross-platform profit tracking (knows which platform an item sold on)
 - Simple, well-reviewed app
 
 **Weaknesses:**
+
 - Post-acquisition tool only (tracks items you already own)
 - No deal-finding or auction monitoring
 - No pre-purchase analysis or valuation
@@ -223,21 +241,21 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 
 ## Feature Comparison Matrix
 
-| Feature | DFG (MVP) | Swoopa | Flipify | DealScout | Rouse/RB Global | GovDeals (native) | Flippd |
-|---------|-----------|--------|---------|-----------|-----------------|-------------------|--------|
-| Cross-platform auction scraping | Yes (2 sources) | No (marketplaces) | No (marketplaces) | No (FB only) | No (own platforms) | No (single) | No |
-| Government surplus coverage | Planned | No | No | No | Partial | Yes (single) | No |
-| AI-powered profit analysis | Yes (Claude) | Basic price compare | No | No | No (historical data) | No | No |
-| Conservative financial modeling | Yes (canonical math) | No | No | No | No | No | Basic fee calc |
-| Category-specific intelligence | Yes (3 tiers) | No | No | No | Yes (equipment) | No | No |
-| Opportunity scoring (0-100) | Yes (4 dimensions) | No | No | No | No | No | No |
-| Operator workflow (lifecycle) | Yes (7 stages) | No | No | No | No | No | Inventory only |
-| Real-time alerts/notifications | Partial (in-app) | Yes (push) | Yes (push) | Yes (push) | No | Yes (email/SMS) | No |
-| Mobile-first design | Yes (iOS Safari) | Yes (native) | Yes (native) | Yes (native) | No (web) | Partial | Yes (native) |
-| Outcome tracking / P&L | Planned | No | No | No | Yes (fleet level) | No | Yes |
-| Decision audit trail | Yes (MVC events) | No | No | No | No | No | No |
-| Multi-user support | No (founder only) | Yes | Yes | Yes | Yes (enterprise) | Yes | Yes |
-| Price per month | TBD ($149 target) | $47-352 | $5+ | Free-paid | $200-500+ (est.) | Free | $0-10 |
+| Feature                         | DFG (MVP)            | Swoopa              | Flipify           | DealScout    | Rouse/RB Global      | GovDeals (native) | Flippd         |
+| ------------------------------- | -------------------- | ------------------- | ----------------- | ------------ | -------------------- | ----------------- | -------------- |
+| Cross-platform auction scraping | Yes (2 sources)      | No (marketplaces)   | No (marketplaces) | No (FB only) | No (own platforms)   | No (single)       | No             |
+| Government surplus coverage     | Planned              | No                  | No                | No           | Partial              | Yes (single)      | No             |
+| AI-powered profit analysis      | Yes (Claude)         | Basic price compare | No                | No           | No (historical data) | No                | No             |
+| Conservative financial modeling | Yes (canonical math) | No                  | No                | No           | No                   | No                | Basic fee calc |
+| Category-specific intelligence  | Yes (3 tiers)        | No                  | No                | No           | Yes (equipment)      | No                | No             |
+| Opportunity scoring (0-100)     | Yes (4 dimensions)   | No                  | No                | No           | No                   | No                | No             |
+| Operator workflow (lifecycle)   | Yes (7 stages)       | No                  | No                | No           | No                   | No                | Inventory only |
+| Real-time alerts/notifications  | Partial (in-app)     | Yes (push)          | Yes (push)        | Yes (push)   | No                   | Yes (email/SMS)   | No             |
+| Mobile-first design             | Yes (iOS Safari)     | Yes (native)        | Yes (native)      | Yes (native) | No (web)             | Partial           | Yes (native)   |
+| Outcome tracking / P&L          | Planned              | No                  | No                | No           | Yes (fleet level)    | No                | Yes            |
+| Decision audit trail            | Yes (MVC events)     | No                  | No                | No           | No                   | No                | No             |
+| Multi-user support              | No (founder only)    | Yes                 | Yes               | Yes          | Yes (enterprise)     | Yes               | Yes            |
+| Price per month                 | TBD ($149 target)    | $47-352             | $5+               | Free-paid    | $200-500+ (est.)     | Free              | $0-10          |
 
 ---
 
@@ -269,14 +287,14 @@ No existing product combines cross-platform auction scraping, AI-powered profit 
 
 ## Pricing & Business Model Benchmarks
 
-| Competitor | Model | Entry Price | Mid Tier | High Tier | Free Option |
-|------------|-------|-------------|----------|-----------|-------------|
-| Swoopa | Monthly subscription | $47/mo | ~$150/mo (est.) | $352/mo (enterprise) | 48-hour trial |
-| Flipify | Monthly subscription | $5/mo (basic) | Premium (not public) | -- | 5-day trial |
-| DealScout | Tiered subscription | Free (1hr alerts) | Paid (5min alerts) | Pro Scout | Free tier |
-| Flippd | Freemium + subscription | Free (20 items) | $9.99/mo | $99.99/yr | Yes (limited) |
-| Rouse Analytics | Enterprise subscription | ~$200/mo (est.) | ~$500/mo (est.) | Enterprise (custom) | Free basic lookup |
-| **DFG (planned)** | **Monthly subscription** | **$149/mo** | **--** | **--** | **No** |
+| Competitor        | Model                    | Entry Price       | Mid Tier             | High Tier            | Free Option       |
+| ----------------- | ------------------------ | ----------------- | -------------------- | -------------------- | ----------------- |
+| Swoopa            | Monthly subscription     | $47/mo            | ~$150/mo (est.)      | $352/mo (enterprise) | 48-hour trial     |
+| Flipify           | Monthly subscription     | $5/mo (basic)     | Premium (not public) | --                   | 5-day trial       |
+| DealScout         | Tiered subscription      | Free (1hr alerts) | Paid (5min alerts)   | Pro Scout            | Free tier         |
+| Flippd            | Freemium + subscription  | Free (20 items)   | $9.99/mo             | $99.99/yr            | Yes (limited)     |
+| Rouse Analytics   | Enterprise subscription  | ~$200/mo (est.)   | ~$500/mo (est.)      | Enterprise (custom)  | Free basic lookup |
+| **DFG (planned)** | **Monthly subscription** | **$149/mo**       | **--**               | **--**               | **No**            |
 
 ### Pricing Analysis
 

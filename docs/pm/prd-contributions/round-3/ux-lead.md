@@ -63,6 +63,7 @@ The MVP user journey has two primary flows: the Daily Triage Loop and the Deep E
 
 **Step 1: Open Console (Dashboard)**
 Scott opens the app from his iPhone home screen. The Dashboard loads and immediately shows:
+
 - Scout Health Banner (topmost element): hidden when scout is healthy (last successful run within 30 minutes); red full-width banner with "Scout has not run since [relative time]. Deal flow may be stale." and "Details" link to Sources page when scout is unhealthy. This is the first thing the operator sees to establish trust in data freshness.
 - Attention Required list (priority-sorted items that need action, with inline quick actions for pass/watch/re-analyze)
 - Quick Stats grid (Inbox count, Strike Zone count, Needs Info count, Qualifying count, Watching count, Bidding count)
@@ -97,6 +98,7 @@ Scott navigates to an opportunity detail page. The page loads with the opportuni
 
 **Step 2: Review AI Analysis**
 If no analysis exists, Scott taps "Analyze" in the header. Analysis runs (p95 under 45 seconds, per Technical Lead performance budget) and populates the tabbed analysis interface. The default tab is **Summary** (not Report), showing:
+
 - Summary tab (default): Max bid range, retail estimate, expected profit, margin percentage, all-in acquisition cost breakdown
 - Report tab: Full AI-generated report text with original listing link
 - Condition tab: Graded condition assessment with red flags separated into Core Risks vs Optional Issues
@@ -104,6 +106,7 @@ If no analysis exists, Scott taps "Analyze" in the header. Analysis runs (p95 un
 - Buyer tab: Target buyer profiles, demand level, price range, seasonal factors, selling points
 
 The Next Action Card above the tabs shows the verdict-derived next action (Bid/Inspect/Pass) in large text with color coding, "Why" reasoning bullets, walk triggers (top 3 inspection priorities), the max bid (with note if 20% haircut is applied due to uncleared gates), and an analysis source indicator:
+
 - "AI-powered analysis" (default, when `aiAnalysisResult` is present on the analysis run) -- no special badge, this is the expected state
 - "Estimate only -- AI unavailable" (when `aiAnalysisResult` is null) -- amber badge, signaling that the recommendation is gate-derived, not AI-evaluated
 
@@ -122,6 +125,7 @@ The Gates Display card shows which critical and confidence gates have passed, fa
 
 **Step 6: Decision**
 With analysis reviewed, photos checked, title verified, and gates assessed, Scott makes a decision:
+
 - **Bid:** Tap "Set Bid." A modal slides up with: a numeric input field (pre-populated with the system's `max_bid_high` value), `inputmode="decimal"` for the iOS numeric keyboard, currency formatting preview below the input (e.g., "$2,150.00"), a clear "This is the maximum you will pay, all costs included" label, positive-value validation, and Confirm/Cancel buttons. Both buttons are 44px minimum height. On confirm, status moves to `bid` and `max_bid_locked` is set.
 - **Watch:** Tap "Watch", configure trigger conditions (ending_soon with hours-before setting, time_window with specific datetime, or manual). Status moves to `watch`.
 - **Reject:** Tap "Reject." The reject modal slides up showing a single-select grid of 6 reason codes (too far, too expensive, wrong category, poor condition, missing info, other) with large 44px+ tap targets. Selecting "other" requires a note. Confirm/Cancel at the bottom. Confirm is disabled until a code is selected and (if "other") a note is non-empty.
@@ -129,6 +133,7 @@ With analysis reviewed, photos checked, title verified, and gates assessed, Scot
 - **Lost:** Tap "Lost." A confirmation dialog asks "Mark as lost?" with Confirm/Cancel. Status moves to `lost`.
 
 The action bar at the bottom of the detail page shows only the contextually relevant actions for the current status:
+
 - `inbox`: Qualify (primary), Watch (secondary), Reject (danger)
 - `qualifying`: Inspect (primary -- highlighted green when analysis exists with BID/WATCH recommendation), Watch (secondary), Reject (danger)
 - `watch`: Inspect (primary), Qualify (secondary), Reject (danger)
@@ -148,12 +153,14 @@ If Scott changes operator inputs after running analysis, a Staleness Banner appe
 The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and a hamburger slide-over menu on mobile (fixed header h-14, slide-in panel w-72 from left).
 
 #### 1. Login (`/login`)
+
 - DFG Console branding (logo icon, title, "Internal Use Only" tagline)
 - Email + password form (hardcoded credentials, prototype-grade)
 - Error alert for invalid credentials
 - No registration flow (founder-only)
 
 #### 2. Dashboard (`/`)
+
 - **Scout Health Banner (topmost):** Hidden when last successful scout run is within 30 minutes. Red full-width banner when unhealthy: "Scout has not run since [relative time]. Deal flow may be stale." with "Details" link to Sources page. Requires stats endpoint to return valid `last_scout_run` timestamp. Uses `position: sticky` at top of content area (not `position: fixed`) per CLAUDE.md guidance.
 - **Attention Required card:** Priority-sorted list of items needing operator action, with rank badges (top 3 highlighted in red), reason chips (Decision Needed, Ending Soon, Stale, Re-analyze), inline quick actions (re-analyze, touch/mark reviewed, pass, watch), current bid and time remaining. Tappable rows link to detail. "View all" link when truncated. Pass action uses `rejection_reason='missing_info'` as default (not `'other'`) with a 5-second undo toast: "Rejected [title]. Undo?" at the bottom of the list. Undo reverses the rejection. After 5 seconds, the toast auto-dismisses and the rejection is final.
 - **Quick Stats grid:** 2-column grid of tappable cards linking to filtered opportunity lists. Cards: Inbox (blue), Strike Zone (orange), Needs Info (purple, subtitle: "Missing title, lien, or mileage data"), Qualifying (amber), Watching (blue), Bidding (green). Counts update on refresh. Cards highlight with colored border when count > 0.
@@ -164,6 +171,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and
 - **Desktop header:** "Dashboard" title, refresh button. Mobile header provided by Navigation component.
 
 #### 3. Opportunities List (`/opportunities`)
+
 - **Desktop header:** Title with result count, refresh button, Buy Box quick toggle, Filters button with active count badge. Below: active filter chips row with dismiss buttons and "Clear all" (shown when 2+ filters active).
 - **Mobile toolbar:** Result count, refresh, Buy Box toggle (icon only), Filters button (links to full-page filter screen).
 - **Mobile active filter chips:** Dismissible chip row. Consolidated filter chips: "Needs Refresh" (combines stale + analysis_stale + decision_stale), "Ending Soon", "Strike Zone", "New Today", "Needs Info", "Attention Required".
@@ -174,6 +182,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and
 - **Loading state:** Centered spinner (with `prefers-reduced-motion` guard).
 
 #### 4. Filters (Mobile Full-Page) (`/opportunities/filters`)
+
 - **Header:** Back button, "Filters" title, "Clear" text button.
 - **Dropdown selects:** Status (all 9 statuses), Score (High/Medium/Low), Ending (24h/48h/7d).
 - **Toggle section "Quick Filters":** Needs Refresh, Needs Info, Ending Soon.
@@ -181,6 +190,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and
 - **Fixed bottom button:** "Apply Filters" (full-width primary button with safe area padding via `pb-safe`).
 
 #### 5. Opportunity Detail (`/opportunities/[id]`)
+
 - **Header:** Desktop: back button + title + "Last updated X min ago" label + Analyze button + View Listing link. Mobile: back button in Navigation, title in Navigation, Analyze button and View Listing link in header row below Navigation, "Last updated" label in header row.
 - **Alerts bar:** Red background bar showing active alerts with severity badge, title, message, and dismiss button. Only visible when alerts exist.
 - **Next Action Card:** Prominent card showing verdict-derived next action (Bid/Inspect/Pass) in large text with color coding (green/yellow/red). "Why" section with up to 3 bullet points. "Walk Triggers" section with top 3 inspection priorities. Max Bid display (with note if 20% haircut is applied due to uncleared gates). Analysis source indicator: no badge for AI-powered analysis; amber "Estimate only -- AI unavailable" badge when `aiAnalysisResult` is null (gate-only fallback per BR-049). Staleness warning if analysis is old. Empty dashed-border placeholder when no analysis exists.
@@ -206,6 +216,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and
 - **Photo Lightbox:** Fixed full-screen overlay with 90% black background. Image displayed at max dimensions with `object-contain`. Swipe left/right to navigate between photos (using `touchstart`/`touchmove`/`touchend` event handlers with `touch-action: pan-y` on the container). Photo counter "3 of 12" shown at top. Tap outside image to dismiss. Escape key to dismiss. Arrow keys to navigate. `prefers-reduced-motion` guard on transition animations.
 
 #### 6. Sources (`/sources`)
+
 - **Header:** Desktop: "Sources" title + "Run Scout" button. Mobile: full-width "Run Scout Now" button below navigation.
 - **Trigger message card:** Blue-bordered feedback card shown after triggering scout run.
 - **Active Sources section:** Section header with count. Source cards showing: enabled indicator (green checkmark), display name, buyer premium percentage, pickup days, last run relative time, external link to source website.
@@ -213,6 +224,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and
 - **Info card:** Explanatory text about what sources are and how scout runs work.
 
 #### 7. Settings (`/settings`)
+
 - **Auction Sources card:** List of sources with display name, buyer premium, pickup days, last run time, and enabled/disabled toggle button.
 - **API Configuration card:** API URL (from env), auth status indicator.
 - **About card:** Version number, environment.
@@ -220,12 +232,14 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and
 ### Navigation Structure
 
 **Primary navigation items (4):**
+
 1. Dashboard (`/`) -- LayoutDashboard icon
 2. Opportunities (`/opportunities`) -- Search icon
 3. Sources (`/sources`) -- Database icon
 4. Settings (`/settings`) -- Settings icon
 
 **Navigation behavior:**
+
 - Desktop: Persistent left sidebar (w-64), sticky to viewport, logo at top, nav items mid, version footer at bottom.
 - Mobile: Fixed top header (h-14) with hamburger/back button (left), logo or page title (center), placeholder right slot (w-10). Hamburger opens a slide-over panel (w-72) from left with backdrop, same nav items in larger touch targets (py-3), close button, version footer with safe area padding.
 - Detail pages: Mobile header shows back arrow instead of hamburger, page title instead of logo.
@@ -241,6 +255,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (w-64, persistent) and
 The opportunity lifecycle is a directed graph with 9 states. The UI enforces valid transitions by showing only contextually appropriate action buttons.
 
 **State machine** (from Technical Lead, ref: BR-012):
+
 ```
 inbox --> qualifying --> inspect --> bid --> won
   |           |            |          |
@@ -252,18 +267,22 @@ inbox --> qualifying --> inspect --> bid --> won
 ```
 
 **Transition triggers:**
+
 - Button tap in fixed bottom action bar (all status changes)
 - Custom modal with validated numeric input for Set Bid (`max_bid_locked`) and Won (`final_price`). These modals include `inputmode="decimal"` for iOS numeric keyboard, currency formatting preview, positive-value validation, and confirmation step.
 
 **Loading states:**
+
 - Action buttons show disabled state while updating (`updating` or `emittingEvent` flags).
 - Button text does not change during status updates.
 
 **Error handling:**
+
 - Status update failures should display a brief error toast above the action bar (currently logged to console only -- identified as a gap for remediation).
 - MVC event emission failures block status transitions to `bid` and `rejected` (event must succeed before state change proceeds). Event error banner appears fixed above the bottom action bar with dismiss button.
 
 **Optimistic updates:**
+
 - Status changes wait for server response before updating local state (not optimistic). This is the correct pattern for financial actions.
 - Attention Required list uses optimistic updates for inline actions (pass, watch, re-analyze, touch) with rollback on failure and 5-second undo toast for pass actions.
 
@@ -330,6 +349,7 @@ inbox --> qualifying --> inspect --> bid --> won
 ### Pattern 8: Financial Input Modals
 
 **Shared pattern for Set Bid and Won flows:**
+
 - Modal slides up from bottom of screen (bottom-sheet pattern, natural for iOS)
 - Large numeric input field with `inputmode="decimal"` for iOS numeric keyboard
 - Pre-populated: Set Bid uses `max_bid_high`; Won uses empty (operator enters actual purchase price)
@@ -348,6 +368,7 @@ inbox --> qualifying --> inspect --> bid --> won
 **Trigger:** Inline dashboard Pass action, and potentially other single-tap destructive actions in future phases.
 
 **Behavior:**
+
 - Toast appears at the bottom of the current content area (above the safe area, below the last list item)
 - Content: "Rejected [truncated title]. Undo?" with "Undo" as a tappable text button
 - Duration: 5 seconds, auto-dismisses
@@ -363,10 +384,12 @@ inbox --> qualifying --> inspect --> bid --> won
 The following constraints are derived from CLAUDE.md and verified against the codebase.
 
 **Viewport handling:**
+
 - All pages use `min-h-screen` instead of `h-screen` to avoid iOS Safari's dynamic viewport height issues (URL bar show/hide changes available height).
 - Horizontal overflow is explicitly prevented with `max-w-[100vw] overflow-x-hidden` on both the page container and the main content area.
 
 **Layout pattern (from CLAUDE.md):**
+
 ```tsx
 <div className="flex flex-col md:flex-row min-h-screen w-full">
   <Navigation />
@@ -378,6 +401,7 @@ The following constraints are derived from CLAUDE.md and verified against the co
 ```
 
 **Fixed positioning:**
+
 - The mobile navigation header uses `position: fixed` (top: 0, left: 0, right: 0, z-index: 50). A spacer `div` (h-14) immediately follows to prevent content from being hidden behind it.
 - The opportunity detail bottom action bar uses `position: fixed` (bottom: 0) with `pb-safe` for safe area inset padding (home indicator on notch iPhones). Content area has `pb-24` to prevent content from being hidden behind this bar.
 - The codebase avoids `-webkit-transform: translateZ(0)` on body or ancestor elements, as this breaks `position: fixed` in iOS Safari.
@@ -385,9 +409,11 @@ The following constraints are derived from CLAUDE.md and verified against the co
 - Financial input modals and reject modal use bottom-sheet positioning (`position: fixed`, bottom: 0) with `pb-safe`.
 
 **Safe area insets:**
+
 - `pb-safe` class is applied to fixed bottom elements (action bar, mobile menu footer, filter page apply button, financial input modals, reject modal) to respect the home indicator area on modern iPhones.
 
 **Touch targets:**
+
 - All interactive elements must meet 44x44px minimum touch target size. This includes:
   - Action buttons in the fixed bottom bar
   - Reason code tiles in the reject modal (single-select grid)
@@ -400,12 +426,14 @@ The following constraints are derived from CLAUDE.md and verified against the co
   - Scout Health Banner "Details" link
 
 **Scroll behavior:**
+
 - Body scroll is locked (`overflow: hidden`) when the mobile menu is open, preventing background scroll-through.
 - Horizontal photo strip uses native `overflow-x-auto` scrolling.
 - Tab bar in analysis interface uses `overflow-x-auto` for horizontal scrolling.
 - Lightbox swipe uses touch event handlers with `touch-action: pan-y` on the container to allow vertical scroll passthrough while capturing horizontal swipes.
 
 **Known iOS Safari gaps in current implementation:**
+
 1. Checkbox touch targets in the Filters page (`h-5 w-5` = 20x20px) are below the 44px minimum. Mitigation: the `<label>` wrapper provides a larger tap target.
 2. No pull-to-refresh mechanism exists. The operator must tap the refresh button in the header.
 3. No offline support or service worker caching. If the operator loses connectivity, the app shows errors rather than cached data.
@@ -432,6 +460,7 @@ Given that this is an internal tool used by a single operator today, with a 3-5 
 ### Current State Assessment
 
 **Strengths (already in the codebase):**
+
 - `aria-label` attributes on icon-only buttons (back button, menu open/close, go back)
 - Semantic HTML structure: `<nav>`, `<header>`, `<main>`, `<footer>` elements used correctly
 - `<label>` elements properly associated with form inputs via `htmlFor` in Login, and wrapper `<label>` elements in Filters
@@ -474,16 +503,19 @@ Given that this is an internal tool used by a single operator today, with a 3-5 
 ### Recommended Remediation Priority
 
 **MVP (Phase 0) -- minimal accessibility hygiene:**
+
 1. Add `prefers-reduced-motion` guard to all CSS animations (loading spinners, menu slide-in, modal slide-up, undo toast). This is a one-line CSS addition per animation and costs nothing.
 2. Ensure all new UI elements introduced by this PRD (financial input modals, reject modal, undo toast, scout health banner, analysis source indicator) use semantic HTML and include appropriate `aria-label` attributes.
 
 **Before private beta (Phase 1) -- functional accessibility:**
+
 1. Make opportunity cards focusable and keyboard-activatable (`<a>` wrapping the card, or `tabIndex={0}` with `onKeyDown`)
 2. Trap focus inside all modals (reject modal, photo lightbox, financial input modals); add Escape key handler for lightbox
 3. Increase touch targets on external link buttons and inline CTA buttons to 44px minimum
 4. Audit and fix color contrast ratios to meet 4.5:1 minimum
 
 **Acceptable for MVP (founder-only use):**
+
 - Current accessibility state is functional for a sighted, touch-capable sole operator
 - Screen reader support gaps are not blocking for MVP
 - The above items should be tracked and addressed before any additional users access the system
@@ -494,36 +526,36 @@ Given that this is an internal tool used by a single operator today, with a 3-5 
 
 This section documents where this UX contribution intersects with findings from other roles.
 
-| Role | Finding | UX Impact | Resolution |
-|------|---------|-----------|------------|
-| Product Manager | Principle #1: Numbers must be right | Financial input modals must validate numeric input before submission | Custom modals with validation replace `prompt()` (Change #1) |
-| Product Manager | Principle #4: Mobile-first, iOS Safari always | Every interaction pattern specifies mobile behavior first | All patterns documented mobile-first |
-| Product Manager | Principle #5: Operator decides, system recommends | Kill Switch Banner must not auto-reject without operator confirmation | Banner shows reason inline, operator confirms |
-| Product Manager | ADR-002 Part A: Scout failure alerting is P0 | Dashboard must show pipeline health status | Scout Health Banner added to dashboard IA (Change #5) |
-| Product Manager | ADR-003: Add `sold_price` field for outcome tracking | Results footer bar must not imply profit when only acquisition spend is available | Footer revised to "Won: N deals / $X,XXX total" using `final_price` only (Change #8) |
-| Product Manager | ADR-007: Reject flow simplification | Reject modal must resolve the dual-select ambiguity | Single-select 6-code grid, no legacy dropdown, no expandable taxonomy (Change #6) |
-| Technical Lead | R6: Data freshness (up to 15 min stale) | "Last updated" timestamp on cards and detail header | Documented in IA |
-| Technical Lead | R9: Browser `prompt()` for financial inputs | Financial input modals with validation specified | Pattern 8 (Change #1) |
-| Technical Lead | 25-second analyst timeout with gate-only fallback | UI must distinguish AI-powered analysis from gate-only fallback | Analysis source indicator on Next Action Card (Change #3) |
-| Technical Lead | Performance: LCP < 2.5s, INP < 200ms on iOS Safari | Dashboard and list views must be lightweight | Noted in Platform Constraints |
-| Business Analyst | US-007: Batch reject with single reason code | Batch reject UX specifies single reason code for all selected items | Pattern 7 |
-| Business Analyst | OQ-010: `prompt()` for financial inputs | Replaced with validated modal | Pattern 8 (Change #1) |
-| Business Analyst | BR-029: 20% haircut when gates not cleared | Gates Display card and Pricing card both note the haircut | Documented in IA |
-| Business Analyst | BR-049: Gate-based fallback when AI unavailable | Next Action Card shows "Estimate only" indicator | Change #3 |
-| Business Analyst | EC-014: Dashboard quick-pass with `other` reason fails validation | Quick-pass uses `missing_info` default + 5-second undo toast | Change #4, Pattern 9 |
-| Target Customer | Simplify reject flow | Single-select 6-code grid, no expandable section | Change #6 |
-| Target Customer | Photo swipe navigation | Lightbox supports swipe between photos | Pattern 5 |
-| Target Customer | Fewer staleness concepts | Two user-facing filter chips replace five | Documented in Pattern 2 |
-| Target Customer | "Verification Needed" label confusion | Relabeled to "Needs Info" with subtitle | Documented in IA |
-| Target Customer | Wants profit visibility on dashboard | Results footer bar with Won count and total acquisition spend | Change #8 |
-| Target Customer | Wants scout health indicator | Scout Health Banner at top of dashboard | Change #5 |
-| Target Customer | Wants to know when analysis is gate-only | Analysis source indicator on Next Action Card | Change #3 |
-| Target Customer | Wants real input modal for financial entries | Financial input modal with validation and confirmation | Change #1, Pattern 8 |
-| Target Customer | "Inspect" shortcut from inbox | Removed; replaced with highlighted Inspect CTA on qualifying when analysis exists | Change #7 |
-| Target Customer | Dashboard pass action too aggressive | Changed to `missing_info` default with 5-second undo toast | Change #4 |
-| Competitor Analyst | Native app competitors have push notification advantage | Documented PWA considerations for Phase 1 | Platform Constraints |
-| Competitor Analyst | Swoopa Dealers converging on valuations | UX must make analysis depth and workflow discipline tangible proof points | Next Action Card with analysis source indicator, gate enforcement, structured workflow |
-| Competitor Analyst | DFG's premium pricing requires premium proof | Analysis quality and workflow discipline are the UX proof points | Summary tab default, Next Action Card prominence, gate-enforced bid readiness |
+| Role               | Finding                                                           | UX Impact                                                                         | Resolution                                                                             |
+| ------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Product Manager    | Principle #1: Numbers must be right                               | Financial input modals must validate numeric input before submission              | Custom modals with validation replace `prompt()` (Change #1)                           |
+| Product Manager    | Principle #4: Mobile-first, iOS Safari always                     | Every interaction pattern specifies mobile behavior first                         | All patterns documented mobile-first                                                   |
+| Product Manager    | Principle #5: Operator decides, system recommends                 | Kill Switch Banner must not auto-reject without operator confirmation             | Banner shows reason inline, operator confirms                                          |
+| Product Manager    | ADR-002 Part A: Scout failure alerting is P0                      | Dashboard must show pipeline health status                                        | Scout Health Banner added to dashboard IA (Change #5)                                  |
+| Product Manager    | ADR-003: Add `sold_price` field for outcome tracking              | Results footer bar must not imply profit when only acquisition spend is available | Footer revised to "Won: N deals / $X,XXX total" using `final_price` only (Change #8)   |
+| Product Manager    | ADR-007: Reject flow simplification                               | Reject modal must resolve the dual-select ambiguity                               | Single-select 6-code grid, no legacy dropdown, no expandable taxonomy (Change #6)      |
+| Technical Lead     | R6: Data freshness (up to 15 min stale)                           | "Last updated" timestamp on cards and detail header                               | Documented in IA                                                                       |
+| Technical Lead     | R9: Browser `prompt()` for financial inputs                       | Financial input modals with validation specified                                  | Pattern 8 (Change #1)                                                                  |
+| Technical Lead     | 25-second analyst timeout with gate-only fallback                 | UI must distinguish AI-powered analysis from gate-only fallback                   | Analysis source indicator on Next Action Card (Change #3)                              |
+| Technical Lead     | Performance: LCP < 2.5s, INP < 200ms on iOS Safari                | Dashboard and list views must be lightweight                                      | Noted in Platform Constraints                                                          |
+| Business Analyst   | US-007: Batch reject with single reason code                      | Batch reject UX specifies single reason code for all selected items               | Pattern 7                                                                              |
+| Business Analyst   | OQ-010: `prompt()` for financial inputs                           | Replaced with validated modal                                                     | Pattern 8 (Change #1)                                                                  |
+| Business Analyst   | BR-029: 20% haircut when gates not cleared                        | Gates Display card and Pricing card both note the haircut                         | Documented in IA                                                                       |
+| Business Analyst   | BR-049: Gate-based fallback when AI unavailable                   | Next Action Card shows "Estimate only" indicator                                  | Change #3                                                                              |
+| Business Analyst   | EC-014: Dashboard quick-pass with `other` reason fails validation | Quick-pass uses `missing_info` default + 5-second undo toast                      | Change #4, Pattern 9                                                                   |
+| Target Customer    | Simplify reject flow                                              | Single-select 6-code grid, no expandable section                                  | Change #6                                                                              |
+| Target Customer    | Photo swipe navigation                                            | Lightbox supports swipe between photos                                            | Pattern 5                                                                              |
+| Target Customer    | Fewer staleness concepts                                          | Two user-facing filter chips replace five                                         | Documented in Pattern 2                                                                |
+| Target Customer    | "Verification Needed" label confusion                             | Relabeled to "Needs Info" with subtitle                                           | Documented in IA                                                                       |
+| Target Customer    | Wants profit visibility on dashboard                              | Results footer bar with Won count and total acquisition spend                     | Change #8                                                                              |
+| Target Customer    | Wants scout health indicator                                      | Scout Health Banner at top of dashboard                                           | Change #5                                                                              |
+| Target Customer    | Wants to know when analysis is gate-only                          | Analysis source indicator on Next Action Card                                     | Change #3                                                                              |
+| Target Customer    | Wants real input modal for financial entries                      | Financial input modal with validation and confirmation                            | Change #1, Pattern 8                                                                   |
+| Target Customer    | "Inspect" shortcut from inbox                                     | Removed; replaced with highlighted Inspect CTA on qualifying when analysis exists | Change #7                                                                              |
+| Target Customer    | Dashboard pass action too aggressive                              | Changed to `missing_info` default with 5-second undo toast                        | Change #4                                                                              |
+| Competitor Analyst | Native app competitors have push notification advantage           | Documented PWA considerations for Phase 1                                         | Platform Constraints                                                                   |
+| Competitor Analyst | Swoopa Dealers converging on valuations                           | UX must make analysis depth and workflow discipline tangible proof points         | Next Action Card with analysis source indicator, gate enforcement, structured workflow |
+| Competitor Analyst | DFG's premium pricing requires premium proof                      | Analysis quality and workflow discipline are the UX proof points                  | Summary tab default, Next Action Card prominence, gate-enforced bid readiness          |
 
 ---
 

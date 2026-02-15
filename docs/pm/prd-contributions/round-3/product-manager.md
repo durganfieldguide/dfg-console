@@ -54,12 +54,14 @@
 **Positioning:** DFG is an operator intelligence tool for physical asset arbitrage at auction. It automates information-gathering and analysis so the operator focuses exclusively on decision-making and execution. DFG's differentiation is (1) accurate, conservative profit analysis that prevents bad acquisitions, and (2) structured workflow that enforces disciplined decision-making. These are harder to replicate than alerts or scraping.
 
 **What DFG IS:**
+
 - A deal flow intelligence engine for physical asset acquisition
 - A conservative financial analysis tool that protects the operator from bad buys
 - A workflow system that enforces disciplined evaluation before bidding
 - A mobile-first operator console designed for on-the-go decision-making (iOS Safari primary, per CLAUDE.md)
 
 **What DFG is NOT:**
+
 - Not a marketplace or auction platform (DFG scrapes platforms; it does not host listings)
 - Not a general-purpose dashboard or analytics tool
 - Not a fully automated bidding bot (the operator makes final decisions -- Product Principle #6)
@@ -74,11 +76,10 @@
 These are ordered by priority. When principles conflict, the higher-numbered principle wins.
 
 1. **Numbers must be right.** Financial calculations are non-negotiable. A single incorrect margin or double-counted fee destroys operator trust permanently. The canonical money math is the foundation of every product decision:
-
    - Acquisition Cost = Bid + Buyer Premium + Transport + Immediate Repairs
    - Net Proceeds = Sale Price - Listing Fees - Payment Processing
    - Profit = Net Proceeds - Acquisition Cost
-   - Margin % = (Profit / Acquisition Cost) * 100
+   - Margin % = (Profit / Acquisition Cost) \* 100
 
    Listing fees are selling costs only -- never included in acquisition cost. Never double-counted. This principle extends to input mechanisms: browser `prompt()` for entering bid amounts is a numbers-must-be-right issue, not just a UX issue. The Target Customer confirmed: "If I bid based on a number the system gave me and the profit calculation was wrong, I am done."
 
@@ -100,30 +101,30 @@ These are ordered by priority. When principles conflict, the higher-numbered pri
 
 ### MVP Success Metrics
 
-| Metric | Target | Measurement Method | Timeframe | Notes |
-|--------|--------|-------------------|-----------|-------|
-| Opportunities surfaced per day | >= 15 qualified candidates | `SELECT COUNT(*) FROM opportunities WHERE status NOT IN ('rejected','archived') AND date(created_at) = date('now')` | Daily average over 30 days | Requires both sources functioning. At 17% IronPlanet capture, target may not be achievable without fix. |
-| Analysis accuracy (operator agreement) | >= 70% of BID recommendations result in operator bid or watch | MVC events: `decision_made` where `analyst_verdict = BID` and decision IN (BID, WATCH) | Rolling 30-day window | |
-| False positive rate | <= 30% of scored >= 80 opportunities get rejected | Rejection rate of high-score opportunities via `tuning_events` | Rolling 30-day window | Target Customer specifically called out false positives as trust-destroying |
-| Operator response time | Median < 4 hours from inbox to qualifying/rejected | `status_changed_at` delta from inbox to next status | Rolling 30-day window | |
-| Scout uptime | >= 95% of scheduled runs complete successfully | `scout_runs` table success rate | Weekly | Requires scout failure alerting (P0) to be meaningful |
-| Analysis latency | p95 < 45 seconds from listing to scored opportunity | Time delta: `listing.created_at` to `opportunity.last_analyzed_at` | Rolling 7-day window | Technical Lead specified 30s p95 for the AI analysis call itself |
-| Won deals per month | >= 2 acquisitions from DFG pipeline | `SELECT COUNT(*) FROM opportunities WHERE status = 'won' AND created_at > datetime('now', '-30 days')` | Monthly | Core revenue validation |
-| Realized margin on won deals | >= 25% average margin | `(sold_price - acquisition_cost) / acquisition_cost * 100` using `final_price` + `sold_price` fields | Per-deal, trailing 90 days | Requires adding `sold_price` field to opportunities (ADR-003) |
-| Scout failure detection latency | < 4 hours from failure to operator awareness | Time between last successful scout run and operator notification or dashboard banner display | Per-incident | In-app banner is P0; push notification is P0 |
+| Metric                                 | Target                                                        | Measurement Method                                                                                                  | Timeframe                  | Notes                                                                                                   |
+| -------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Opportunities surfaced per day         | >= 15 qualified candidates                                    | `SELECT COUNT(*) FROM opportunities WHERE status NOT IN ('rejected','archived') AND date(created_at) = date('now')` | Daily average over 30 days | Requires both sources functioning. At 17% IronPlanet capture, target may not be achievable without fix. |
+| Analysis accuracy (operator agreement) | >= 70% of BID recommendations result in operator bid or watch | MVC events: `decision_made` where `analyst_verdict = BID` and decision IN (BID, WATCH)                              | Rolling 30-day window      |                                                                                                         |
+| False positive rate                    | <= 30% of scored >= 80 opportunities get rejected             | Rejection rate of high-score opportunities via `tuning_events`                                                      | Rolling 30-day window      | Target Customer specifically called out false positives as trust-destroying                             |
+| Operator response time                 | Median < 4 hours from inbox to qualifying/rejected            | `status_changed_at` delta from inbox to next status                                                                 | Rolling 30-day window      |                                                                                                         |
+| Scout uptime                           | >= 95% of scheduled runs complete successfully                | `scout_runs` table success rate                                                                                     | Weekly                     | Requires scout failure alerting (P0) to be meaningful                                                   |
+| Analysis latency                       | p95 < 45 seconds from listing to scored opportunity           | Time delta: `listing.created_at` to `opportunity.last_analyzed_at`                                                  | Rolling 7-day window       | Technical Lead specified 30s p95 for the AI analysis call itself                                        |
+| Won deals per month                    | >= 2 acquisitions from DFG pipeline                           | `SELECT COUNT(*) FROM opportunities WHERE status = 'won' AND created_at > datetime('now', '-30 days')`              | Monthly                    | Core revenue validation                                                                                 |
+| Realized margin on won deals           | >= 25% average margin                                         | `(sold_price - acquisition_cost) / acquisition_cost * 100` using `final_price` + `sold_price` fields                | Per-deal, trailing 90 days | Requires adding `sold_price` field to opportunities (ADR-003)                                           |
+| Scout failure detection latency        | < 4 hours from failure to operator awareness                  | Time between last successful scout run and operator notification or dashboard banner display                        | Per-incident               | In-app banner is P0; push notification is P0                                                            |
 
 ### Kill Criteria
 
 The MVP should be killed or fundamentally reconsidered if any of the following hold true after 90 days of operation:
 
-| Kill Criterion | Threshold | Rationale | Measurability Status |
-|---------------|-----------|-----------|---------------------|
-| Zero profitable acquisitions | 0 won deals with positive margin in 90 days | System is not generating actionable intelligence | Measurable now: `opportunities WHERE status='won'` |
-| Sustained negative margins | Average margin < 10% across all won deals over 90 days | Deals being surfaced are not sufficiently undervalued | Requires `sold_price` field (ADR-003); measurable via spreadsheet until implemented |
-| Operator abandonment | < 5 opportunity detail views per week for 4 consecutive weeks | Tool is not providing enough value to justify checking | Measurable via `operator_actions` table activity counts. Hardcoded auth cannot provide login tracking -- this is the best proxy available. |
-| Scout data staleness | > 50% of opportunities have `auction_ends_at` in the past when operator first views them | Pipeline is too slow for time-sensitive auctions | Measurable now: compare `auction_ends_at` to first `operator_actions` timestamp per opportunity |
-| Analysis disagreement rate | > 60% of BID recommendations rejected by operator over 60 days | AI analysis is not calibrated to operator's actual buy box | Measurable now: MVC events where `analyst_verdict=BID` but `decision=PASS` |
-| Scout failure goes undetected | Operator discovers a scout outage > 4 hours after it begins more than twice | Failure alerting is not working; operator cannot trust coverage | Measurable once scout failure alerting is implemented (P0) |
+| Kill Criterion                | Threshold                                                                                | Rationale                                                       | Measurability Status                                                                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Zero profitable acquisitions  | 0 won deals with positive margin in 90 days                                              | System is not generating actionable intelligence                | Measurable now: `opportunities WHERE status='won'`                                                                                         |
+| Sustained negative margins    | Average margin < 10% across all won deals over 90 days                                   | Deals being surfaced are not sufficiently undervalued           | Requires `sold_price` field (ADR-003); measurable via spreadsheet until implemented                                                        |
+| Operator abandonment          | < 5 opportunity detail views per week for 4 consecutive weeks                            | Tool is not providing enough value to justify checking          | Measurable via `operator_actions` table activity counts. Hardcoded auth cannot provide login tracking -- this is the best proxy available. |
+| Scout data staleness          | > 50% of opportunities have `auction_ends_at` in the past when operator first views them | Pipeline is too slow for time-sensitive auctions                | Measurable now: compare `auction_ends_at` to first `operator_actions` timestamp per opportunity                                            |
+| Analysis disagreement rate    | > 60% of BID recommendations rejected by operator over 60 days                           | AI analysis is not calibrated to operator's actual buy box      | Measurable now: MVC events where `analyst_verdict=BID` but `decision=PASS`                                                                 |
+| Scout failure goes undetected | Operator discovers a scout outage > 4 hours after it begins more than twice              | Failure alerting is not working; operator cannot trust coverage | Measurable once scout failure alerting is implemented (P0)                                                                                 |
 
 ---
 
@@ -131,35 +132,35 @@ The MVP should be killed or fundamentally reconsidered if any of the following h
 
 ### Business Risks
 
-| # | Risk | Likelihood | Impact | Mitigation |
-|---|------|-----------|--------|------------|
-| B1 | **Auction platform blocks scraping.** IronPlanet (owned by RB Global) could restrict access. The Competitor Analyst confirmed: official API access for government auction platforms is rare. | High | Critical -- no data, no product | Multiple source adapters isolate platform-specific logic. Rate limiting and polite scraping headers. If a source becomes unscrapeable, disable it and be transparent rather than showing degraded coverage as functional. Investigate official API access but do not depend on it. |
-| B2 | **IronPlanet capture rate remains degraded.** At 17%, this is functionally a dead source. The Target Customer shifted from "fix it" to "have a fallback" after reading the platform risk assessment. | High | High -- false confidence in coverage | P0: Investigate adapter failures. Fix to >= 80% or disable with transparent indicator. Accelerate third source (GovPlanet) to late Phase 0 / early Phase 1 as pipeline insurance. |
-| B3 | **Swoopa Dealers convergence.** January 2026 launch with instant valuations, comps, and margin clarity for vehicle dealers. Moving from alert-only to analysis-assisted sourcing. | Medium | High -- narrowing differentiation window | DFG's durable advantages are canonical money math (58 business rules, source-specific fee schedules) and structured workflow with gate enforcement. These require months of operational experience to replicate. Invest in calibration data and domain knowledge encoding. |
-| B4 | **Market shift reduces trailer margins.** Phoenix trailer market could soften, reducing the core thesis. | Medium | High -- category thesis invalidated | Category system supports Power Tools and Vehicles. Outcomes tracking provides early warning. Category expansion is Phase 1/2. |
-| B5 | **Sole operator dependency.** The product stalls without active use and feedback. | High | Medium -- product stalls | Private beta (Phase 1) validates multi-user value. For Phase 0, the operator IS the product owner. |
-| B6 | **Shallow moat.** Any developer with Claude API access could build a comparable analysis engine in weeks. | Medium | Medium -- competitive pressure | The moat is operational knowledge (auction fee structures, trailer market economics, category-specific prompt engineering) plus the structured workflow. Encode this knowledge into the system rather than keeping it in the operator's head. Defensibility grows with outcome data over time. |
-| B7 | **AI analysis advantage erodes within 12-18 months.** Swoopa, Rouse, and others are investing in AI capabilities. | High | Medium -- convergence pressure | The durable advantage is calibrated AI with domain-specific prompts, category-tier systems, and operational feedback loops (tuning events). The moat is calibration data and domain knowledge, not the API call. |
+| #   | Risk                                                                                                                                                                                                 | Likelihood | Impact                                   | Mitigation                                                                                                                                                                                                                                                                                     |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | **Auction platform blocks scraping.** IronPlanet (owned by RB Global) could restrict access. The Competitor Analyst confirmed: official API access for government auction platforms is rare.         | High       | Critical -- no data, no product          | Multiple source adapters isolate platform-specific logic. Rate limiting and polite scraping headers. If a source becomes unscrapeable, disable it and be transparent rather than showing degraded coverage as functional. Investigate official API access but do not depend on it.             |
+| B2  | **IronPlanet capture rate remains degraded.** At 17%, this is functionally a dead source. The Target Customer shifted from "fix it" to "have a fallback" after reading the platform risk assessment. | High       | High -- false confidence in coverage     | P0: Investigate adapter failures. Fix to >= 80% or disable with transparent indicator. Accelerate third source (GovPlanet) to late Phase 0 / early Phase 1 as pipeline insurance.                                                                                                              |
+| B3  | **Swoopa Dealers convergence.** January 2026 launch with instant valuations, comps, and margin clarity for vehicle dealers. Moving from alert-only to analysis-assisted sourcing.                    | Medium     | High -- narrowing differentiation window | DFG's durable advantages are canonical money math (58 business rules, source-specific fee schedules) and structured workflow with gate enforcement. These require months of operational experience to replicate. Invest in calibration data and domain knowledge encoding.                     |
+| B4  | **Market shift reduces trailer margins.** Phoenix trailer market could soften, reducing the core thesis.                                                                                             | Medium     | High -- category thesis invalidated      | Category system supports Power Tools and Vehicles. Outcomes tracking provides early warning. Category expansion is Phase 1/2.                                                                                                                                                                  |
+| B5  | **Sole operator dependency.** The product stalls without active use and feedback.                                                                                                                    | High       | Medium -- product stalls                 | Private beta (Phase 1) validates multi-user value. For Phase 0, the operator IS the product owner.                                                                                                                                                                                             |
+| B6  | **Shallow moat.** Any developer with Claude API access could build a comparable analysis engine in weeks.                                                                                            | Medium     | Medium -- competitive pressure           | The moat is operational knowledge (auction fee structures, trailer market economics, category-specific prompt engineering) plus the structured workflow. Encode this knowledge into the system rather than keeping it in the operator's head. Defensibility grows with outcome data over time. |
+| B7  | **AI analysis advantage erodes within 12-18 months.** Swoopa, Rouse, and others are investing in AI capabilities.                                                                                    | High       | Medium -- convergence pressure           | The durable advantage is calibrated AI with domain-specific prompts, category-tier systems, and operational feedback loops (tuning events). The moat is calibration data and domain knowledge, not the API call.                                                                               |
 
 ### Technical Risks
 
-| # | Risk | Likelihood | Impact | Mitigation |
-|---|------|-----------|--------|------------|
-| T1 | **D1 concurrent write conflicts.** `PATCH /api/opportunities/:id` does not use optimistic locking. | Low (single operator) | High (multi-user) | Accept for MVP. Add `updated_at` optimistic lock before Phase 1. |
-| T2 | **Analyst timeout under Claude API load.** 25-second timeout; Claude API cold starts or rate limits could cause failures. | Medium | Medium -- analysis delays | Fallback: gate-only mode. Add visible indicator when analysis used gate-only fallback (new requirement from Round 3). Exponential backoff retry implemented. Analysis runs idempotent and replayable. |
-| T3 | **Shared D1 schema coupling.** dfg-scout and dfg-api share the same D1 database with different binding names. | Medium | High -- pipeline stalls | Migrations live in dfg-api for API-owned tables, dfg-scout for scout-owned tables. Schema ownership documented in Technical Lead's ownership matrix. |
-| T4 | **Auth is prototype-grade.** Hardcoded credentials. | High | Critical for multi-user, Medium for single operator | Acceptable for Phase 0. Analyst endpoints behind `ANALYST_SERVICE_SECRET`. Clerk + Stripe for Phase 1. |
-| T5 | **Verdict threshold OR logic produces non-conservative recommendations.** A deal with $600 profit but 5% margin would be recommended as BID. | High | High -- violates Principle #3, erodes operator trust | P0: Change `applyVerdictThresholds` to AND logic for BUY. Backtest against historical data before deploying. |
-| T6 | **`tuning_events` CHECK constraint rejects `status_change` event type.** Silent data loss on every auto-rejection. | High | High -- undermines algorithm feedback loop | P0: Fix code to use `event_type: 'rejection'` with `auto_rejected: true` in signal_data (preferred, no migration needed). Alternatively, add migration 0008 to expand CHECK constraint. |
-| T7 | **Platform access revocation.** IronPlanet (RB Global) could block scraping entirely. GovDeals investing in buyer engagement tools signals tightening access. | Medium | High -- loss of data source | Adapter architecture isolates platform logic. Diversify sources (GovPlanet seeded for Phase 1). Rate limiting and polite headers implemented. |
+| #   | Risk                                                                                                                                                          | Likelihood            | Impact                                               | Mitigation                                                                                                                                                                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | **D1 concurrent write conflicts.** `PATCH /api/opportunities/:id` does not use optimistic locking.                                                            | Low (single operator) | High (multi-user)                                    | Accept for MVP. Add `updated_at` optimistic lock before Phase 1.                                                                                                                                      |
+| T2  | **Analyst timeout under Claude API load.** 25-second timeout; Claude API cold starts or rate limits could cause failures.                                     | Medium                | Medium -- analysis delays                            | Fallback: gate-only mode. Add visible indicator when analysis used gate-only fallback (new requirement from Round 3). Exponential backoff retry implemented. Analysis runs idempotent and replayable. |
+| T3  | **Shared D1 schema coupling.** dfg-scout and dfg-api share the same D1 database with different binding names.                                                 | Medium                | High -- pipeline stalls                              | Migrations live in dfg-api for API-owned tables, dfg-scout for scout-owned tables. Schema ownership documented in Technical Lead's ownership matrix.                                                  |
+| T4  | **Auth is prototype-grade.** Hardcoded credentials.                                                                                                           | High                  | Critical for multi-user, Medium for single operator  | Acceptable for Phase 0. Analyst endpoints behind `ANALYST_SERVICE_SECRET`. Clerk + Stripe for Phase 1.                                                                                                |
+| T5  | **Verdict threshold OR logic produces non-conservative recommendations.** A deal with $600 profit but 5% margin would be recommended as BID.                  | High                  | High -- violates Principle #3, erodes operator trust | P0: Change `applyVerdictThresholds` to AND logic for BUY. Backtest against historical data before deploying.                                                                                          |
+| T6  | **`tuning_events` CHECK constraint rejects `status_change` event type.** Silent data loss on every auto-rejection.                                            | High                  | High -- undermines algorithm feedback loop           | P0: Fix code to use `event_type: 'rejection'` with `auto_rejected: true` in signal_data (preferred, no migration needed). Alternatively, add migration 0008 to expand CHECK constraint.               |
+| T7  | **Platform access revocation.** IronPlanet (RB Global) could block scraping entirely. GovDeals investing in buyer engagement tools signals tightening access. | Medium                | High -- loss of data source                          | Adapter architecture isolates platform logic. Diversify sources (GovPlanet seeded for Phase 1). Rate limiting and polite headers implemented.                                                         |
 
 ### Execution Risks
 
-| # | Risk | Likelihood | Impact | Mitigation |
-|---|------|-----------|--------|------------|
-| E1 | **Scope creep into multi-tenant SaaS.** Competitive pressure could push premature expansion. | Medium | High -- diverts from core value | This PRD explicitly scopes to MVP/Phase 0. Multi-tenant is Phase 2 at earliest. Target Customer: "Do not add features I did not ask for." |
-| E2 | **Over-engineering scoring algorithm.** Scoring changes without outcome data are speculative. | Medium | Medium | Scoring changes require backtesting on historical data. Tuning events capture signals for data-driven iteration. |
-| E3 | **Native app pressure.** All direct competitors have native apps. | Low (Phase 0) | Medium (Phase 1+) | Do not build a native app. Target Customer uses iOS Safari today and it works. Web push for Phase 1 notifications. Native app is Phase 3+ consideration. |
+| #   | Risk                                                                                          | Likelihood    | Impact                          | Mitigation                                                                                                                                               |
+| --- | --------------------------------------------------------------------------------------------- | ------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | **Scope creep into multi-tenant SaaS.** Competitive pressure could push premature expansion.  | Medium        | High -- diverts from core value | This PRD explicitly scopes to MVP/Phase 0. Multi-tenant is Phase 2 at earliest. Target Customer: "Do not add features I did not ask for."                |
+| E2  | **Over-engineering scoring algorithm.** Scoring changes without outcome data are speculative. | Medium        | Medium                          | Scoring changes require backtesting on historical data. Tuning events capture signals for data-driven iteration.                                         |
+| E3  | **Native app pressure.** All direct competitors have native apps.                             | Low (Phase 0) | Medium (Phase 1+)               | Do not build a native app. Target Customer uses iOS Safari today and it works. Web push for Phase 1 notifications. Native app is Phase 3+ consideration. |
 
 ---
 
@@ -168,33 +169,40 @@ The MVP should be killed or fundamentally reconsidered if any of the following h
 ### Decided (implemented or ready to implement)
 
 **ADR-001: Auth System Selection**
+
 - Status: Decided (Clerk + Stripe), not yet implemented
 - Decision: Use Clerk for authentication, Stripe for billing
 - Blocker for: Private beta (Phase 1)
 
 **ADR-002: Notification Channels (Split Decision)**
+
 - Part A -- Scout failure alerting (P0): Implement webhook notification when scout cron fails. Use Pushover, ntfy.sh, or Twilio SMS. Operator must be notified within 15 minutes of failure. In-app red banner when `last_scout_run` exceeds 30 minutes. Both mechanisms are P0.
 - Part B -- Opportunity alerting (Phase 1): Web push notifications as primary. SMS as critical-only fallback. Email for daily digest (low priority).
 
 **ADR-003: Outcome Tracking Depth**
+
 - Status: Decided for MVP
 - Decision: Add `sold_price` field to `opportunities` table via migration. Combined with `final_price` and source `buyer_premium_pct`, enables realized profit/margin calculation using canonical money math. Full P&L UI is Phase 1.
-- Realized Profit = sold_price - (final_price * (1 + buyer_premium_pct/100) + estimated_transport + estimated_repairs)
+- Realized Profit = sold_price - (final_price \* (1 + buyer_premium_pct/100) + estimated_transport + estimated_repairs)
 
 **ADR-004: Multi-Source Expansion Priority**
+
 - Status: Deferred to late Phase 0 / early Phase 1 (elevated from Round 2)
 - Decision: GovPlanet first (already seeded). Elevated urgency as pipeline insurance given IronPlanet fragility. Target Customer: "Fix what you have before adding more" but also "have a fallback."
 
 **ADR-005: Scoring Algorithm Transparency**
+
 - Status: Deferred (deprioritized behind P0 items)
 - Decision: Surface four scoring dimensions in opportunity detail view when resources allow. Not blocking.
 
 **ADR-006: Verdict Threshold Logic**
+
 - Status: P0 -- needs implementation
 - Decision: AND logic for BUY (must meet BOTH min_profit AND min_margin). OR logic for WATCH (meet either). PASS when meeting neither.
 - Rationale: OR logic allows 5% margin deals to receive BUY verdict. This violates Principle #3. Target Customer: "I will not trust a system that recommends buying 5% margin deals." Requires backtesting against historical data before deployment.
 
 **ADR-007: Reject Flow Simplification**
+
 - Status: Decided
 - Decision: Remove the legacy single-select dropdown from the UI. Show the multi-select reason code grid as the sole mechanism, defaulting to the 6 most common codes with an expandable "More reasons" section. Backend maps the first selected code to the legacy `rejection_reason` field for backward compatibility. "Other" requires a note. Two-tap completion on mobile (select reason, confirm).
 
@@ -214,6 +222,7 @@ The MVP should be killed or fundamentally reconsidered if any of the following h
 Phase 0 is largely complete. The system is operational and producing revenue. Remaining Phase 0 work is hardening and gap-filling based on three rounds of cross-role review.
 
 **What is built and working:**
+
 - Scout pipeline with Sierra + IronPlanet adapters (cron every 15 minutes)
 - Three-gate classification (price, negative keywords, positive keywords)
 - Claude-powered dual-lens analysis (operator perspective + buyer perspective)
@@ -233,22 +242,23 @@ Phase 0 is largely complete. The system is operational and producing revenue. Re
 
 **Remaining Phase 0 work (prioritized, stable after three rounds):**
 
-| Item | Priority | Description | Consensus |
-|------|----------|-------------|-----------|
-| Scout failure alerting -- in-app banner | P0 | Red dashboard banner when `last_scout_run` exceeds 30 minutes. Populate `last_scout_run` on stats endpoint. | All 6 roles agree |
-| Scout failure alerting -- push notification | P0 | Simple webhook/SMS (Pushover, ntfy.sh, or Twilio) when scout cron fails. Notify within 15 minutes. | All 6 roles agree |
-| Verdict threshold AND logic | P0 | Change `applyVerdictThresholds` to require BOTH min_profit AND min_margin for BUY. Current OR logic violates Principle #3. Backtest before deploying. | PM, BA, TC, TL agree |
-| `tuning_events` CHECK constraint fix | P0 | Fix auto-rejection code to use `event_type: 'rejection'` with `auto_rejected: true` in signal_data. Alternatively, expand CHECK constraint via migration 0008. | BA, TL agree (confirmed bug) |
-| Security: Auth on analyst endpoints | P0 | Verify `ANALYST_SERVICE_SECRET` is enforced on all non-health analyst routes. Issue #123. | PM, TC, TL agree |
-| IronPlanet capture rate investigation | P0 | Investigate adapter failures. Fix to >= 80% capture rate or disable source and remove from Sources page. Never show "active" at 17%. | PM, TC agree |
-| Dashboard quick-pass default reason fix | P0 | Change inline Pass action default from `rejection_reason='other'` to `rejection_reason='missing_info'` to prevent silent validation failure. One-line fix. | BA (EC-014), TC, UX agree |
-| Gate-only fallback indicator | P0 | When `ai_analysis_json = null` on an analysis run, display "Analysis: Gates only -- AI was unavailable" on Next Action Card. | TC raised, PM added |
-| Add `sold_price` field to opportunities | P1 | Simple migration to enable minimum viable outcome tracking. Required to measure "realized margin >= 25%" success metric. | PM, BA agree |
-| `last_scout_run` on stats endpoint | P1 | Currently returns null. Required for dashboard banner and pipeline health monitoring. | BA, TL agree |
-| "Needs Info" label rename | P1 | Rename "Verification Needed" to "Needs Info" with subtitle "Missing title, lien, or mileage data." Frontend text change only. | TC, UX, BA agree |
-| 3 failing scout tests | P2 | Known tech debt. Fix before adding more tests. | TL identified |
+| Item                                        | Priority | Description                                                                                                                                                    | Consensus                    |
+| ------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Scout failure alerting -- in-app banner     | P0       | Red dashboard banner when `last_scout_run` exceeds 30 minutes. Populate `last_scout_run` on stats endpoint.                                                    | All 6 roles agree            |
+| Scout failure alerting -- push notification | P0       | Simple webhook/SMS (Pushover, ntfy.sh, or Twilio) when scout cron fails. Notify within 15 minutes.                                                             | All 6 roles agree            |
+| Verdict threshold AND logic                 | P0       | Change `applyVerdictThresholds` to require BOTH min_profit AND min_margin for BUY. Current OR logic violates Principle #3. Backtest before deploying.          | PM, BA, TC, TL agree         |
+| `tuning_events` CHECK constraint fix        | P0       | Fix auto-rejection code to use `event_type: 'rejection'` with `auto_rejected: true` in signal_data. Alternatively, expand CHECK constraint via migration 0008. | BA, TL agree (confirmed bug) |
+| Security: Auth on analyst endpoints         | P0       | Verify `ANALYST_SERVICE_SECRET` is enforced on all non-health analyst routes. Issue #123.                                                                      | PM, TC, TL agree             |
+| IronPlanet capture rate investigation       | P0       | Investigate adapter failures. Fix to >= 80% capture rate or disable source and remove from Sources page. Never show "active" at 17%.                           | PM, TC agree                 |
+| Dashboard quick-pass default reason fix     | P0       | Change inline Pass action default from `rejection_reason='other'` to `rejection_reason='missing_info'` to prevent silent validation failure. One-line fix.     | BA (EC-014), TC, UX agree    |
+| Gate-only fallback indicator                | P0       | When `ai_analysis_json = null` on an analysis run, display "Analysis: Gates only -- AI was unavailable" on Next Action Card.                                   | TC raised, PM added          |
+| Add `sold_price` field to opportunities     | P1       | Simple migration to enable minimum viable outcome tracking. Required to measure "realized margin >= 25%" success metric.                                       | PM, BA agree                 |
+| `last_scout_run` on stats endpoint          | P1       | Currently returns null. Required for dashboard banner and pipeline health monitoring.                                                                          | BA, TL agree                 |
+| "Needs Info" label rename                   | P1       | Rename "Verification Needed" to "Needs Info" with subtitle "Missing title, lien, or mileage data." Frontend text change only.                                  | TC, UX, BA agree             |
+| 3 failing scout tests                       | P2       | Known tech debt. Fix before adding more tests.                                                                                                                 | TL identified                |
 
 **Explicitly NOT in Phase 0 (confirmed by three rounds of cross-role review):**
+
 - Push notifications for opportunities (Phase 1 -- ADR-002 Part B)
 - New auction source adapters (late Phase 0 / early Phase 1 -- ADR-004, elevated)
 - Outcome tracking UI/dashboard (Phase 1)
@@ -265,22 +275,23 @@ Phase 1 transforms DFG from a founder tool into a system that 3-5 private beta u
 
 **Features in Phase 1 (ordered by priority):**
 
-| # | Feature | Rationale |
-|---|---------|-----------|
-| 1 | Replace browser `prompt()` with validated financial input modals | Numbers must be right (Principle #1). Pre-beta blocker. UX Lead specified Pattern 8. |
-| 2 | Clerk authentication | Replace hardcoded auth. Required for any external user. |
-| 3 | Stripe billing integration | Subscription management ($149/mo target). |
-| 4 | GovPlanet adapter | Third auction source. Pipeline insurance against IronPlanet fragility. |
-| 5 | Web push notification system | Operators need alerts without keeping the console open. Competitive table stake. |
-| 6 | Reject flow simplification | Implement ADR-007: single multi-select grid, remove legacy dropdown. |
-| 7 | Outcome tracking UI | Simple P&L entry for won deals, realized margin calculation. |
-| 8 | Onboarding flow | New users need location setup, category preferences. |
-| 9 | Per-user category/location preferences | Different operators have different buy boxes. |
-| 10 | Photo lightbox swipe gestures | Target Customer requested. Achievable with CSS touch-action and JS touch handlers. |
-| 11 | Accessibility fixes for multi-user | Keyboard navigation, focus trapping, touch target sizes (5 items from UX Lead). |
-| 12 | 5-second undo toast for dashboard quick actions | Target Customer requested. Protects against accidental Pass on good deals. |
+| #   | Feature                                                          | Rationale                                                                            |
+| --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 1   | Replace browser `prompt()` with validated financial input modals | Numbers must be right (Principle #1). Pre-beta blocker. UX Lead specified Pattern 8. |
+| 2   | Clerk authentication                                             | Replace hardcoded auth. Required for any external user.                              |
+| 3   | Stripe billing integration                                       | Subscription management ($149/mo target).                                            |
+| 4   | GovPlanet adapter                                                | Third auction source. Pipeline insurance against IronPlanet fragility.               |
+| 5   | Web push notification system                                     | Operators need alerts without keeping the console open. Competitive table stake.     |
+| 6   | Reject flow simplification                                       | Implement ADR-007: single multi-select grid, remove legacy dropdown.                 |
+| 7   | Outcome tracking UI                                              | Simple P&L entry for won deals, realized margin calculation.                         |
+| 8   | Onboarding flow                                                  | New users need location setup, category preferences.                                 |
+| 9   | Per-user category/location preferences                           | Different operators have different buy boxes.                                        |
+| 10  | Photo lightbox swipe gestures                                    | Target Customer requested. Achievable with CSS touch-action and JS touch handlers.   |
+| 11  | Accessibility fixes for multi-user                               | Keyboard navigation, focus trapping, touch target sizes (5 items from UX Lead).      |
+| 12  | 5-second undo toast for dashboard quick actions                  | Target Customer requested. Protects against accidental Pass on good deals.           |
 
 **Not in Phase 1:**
+
 - Multi-tenant data isolation (beta users can share deal flow for Phoenix area)
 - Custom scoring algorithm per user
 - Native mobile app
@@ -291,17 +302,17 @@ Phase 1 transforms DFG from a founder tool into a system that 3-5 private beta u
 
 Phase 2 targets 25-30 paying users at approximately $3,700-4,500 MRR.
 
-| Feature | Rationale for Deferral |
-|---------|----------------------|
-| Multi-tenant data isolation | Not needed until user count creates contention on shared deal flow |
-| Per-user scoring customization | Needs outcome data from multiple users to calibrate |
-| Additional auction platform adapters (GovDeals, Public Surplus) | Breadth after depth |
-| Algorithm auto-tuning from outcomes | Requires sufficient outcome volume for statistical validity |
-| Geographic market expansion beyond Phoenix | Currently hard-coded in `phoenix-market-data.ts`; expand after per-user location prefs proven |
-| Team/organization support | Solo operators first |
-| Free trial / freemium tier | Validate pricing with beta before giving anything away |
-| Optimistic locking on PATCH endpoint | Required before concurrent multi-user writes |
-| Request queuing for analyst calls | Queue needed at scale; synchronous 25s timeout is single-operator only |
+| Feature                                                         | Rationale for Deferral                                                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Multi-tenant data isolation                                     | Not needed until user count creates contention on shared deal flow                            |
+| Per-user scoring customization                                  | Needs outcome data from multiple users to calibrate                                           |
+| Additional auction platform adapters (GovDeals, Public Surplus) | Breadth after depth                                                                           |
+| Algorithm auto-tuning from outcomes                             | Requires sufficient outcome volume for statistical validity                                   |
+| Geographic market expansion beyond Phoenix                      | Currently hard-coded in `phoenix-market-data.ts`; expand after per-user location prefs proven |
+| Team/organization support                                       | Solo operators first                                                                          |
+| Free trial / freemium tier                                      | Validate pricing with beta before giving anything away                                        |
+| Optimistic locking on PATCH endpoint                            | Required before concurrent multi-user writes                                                  |
+| Request queuing for analyst calls                               | Queue needed at scale; synchronous 25s timeout is single-operator only                        |
 
 ---
 
@@ -309,34 +320,34 @@ Phase 2 targets 25-30 paying users at approximately $3,700-4,500 MRR.
 
 After three rounds, the following items have universal or near-universal agreement:
 
-| Item | Consensus Level | Notes |
-|------|----------------|-------|
-| Scout failure alerting is P0 | All 6 roles | Highest-priority gap |
-| Verdict threshold AND logic is P0 | 5 roles (PM, BA, TC, TL, UX implicit) | OR logic violates Principle #3 |
-| `tuning_events` CHECK constraint is a bug | 3 roles (BA, TL, PM) | Silent data loss on every auto-rejection |
-| Canonical money math is non-negotiable | All 6 roles | Foundation of product trust |
-| IronPlanet at 17% is unacceptable as "active" | All 6 roles | Fix or disable with transparency |
-| Reject flow needs simplification | 4 roles (TC, UX, BA, PM) | Single grid, remove legacy dropdown |
-| "Verification Needed" rename to "Needs Info" | 3 roles (TC, UX, BA) | Frontend text change |
-| State machine should NOT allow inbox-to-bid | 4 roles (TL, BA, PM, TC retracted) | Discipline over speed |
-| Native app is not Phase 0 or Phase 1 | All 6 roles | Web app on iOS Safari is deliberate |
-| Outcome tracking UI is Phase 1 | 5 roles | Target Customer: "not why I open DFG" |
+| Item                                          | Consensus Level                       | Notes                                    |
+| --------------------------------------------- | ------------------------------------- | ---------------------------------------- |
+| Scout failure alerting is P0                  | All 6 roles                           | Highest-priority gap                     |
+| Verdict threshold AND logic is P0             | 5 roles (PM, BA, TC, TL, UX implicit) | OR logic violates Principle #3           |
+| `tuning_events` CHECK constraint is a bug     | 3 roles (BA, TL, PM)                  | Silent data loss on every auto-rejection |
+| Canonical money math is non-negotiable        | All 6 roles                           | Foundation of product trust              |
+| IronPlanet at 17% is unacceptable as "active" | All 6 roles                           | Fix or disable with transparency         |
+| Reject flow needs simplification              | 4 roles (TC, UX, BA, PM)              | Single grid, remove legacy dropdown      |
+| "Verification Needed" rename to "Needs Info"  | 3 roles (TC, UX, BA)                  | Frontend text change                     |
+| State machine should NOT allow inbox-to-bid   | 4 roles (TL, BA, PM, TC retracted)    | Discipline over speed                    |
+| Native app is not Phase 0 or Phase 1          | All 6 roles                           | Web app on iOS Safari is deliberate      |
+| Outcome tracking UI is Phase 1                | 5 roles                               | Target Customer: "not why I open DFG"    |
 
 ---
 
 ## Appendix: Contradiction Resolution Log (All Rounds)
 
-| Contradiction | Round Identified | Resolution |
-|---------------|-----------------|------------|
-| Tech Lead defers outcomes table vs. BA says `final_price` alone is insufficient | Round 1 | Resolved: Add `sold_price` field to opportunities (minimal migration, not full table) |
-| Target Customer wants inbox-to-bid vs. state machine disallows it | Round 1 | Resolved Round 2: Target Customer retracted after reading state machine rationale. UX Lead proposed inspect shortcut for Phase 1. |
-| Target Customer says MVC logging is irrelevant vs. Principle #7 | Round 1 | Resolved: MVC logging stays (already built, zero maintenance cost). No further investment in MVP. |
-| UX Lead recommends replacing `prompt()` vs. Target Customer was using it fine | Round 1 | **Partially resolved Round 3:** Classified as P1 first-item (pre-beta blocker). Target Customer revised to "should be P0." See Unresolved Issues. |
-| Competitor Analyst says moat is shallow vs. PM positions DFG as differentiated | Round 1 | Resolved: Moat is operational knowledge and conservative analysis quality, not technical barriers. Reflected in Principles and phased plan. |
-| PM had scout alerting at P1 vs. Target Customer demanded P0 | Round 2 | Resolved Round 2: Elevated to P0. Unanimous in Round 3. |
-| BA classifies `prompt()` as P1 pre-beta blocker vs. TC says P0 | Round 2 | **See Unresolved Issues** |
-| Quick-pass dashboard action fails on "other" validation | Round 2 | Resolved Round 3: Change default reason to `missing_info` |
-| IronPlanet: fix capture rate vs. add third source as fallback | Round 2 | Resolved Round 3: Do both. Fix or disable IronPlanet (P0). Accelerate GovPlanet (late Phase 0 / early Phase 1). |
+| Contradiction                                                                   | Round Identified | Resolution                                                                                                                                        |
+| ------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tech Lead defers outcomes table vs. BA says `final_price` alone is insufficient | Round 1          | Resolved: Add `sold_price` field to opportunities (minimal migration, not full table)                                                             |
+| Target Customer wants inbox-to-bid vs. state machine disallows it               | Round 1          | Resolved Round 2: Target Customer retracted after reading state machine rationale. UX Lead proposed inspect shortcut for Phase 1.                 |
+| Target Customer says MVC logging is irrelevant vs. Principle #7                 | Round 1          | Resolved: MVC logging stays (already built, zero maintenance cost). No further investment in MVP.                                                 |
+| UX Lead recommends replacing `prompt()` vs. Target Customer was using it fine   | Round 1          | **Partially resolved Round 3:** Classified as P1 first-item (pre-beta blocker). Target Customer revised to "should be P0." See Unresolved Issues. |
+| Competitor Analyst says moat is shallow vs. PM positions DFG as differentiated  | Round 1          | Resolved: Moat is operational knowledge and conservative analysis quality, not technical barriers. Reflected in Principles and phased plan.       |
+| PM had scout alerting at P1 vs. Target Customer demanded P0                     | Round 2          | Resolved Round 2: Elevated to P0. Unanimous in Round 3.                                                                                           |
+| BA classifies `prompt()` as P1 pre-beta blocker vs. TC says P0                  | Round 2          | **See Unresolved Issues**                                                                                                                         |
+| Quick-pass dashboard action fails on "other" validation                         | Round 2          | Resolved Round 3: Change default reason to `missing_info`                                                                                         |
+| IronPlanet: fix capture rate vs. add third source as fallback                   | Round 2          | Resolved Round 3: Do both. Fix or disable IronPlanet (P0). Accelerate GovPlanet (late Phase 0 / early Phase 1).                                   |
 
 ---
 

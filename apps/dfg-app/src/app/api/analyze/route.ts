@@ -9,65 +9,65 @@
  * - ANALYST_SERVICE_SECRET: Bearer token for authenticating with dfg-analyst worker
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Check if user is authenticated
-  const session = await getServerSession();
+  const session = await getServerSession()
   if (!session) {
     return NextResponse.json(
       { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
       { status: 401 }
-    );
+    )
   }
 
   // Get analyst URL and service secret from environment
-  const analystUrl = process.env.DFG_ANALYST_URL;
-  const serviceSecret = process.env.ANALYST_SERVICE_SECRET;
+  const analystUrl = process.env.DFG_ANALYST_URL
+  const serviceSecret = process.env.ANALYST_SERVICE_SECRET
 
   if (!analystUrl) {
-    console.error('[analyze] DFG_ANALYST_URL environment variable not set');
+    console.error('[analyze] DFG_ANALYST_URL environment variable not set')
     return NextResponse.json(
       { error: { code: 'CONFIG_ERROR', message: 'Analyst URL not configured' } },
       { status: 500 }
-    );
+    )
   }
 
   if (!serviceSecret) {
-    console.error('[analyze] ANALYST_SERVICE_SECRET environment variable not set');
+    console.error('[analyze] ANALYST_SERVICE_SECRET environment variable not set')
     return NextResponse.json(
       { error: { code: 'CONFIG_ERROR', message: 'Analyst service secret not configured' } },
       { status: 500 }
-    );
+    )
   }
 
   try {
-    const body = await request.text();
-    const targetUrl = `${analystUrl.replace(/\/$/, '')}/analyze`;
+    const body = await request.text()
+    const targetUrl = `${analystUrl.replace(/\/$/, '')}/analyze`
 
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${serviceSecret}`,
+        Authorization: `Bearer ${serviceSecret}`,
       },
       body,
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     return NextResponse.json(data, {
       status: response.status,
       headers: {
         'Cache-Control': 'no-store',
       },
-    });
+    })
   } catch (error) {
-    console.error('[analyze] Fetch error:', error);
+    console.error('[analyze] Fetch error:', error)
     return NextResponse.json(
       { error: { code: 'ANALYST_ERROR', message: 'Failed to reach analyst' } },
       { status: 502 }
-    );
+    )
   }
 }

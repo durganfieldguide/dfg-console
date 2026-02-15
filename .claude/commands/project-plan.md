@@ -15,6 +15,7 @@ Create a detailed implementation plan before starting work on a complex issue:
 4. Once approved, exit planning mode and begin implementation
 
 **When to use this command:**
+
 - Issues with points >= 3
 - Issues tagged with prio:P0
 - Multi-file changes
@@ -22,6 +23,7 @@ Create a detailed implementation plan before starting work on a complex issue:
 - Features with unclear requirements
 
 **Do not use for:**
+
 - Simple bug fixes
 - Single-file changes
 - Trivial updates

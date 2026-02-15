@@ -1,51 +1,49 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { Check, ClipboardCheck } from 'lucide-react';
+import * as React from 'react'
+import { Check, ClipboardCheck } from 'lucide-react'
 
 export interface ChecklistItem {
-  id: string;
-  label: string;
-  critical: boolean;
+  id: string
+  label: string
+  critical: boolean
 }
 
 interface PreBidChecklistProps {
-  items: ChecklistItem[];
-  className?: string;
-  onComplete?: (allCleared: boolean, clearedItems: string[]) => void;
+  items: ChecklistItem[]
+  className?: string
+  onComplete?: (allCleared: boolean, clearedItems: string[]) => void
 }
 
 export function PreBidChecklist({ items, className = '', onComplete }: PreBidChecklistProps) {
-  const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set());
+  const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
 
   const toggleItem = (id: string) => {
-    const newChecked = new Set(checkedItems);
+    const newChecked = new Set(checkedItems)
     if (newChecked.has(id)) {
-      newChecked.delete(id);
+      newChecked.delete(id)
     } else {
-      newChecked.add(id);
+      newChecked.add(id)
     }
-    setCheckedItems(newChecked);
+    setCheckedItems(newChecked)
 
     // Notify parent of completion status
     if (onComplete) {
-      const allCleared = items.every((item) => newChecked.has(item.id));
-      onComplete(allCleared, Array.from(newChecked));
+      const allCleared = items.every((item) => newChecked.has(item.id))
+      onComplete(allCleared, Array.from(newChecked))
     }
-  };
+  }
 
-  const criticalItems = items.filter((item) => item.critical);
-  const otherItems = items.filter((item) => !item.critical);
-  const allCriticalCleared = criticalItems.every((item) => checkedItems.has(item.id));
-  const allCleared = items.every((item) => checkedItems.has(item.id));
+  const criticalItems = items.filter((item) => item.critical)
+  const otherItems = items.filter((item) => !item.critical)
+  const allCriticalCleared = criticalItems.every((item) => checkedItems.has(item.id))
+  const allCleared = items.every((item) => checkedItems.has(item.id))
 
   return (
     <div
       className={`rounded-lg border-2 overflow-hidden ${className}`}
       style={{
-        borderColor: allCriticalCleared
-          ? 'rgba(34, 197, 94, 0.5)'
-          : 'rgba(245, 158, 11, 0.5)',
+        borderColor: allCriticalCleared ? 'rgba(34, 197, 94, 0.5)' : 'rgba(245, 158, 11, 0.5)',
       }}
     >
       {/* Header */}
@@ -116,7 +114,7 @@ export function PreBidChecklist({ items, className = '', onComplete }: PreBidChe
         )}
       </div>
     </div>
-  );
+  )
 }
 
 function ChecklistRow({
@@ -124,9 +122,9 @@ function ChecklistRow({
   checked,
   onToggle,
 }: {
-  item: ChecklistItem;
-  checked: boolean;
-  onToggle: () => void;
+  item: ChecklistItem
+  checked: boolean
+  onToggle: () => void
 }) {
   return (
     <label
@@ -146,22 +144,13 @@ function ChecklistRow({
       >
         {checked && <Check className="h-3.5 w-3.5 text-white" />}
       </div>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onToggle}
-        className="sr-only"
-      />
-      <span
-        className={`flex-1 text-sm ${
-          checked ? 'line-through opacity-60' : ''
-        }`}
-      >
+      <input type="checkbox" checked={checked} onChange={onToggle} className="sr-only" />
+      <span className={`flex-1 text-sm ${checked ? 'line-through opacity-60' : ''}`}>
         {item.label}
         {item.critical && !checked && (
           <span className="ml-2 text-xs text-red-500 font-medium">CRITICAL</span>
         )}
       </span>
     </label>
-  );
+  )
 }

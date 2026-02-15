@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
-import { STATUS_COLORS, STATUS_LABELS } from '@/lib/utils';
-import type { OpportunityStatus } from '@dfg/types';
+import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
+import { STATUS_COLORS, STATUS_LABELS } from '@/lib/utils'
+import type { OpportunityStatus } from '@dfg/types'
 
 // Generic Badge component with variants
 const badgeVariants = cva(
@@ -27,23 +27,20 @@ const badgeVariants = cva(
       variant: 'default',
     },
   }
-);
+)
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 
 export function Badge({ className, variant, ...props }: BadgeProps) {
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  );
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />
 }
 
-export { badgeVariants };
+export { badgeVariants }
 
 interface StatusBadgeProps {
-  status: OpportunityStatus;
-  className?: string;
+  status: OpportunityStatus
+  className?: string
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
@@ -57,20 +54,20 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     >
       {STATUS_LABELS[status]}
     </span>
-  );
+  )
 }
 
 interface ScoreBadgeProps {
-  score: number;
-  className?: string;
+  score: number
+  className?: string
 }
 
 export function ScoreBadge({ score, className }: ScoreBadgeProps) {
   const getBgColor = (score: number) => {
-    if (score >= 70) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-    if (score >= 40) return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
-    return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-  };
+    if (score >= 70) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    if (score >= 40) return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+    return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+  }
 
   return (
     <span
@@ -82,16 +79,16 @@ export function ScoreBadge({ score, className }: ScoreBadgeProps) {
     >
       {Math.round(score)}
     </span>
-  );
+  )
 }
 
 interface AlertBadgeProps {
-  count: number;
-  className?: string;
+  count: number
+  className?: string
 }
 
 export function AlertBadge({ count, className }: AlertBadgeProps) {
-  if (count === 0) return null;
+  if (count === 0) return null
 
   return (
     <span
@@ -103,5 +100,5 @@ export function AlertBadge({ count, className }: AlertBadgeProps) {
     >
       {count > 99 ? '99+' : count}
     </span>
-  );
+  )
 }

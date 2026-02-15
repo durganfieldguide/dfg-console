@@ -4,15 +4,15 @@
  */
 export interface FeeScheduleTier {
   /** Minimum bid amount (inclusive) */
-  minBid: number;
+  minBid: number
   /** Maximum bid amount (inclusive, use Infinity for uncapped) */
-  maxBid: number;
+  maxBid: number
   /** Fee calculation type */
-  feeType: 'flat' | 'percent';
+  feeType: 'flat' | 'percent'
   /** Fee amount: dollars if flat, decimal if percent (0.03 = 3%) */
-  amount: number;
+  amount: number
   /** Optional maximum fee cap in dollars */
-  cap?: number;
+  cap?: number
 }
 
 /**
@@ -20,9 +20,9 @@ export interface FeeScheduleTier {
  */
 export interface FeeSchedule {
   /** Source identifier (e.g., 'sierra', 'rbid') */
-  source: string;
+  source: string
   /** Ordered tiers (evaluated in order, first match wins) */
-  tiers: FeeScheduleTier[];
+  tiers: FeeScheduleTier[]
 }
 
 /**
@@ -30,13 +30,13 @@ export interface FeeSchedule {
  */
 export interface AcquisitionInput {
   /** Winning bid amount */
-  bid: number;
+  bid: number
   /** Buyer premium (calculated from fee schedule) */
-  buyerPremium: number;
+  buyerPremium: number
   /** Transport/shipping cost */
-  transport: number;
+  transport: number
   /** Immediate repairs needed before resale */
-  immediateRepairs: number;
+  immediateRepairs: number
 }
 
 /**
@@ -44,11 +44,11 @@ export interface AcquisitionInput {
  */
 export interface ProceedsInput {
   /** Expected or actual sale price */
-  salePrice: number;
+  salePrice: number
   /** Listing/marketplace fees (e.g., eBay, Facebook) */
-  listingFees: number;
+  listingFees: number
   /** Payment processing fees (e.g., PayPal, Stripe) */
-  paymentProcessing: number;
+  paymentProcessing: number
 }
 
 /**
@@ -56,11 +56,11 @@ export interface ProceedsInput {
  */
 export interface DealAnalysis {
   /** Total cost to acquire the asset */
-  acquisitionCost: number;
+  acquisitionCost: number
   /** Net cash received after selling fees */
-  netProceeds: number;
+  netProceeds: number
   /** Profit = Net Proceeds - Acquisition Cost */
-  profit: number;
+  profit: number
   /** Margin = (Profit / Acquisition Cost) * 100 */
-  marginPercent: number;
+  marginPercent: number
 }

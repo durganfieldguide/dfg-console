@@ -1,48 +1,46 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { RefreshCw, Check } from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
-import { listSources, updateSource } from '@/lib/api';
-import type { Source } from '@dfg/types';
+import { useEffect, useState } from 'react'
+import { RefreshCw, Check } from 'lucide-react'
+import { Navigation } from '@/components/Navigation'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
+import { listSources, updateSource } from '@/lib/api'
+import type { Source } from '@dfg/types'
 
 export default function SettingsPage() {
-  const [sources, setSources] = useState<Source[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<string | null>(null);
+  const [sources, setSources] = useState<Source[]>([])
+  const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchSources();
-  }, []);
+    fetchSources()
+  }, [])
 
   const fetchSources = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const data = await listSources();
-      setSources(data);
+      const data = await listSources()
+      setSources(data)
     } catch (error) {
-      console.error('Failed to fetch sources:', error);
+      console.error('Failed to fetch sources:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const toggleSource = async (source: Source) => {
-    setUpdating(source.id);
+    setUpdating(source.id)
     try {
-      const updated = await updateSource(source.id, { enabled: !source.enabled });
-      setSources((prev) =>
-        prev.map((s) => (s.id === source.id ? updated : s))
-      );
+      const updated = await updateSource(source.id, { enabled: !source.enabled })
+      setSources((prev) => prev.map((s) => (s.id === source.id ? updated : s)))
     } catch (error) {
-      console.error('Failed to update source:', error);
+      console.error('Failed to update source:', error)
     } finally {
-      setUpdating(null);
+      setUpdating(null)
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -52,7 +50,7 @@ export default function SettingsPage() {
           <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
         </main>
       </div>
-    );
+    )
   }
 
   return (
@@ -63,9 +61,7 @@ export default function SettingsPage() {
         {/* Header - hidden on mobile, Navigation provides mobile header (#82) */}
         <header className="hidden md:block sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between px-4 h-14">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Settings
-            </h1>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h1>
             <Button variant="ghost" size="sm" onClick={fetchSources} disabled={loading}>
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
             </Button>
@@ -89,7 +85,8 @@ export default function SettingsPage() {
                       {source.display_name}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {source.default_buyer_premium_pct}% premium, {source.default_pickup_days} days pickup
+                      {source.default_buyer_premium_pct}% premium, {source.default_pickup_days} days
+                      pickup
                     </p>
                     {source.last_run_at && (
                       <p className="text-xs text-gray-400">
@@ -159,5 +156,5 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
-  );
+  )
 }

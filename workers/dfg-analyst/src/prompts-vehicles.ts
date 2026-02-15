@@ -82,7 +82,7 @@ BUYER IMPACT:
   "known_issues": ["brief description of visible/stated issues"],
   "inspection_required": ["brief items"],
   "extraction_notes": ["brief notes"]
-}`;
+}`
 
 export const BUYER_LENS_PROMPT_VEHICLES = `Analyze this vehicle from a CONSERVATIVE BUYER's perspective.
 
@@ -104,7 +104,7 @@ export const BUYER_LENS_PROMPT_VEHICLES = `Analyze this vehicle from a CONSERVAT
 
 Use retail repair pricing: oil change $80-120, brakes $300-600/axle, tires $600-1200 set.
 Buyers discount heavily for: salvage title (30-50%), high mileage, visible damage.
-Keep all string values SHORT. Max 3-5 items per array.`;
+Keep all string values SHORT. Max 3-5 items per array.`
 
 export const INVESTOR_LENS_PROMPT_VEHICLES = `You are a Phoenix-based vehicle flipper evaluating an acquisition.
 
@@ -158,18 +158,21 @@ Acquisition: {{ACQUISITION_JSON}}
 - Title status is CRITICAL: clean title, salvage (30-50% discount required), rebuilt
 - Mileage bands matter: <100k good, 100-150k acceptable, >150k = budget buyer only
 - Include any mechanical unknowns as risk factors
-- For salvage title: profit must be exceptional to justify (>$3k minimum)`;
+- For salvage title: profit must be exceptional to justify (>$3k minimum)`
 
 export function buildConditionPromptVehicles(description: string, photoCount: number): string {
   return `${CONDITION_ASSESSMENT_PROMPT_VEHICLES}
 
 LISTING: ${description}
 
-Photos: ${photoCount}. Return ONLY the JSON object, no markdown.`;
+Photos: ${photoCount}. Return ONLY the JSON object, no markdown.`
 }
 
 export function buildBuyerLensPromptVehicles(conditionJson: string): string {
-  return BUYER_LENS_PROMPT_VEHICLES.replace("{{CONDITION_JSON}}", conditionJson) + "\n\nReturn ONLY JSON, no markdown.";
+  return (
+    BUYER_LENS_PROMPT_VEHICLES.replace('{{CONDITION_JSON}}', conditionJson) +
+    '\n\nReturn ONLY JSON, no markdown.'
+  )
 }
 
 export function buildInvestorLensPromptVehicles(
@@ -178,30 +181,31 @@ export function buildInvestorLensPromptVehicles(
   repairPlanJson: string,
   acquisitionJson: string,
   metrics: {
-    maxBid: number;
-    totalInvestment: number;
+    maxBid: number
+    totalInvestment: number
     scenarios: {
-      quick_sale: { sale_price: number; gross_profit: number; margin: number };
-      expected: { sale_price: number; gross_profit: number; margin: number };
-      premium: { sale_price: number; gross_profit: number; margin: number };
-    };
+      quick_sale: { sale_price: number; gross_profit: number; margin: number }
+      expected: { sale_price: number; gross_profit: number; margin: number }
+      premium: { sale_price: number; gross_profit: number; margin: number }
+    }
   }
 ): string {
-  return INVESTOR_LENS_PROMPT_VEHICLES
-    .replace("{{CONDITION_JSON}}", conditionJson)
-    .replace("{{MARKET_COMPS_JSON}}", marketCompsJson)
-    .replace("{{REPAIR_PLAN_JSON}}", repairPlanJson)
-    .replace("{{ACQUISITION_JSON}}", acquisitionJson)
-    .replace("{{MAX_BID}}", String(metrics.maxBid))
-    .replace("{{TOTAL_INVESTMENT}}", String(metrics.totalInvestment))
-    .replace("{{QS_PRICE}}", String(metrics.scenarios.quick_sale.sale_price))
-    .replace("{{QS_PROFIT}}", String(metrics.scenarios.quick_sale.gross_profit))
-    .replace("{{QS_MARGIN}}", String(metrics.scenarios.quick_sale.margin))
-    .replace("{{EXP_PRICE}}", String(metrics.scenarios.expected.sale_price))
-    .replace("{{EXP_PROFIT}}", String(metrics.scenarios.expected.gross_profit))
-    .replace("{{EXP_MARGIN}}", String(metrics.scenarios.expected.margin))
-    .replace("{{PREM_PRICE}}", String(metrics.scenarios.premium.sale_price))
-    .replace("{{PREM_PROFIT}}", String(metrics.scenarios.premium.gross_profit))
-    .replace("{{PREM_MARGIN}}", String(metrics.scenarios.premium.margin))
-    + "\n\nReturn ONLY JSON, no markdown.";
+  return (
+    INVESTOR_LENS_PROMPT_VEHICLES.replace('{{CONDITION_JSON}}', conditionJson)
+      .replace('{{MARKET_COMPS_JSON}}', marketCompsJson)
+      .replace('{{REPAIR_PLAN_JSON}}', repairPlanJson)
+      .replace('{{ACQUISITION_JSON}}', acquisitionJson)
+      .replace('{{MAX_BID}}', String(metrics.maxBid))
+      .replace('{{TOTAL_INVESTMENT}}', String(metrics.totalInvestment))
+      .replace('{{QS_PRICE}}', String(metrics.scenarios.quick_sale.sale_price))
+      .replace('{{QS_PROFIT}}', String(metrics.scenarios.quick_sale.gross_profit))
+      .replace('{{QS_MARGIN}}', String(metrics.scenarios.quick_sale.margin))
+      .replace('{{EXP_PRICE}}', String(metrics.scenarios.expected.sale_price))
+      .replace('{{EXP_PROFIT}}', String(metrics.scenarios.expected.gross_profit))
+      .replace('{{EXP_MARGIN}}', String(metrics.scenarios.expected.margin))
+      .replace('{{PREM_PRICE}}', String(metrics.scenarios.premium.sale_price))
+      .replace('{{PREM_PROFIT}}', String(metrics.scenarios.premium.gross_profit))
+      .replace('{{PREM_MARGIN}}', String(metrics.scenarios.premium.margin)) +
+    '\n\nReturn ONLY JSON, no markdown.'
+  )
 }

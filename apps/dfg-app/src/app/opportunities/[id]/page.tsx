@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import {
   ArrowLeft,
   ExternalLink,
@@ -17,22 +17,22 @@ import {
   Archive,
   RefreshCw,
   Sparkles,
-} from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { StatusBadge, ScoreBadge } from '@/components/ui/Badge';
-import { TabbedAnalysis } from '@/components/features/tabbed-analysis';
-import { NextActionCard } from '@/components/NextActionCard';
+} from 'lucide-react'
+import { Navigation } from '@/components/Navigation'
+import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { StatusBadge, ScoreBadge } from '@/components/ui/Badge'
+import { TabbedAnalysis } from '@/components/features/tabbed-analysis'
+import { NextActionCard } from '@/components/NextActionCard'
 // Sprint 1.5 components
-import { TitleInputs, type OperatorInputs } from '@/components/features/title-inputs';
-import { GatesDisplay, type ComputedGates } from '@/components/features/gates-display';
-import { StalenessBanner, type StalenessReason } from '@/components/features/staleness-banner';
-import { KillSwitchBanner } from '@/components/features/kill-switch-banner';
-import { RequiredExit } from '@/components/features/required-exit';
+import { TitleInputs, type OperatorInputs } from '@/components/features/title-inputs'
+import { GatesDisplay, type ComputedGates } from '@/components/features/gates-display'
+import { StalenessBanner, type StalenessReason } from '@/components/features/staleness-banner'
+import { KillSwitchBanner } from '@/components/features/kill-switch-banner'
+import { RequiredExit } from '@/components/features/required-exit'
 // #188: Decision reason taxonomy
-import { ReasonCodeSelect } from '@/components/ReasonCodeSelect';
-import { DecisionReasonCode } from '@dfg/types';
+import { ReasonCodeSelect } from '@/components/ReasonCodeSelect'
+import { DecisionReasonCode } from '@dfg/types'
 import {
   cn,
   formatCurrency,
@@ -41,7 +41,7 @@ import {
   isEndingSoon,
   SEVERITY_COLORS,
   formatSourceLabel,
-} from '@/lib/utils';
+} from '@/lib/utils'
 import {
   getOpportunity,
   updateOpportunity,
@@ -54,101 +54,101 @@ import {
   createDecisionEvent,
   type AnalysisResult,
   type OpportunityWithAnalysis,
-} from '@/lib/api';
-import type { OpportunityDetail, OpportunityStatus, RejectionReason } from '@/types';
-import type { MvcEvent, DecisionMadePayload } from '@dfg/types';
+} from '@/lib/api'
+import type { OpportunityDetail, OpportunityStatus, RejectionReason } from '@/types'
+import type { MvcEvent, DecisionMadePayload } from '@dfg/types'
 
 export default function OpportunityDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const router = useRouter();
+  const params = useParams()
+  const id = params.id as string
+  const router = useRouter()
 
-  const [opportunity, setOpportunity] = useState<OpportunityDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showWatchModal, setShowWatchModal] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [opportunity, setOpportunity] = useState<OpportunityDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [showWatchModal, setShowWatchModal] = useState(false)
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null)
 
   // #188: Decision reason taxonomy state
-  const [selectedReasonCodes, setSelectedReasonCodes] = useState<DecisionReasonCode[]>([]);
-  const [rejectionNote, setRejectionNote] = useState('');
+  const [selectedReasonCodes, setSelectedReasonCodes] = useState<DecisionReasonCode[]>([])
+  const [rejectionNote, setRejectionNote] = useState('')
 
   // Sprint 1.5 state
-  const [operatorInputs, setOperatorInputs] = useState<OperatorInputs | null>(null);
-  const [gates, setGates] = useState<ComputedGates | null>(null);
-  const [isStale, setIsStale] = useState(false);
-  const [stalenessReasons, setStalenessReasons] = useState<StalenessReason[]>([]);
-  const [reAnalyzing, setReAnalyzing] = useState(false);
-  const [analysisTimestamp, setAnalysisTimestamp] = useState<string | null>(null);
+  const [operatorInputs, setOperatorInputs] = useState<OperatorInputs | null>(null)
+  const [gates, setGates] = useState<ComputedGates | null>(null)
+  const [isStale, setIsStale] = useState(false)
+  const [stalenessReasons, setStalenessReasons] = useState<StalenessReason[]>([])
+  const [reAnalyzing, setReAnalyzing] = useState(false)
+  const [analysisTimestamp, setAnalysisTimestamp] = useState<string | null>(null)
 
   // #187: MVC event logging state
-  const [emittingEvent, setEmittingEvent] = useState(false);
-  const [eventError, setEventError] = useState<string | null>(null);
-  const [events, setEvents] = useState<MvcEvent[]>([]);
-  const [eventsLoading, setEventsLoading] = useState(true);
+  const [emittingEvent, setEmittingEvent] = useState(false)
+  const [eventError, setEventError] = useState<string | null>(null)
+  const [events, setEvents] = useState<MvcEvent[]>([])
+  const [eventsLoading, setEventsLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
-      setLoading(true);
+      setLoading(true)
       try {
-        const data = await getOpportunity(id) as OpportunityWithAnalysis;
-        setOpportunity(data);
+        const data = (await getOpportunity(id)) as OpportunityWithAnalysis
+        setOpportunity(data)
 
         // Sprint 1.5: Set operator inputs and gates from response
         if (data.operatorInputs) {
-          setOperatorInputs(data.operatorInputs);
+          setOperatorInputs(data.operatorInputs)
         }
         if (data.gates) {
-          setGates(data.gates);
+          setGates(data.gates)
         }
 
         // Sprint N+3 (#54): Load persisted AI analysis if available
         const dataWithAnalysis = data as OpportunityWithAnalysis & {
-          currentAnalysisRun?: { aiAnalysis?: AnalysisResult; createdAt?: string };
-        };
+          currentAnalysisRun?: { aiAnalysis?: AnalysisResult; createdAt?: string }
+        }
         if (dataWithAnalysis.currentAnalysisRun?.aiAnalysis) {
-          setAnalysisResult(dataWithAnalysis.currentAnalysisRun.aiAnalysis);
-          setAnalysisTimestamp(dataWithAnalysis.currentAnalysisRun.createdAt || null);
+          setAnalysisResult(dataWithAnalysis.currentAnalysisRun.aiAnalysis)
+          setAnalysisTimestamp(dataWithAnalysis.currentAnalysisRun.createdAt || null)
         }
 
         // Check staleness
-        const staleness = checkStaleness(data);
-        setIsStale(staleness.isStale);
-        setStalenessReasons(staleness.reasons);
+        const staleness = checkStaleness(data)
+        setIsStale(staleness.isStale)
+        setStalenessReasons(staleness.reasons)
       } catch (error) {
-        console.error('Failed to fetch opportunity:', error);
+        console.error('Failed to fetch opportunity:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    fetchData();
-  }, [id]);
+    fetchData()
+  }, [id])
 
   // #187: Load MVC events
   useEffect(() => {
     async function loadEvents() {
-      setEventsLoading(true);
+      setEventsLoading(true)
       try {
-        const fetchedEvents = await getEvents(id);
-        setEvents(fetchedEvents);
+        const fetchedEvents = await getEvents(id)
+        setEvents(fetchedEvents)
       } catch (err) {
-        console.error('Failed to load events:', err);
+        console.error('Failed to load events:', err)
         // Don't show error UI - events are non-critical
       } finally {
-        setEventsLoading(false);
+        setEventsLoading(false)
       }
     }
-    loadEvents();
-  }, [id]);
+    loadEvents()
+  }, [id])
 
   // #187: Emit decision event before status transition
   async function emitDecisionEvent(decision: 'PASS' | 'BID'): Promise<boolean> {
-    setEmittingEvent(true);
-    setEventError(null);
+    setEmittingEvent(true)
+    setEventError(null)
 
     try {
       const payload: DecisionMadePayload = {
@@ -158,155 +158,162 @@ export default function OpportunityDetailPage() {
           buy_box_score: opportunity?.buy_box_score ?? undefined,
           max_bid_high: opportunity?.max_bid_high ?? undefined,
         },
-      };
+      }
       await createEvent({
         opportunity_id: id,
         event_type: 'decision_made',
         payload,
-      });
-      return true;
+      })
+      return true
     } catch (error) {
-      console.error('Failed to emit decision event:', error);
-      setEventError(error instanceof Error ? error.message : 'Failed to log decision');
-      return false;
+      console.error('Failed to emit decision event:', error)
+      setEventError(error instanceof Error ? error.message : 'Failed to log decision')
+      return false
     } finally {
-      setEmittingEvent(false);
+      setEmittingEvent(false)
     }
   }
 
-  const handleStatusChange = async (newStatus: OpportunityStatus, extra?: Record<string, unknown>) => {
-    if (!opportunity) return;
+  const handleStatusChange = async (
+    newStatus: OpportunityStatus,
+    extra?: Record<string, unknown>
+  ) => {
+    if (!opportunity) return
 
     // #187: Emit decision event before state change
     if (newStatus === 'bid') {
-      const eventEmitted = await emitDecisionEvent('BID');
-      if (!eventEmitted) return; // Block transition if event emission fails
+      const eventEmitted = await emitDecisionEvent('BID')
+      if (!eventEmitted) return // Block transition if event emission fails
     }
 
     if (newStatus === 'rejected') {
-      const eventEmitted = await emitDecisionEvent('PASS');
-      if (!eventEmitted) return; // Block transition if event emission fails
+      const eventEmitted = await emitDecisionEvent('PASS')
+      if (!eventEmitted) return // Block transition if event emission fails
     }
 
-    setUpdating(true);
+    setUpdating(true)
     try {
       const updated = await updateOpportunity(opportunity.id, {
         status: newStatus,
         ...extra,
-      });
-      setOpportunity(updated);
+      })
+      setOpportunity(updated)
     } catch (error) {
-      console.error('Failed to update status:', error);
+      console.error('Failed to update status:', error)
     } finally {
-      setUpdating(false);
+      setUpdating(false)
     }
-  };
+  }
 
   const handleDismissAlert = async (alertKey: string) => {
-    if (!opportunity) return;
+    if (!opportunity) return
 
     try {
-      await dismissAlert(opportunity.id, alertKey);
+      await dismissAlert(opportunity.id, alertKey)
       // Refresh opportunity to get updated alerts
-      const updated = await getOpportunity(opportunity.id);
-      setOpportunity(updated);
+      const updated = await getOpportunity(opportunity.id)
+      setOpportunity(updated)
     } catch (error) {
-      console.error('Failed to dismiss alert:', error);
+      console.error('Failed to dismiss alert:', error)
     }
-  };
+  }
 
   const handleAnalyze = async () => {
-    if (!opportunity) return;
+    if (!opportunity) return
 
-    setAnalyzing(true);
-    setAnalysisError(null);
+    setAnalyzing(true)
+    setAnalysisError(null)
     try {
       // Sprint N+3 (#54): Use unified triggerAnalysis which calls dfg-analyst AND persists
-      const { analysisRun } = await triggerAnalysis(opportunity.id);
+      const { analysisRun } = await triggerAnalysis(opportunity.id)
       if (analysisRun.aiAnalysis) {
-        setAnalysisResult(analysisRun.aiAnalysis);
+        setAnalysisResult(analysisRun.aiAnalysis)
       }
-      setAnalysisTimestamp(analysisRun.createdAt);
+      setAnalysisTimestamp(analysisRun.createdAt)
       // Clear staleness after new analysis
-      setIsStale(false);
-      setStalenessReasons([]);
+      setIsStale(false)
+      setStalenessReasons([])
     } catch (error) {
-      console.error('Analysis failed:', error);
-      setAnalysisError(error instanceof Error ? error.message : 'Analysis failed');
+      console.error('Analysis failed:', error)
+      setAnalysisError(error instanceof Error ? error.message : 'Analysis failed')
     } finally {
-      setAnalyzing(false);
+      setAnalyzing(false)
     }
-  };
+  }
 
   // Sprint 1.5: Handle saving operator inputs
   const handleSaveInputs = async (changedField?: string) => {
-    if (!opportunity) return;
+    if (!opportunity) return
 
     try {
       // Refresh opportunity data to get updated gates and staleness
-      const updated = await getOpportunity(opportunity.id) as OpportunityWithAnalysis;
-      setOpportunity(updated);
+      const updated = (await getOpportunity(opportunity.id)) as OpportunityWithAnalysis
+      setOpportunity(updated)
 
       if (updated.operatorInputs) {
-        setOperatorInputs(updated.operatorInputs);
+        setOperatorInputs(updated.operatorInputs)
       }
       if (updated.gates) {
-        setGates(updated.gates);
+        setGates(updated.gates)
       }
 
       // Sprint 1.5: Client-side staleness detection
       // If we have run an analysis (either result exists or timestamp is set), mark as stale
       if (analysisResult || analysisTimestamp) {
-        setIsStale(true);
-        setStalenessReasons([{
-          type: 'operator_input_changed',
-          field: changedField || 'inputs',
-          from: null,
-          to: 'updated',
-        }]);
+        setIsStale(true)
+        setStalenessReasons([
+          {
+            type: 'operator_input_changed',
+            field: changedField || 'inputs',
+            from: null,
+            to: 'updated',
+          },
+        ])
       } else {
         // Check server-side staleness if no client analysis
-        const staleness = checkStaleness(updated);
-        setIsStale(staleness.isStale);
-        setStalenessReasons(staleness.reasons);
+        const staleness = checkStaleness(updated)
+        setIsStale(staleness.isStale)
+        setStalenessReasons(staleness.reasons)
       }
     } catch (error) {
-      console.error('Failed to refresh after save:', error);
+      console.error('Failed to refresh after save:', error)
     }
-  };
+  }
 
   // Sprint N+3: Handle auto-rejection from hard gate failures
   const handleAutoReject = (failures: Array<{ field: string; reason: string }>) => {
-    const failureDescriptions = failures.map(f => f.reason).join(', ');
-    alert(`This opportunity has been auto-rejected due to disqualifying conditions:\n\n${failureDescriptions}\n\nYou will be redirected to the dashboard.`);
-    router.push('/');
-  };
+    const failureDescriptions = failures.map((f) => f.reason).join(', ')
+    alert(
+      `This opportunity has been auto-rejected due to disqualifying conditions:\n\n${failureDescriptions}\n\nYou will be redirected to the dashboard.`
+    )
+    router.push('/')
+  }
 
   // Sprint 1.5: Handle re-analyze
   // Sprint N+3 (#54): Uses unified triggerAnalysis which calls dfg-analyst AND persists
   const handleReAnalyze = async () => {
-    if (!opportunity) return;
+    if (!opportunity) return
 
-    setReAnalyzing(true);
-    setAnalysisError(null);
+    setReAnalyzing(true)
+    setAnalysisError(null)
     try {
       // Re-run analysis - API now handles AI analysis + persistence
-      const { analysisRun } = await triggerAnalysis(opportunity.id);
+      const { analysisRun } = await triggerAnalysis(opportunity.id)
       if (analysisRun.aiAnalysis) {
-        setAnalysisResult(analysisRun.aiAnalysis);
+        setAnalysisResult(analysisRun.aiAnalysis)
       }
-      setAnalysisTimestamp(analysisRun.createdAt);
+      setAnalysisTimestamp(analysisRun.createdAt)
 
       // Clear staleness after re-analyze
-      setIsStale(false);
-      setStalenessReasons([]);
+      setIsStale(false)
+      setStalenessReasons([])
     } catch (error) {
-      console.error('Re-analyze failed:', error);
-      setAnalysisError(error instanceof Error ? error.message : 'Re-analysis failed');
+      console.error('Re-analyze failed:', error)
+      setAnalysisError(error instanceof Error ? error.message : 'Re-analysis failed')
     } finally {
-      setReAnalyzing(false);
+      setReAnalyzing(false)
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -316,7 +323,7 @@ export default function OpportunityDetailPage() {
           <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
         </main>
       </div>
-    );
+    )
   }
 
   if (!opportunity) {
@@ -332,17 +339,23 @@ export default function OpportunityDetailPage() {
           </div>
         </main>
       </div>
-    );
+    )
   }
 
-  const endingSoon = isEndingSoon(opportunity.auction_ends_at, 24);
+  const endingSoon = isEndingSoon(opportunity.auction_ends_at, 24)
 
   // Ensure photos is an array (API may return JSON string)
   const photos: string[] = Array.isArray(opportunity.photos)
     ? opportunity.photos
     : typeof opportunity.photos === 'string'
-      ? (() => { try { return JSON.parse(opportunity.photos) as string[]; } catch { return []; } })()
-      : [];
+      ? (() => {
+          try {
+            return JSON.parse(opportunity.photos) as string[]
+          } catch {
+            return []
+          }
+        })()
+      : []
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -353,7 +366,12 @@ export default function OpportunityDetailPage() {
         <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 h-14">
             {/* Back button - desktop only, Navigation has mobile back */}
-            <Button variant="ghost" size="sm" onClick={() => router.back()} className="shrink-0 hidden md:flex">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="shrink-0 hidden md:flex"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             {/* Title - desktop only, Navigation has mobile title */}
@@ -387,7 +405,10 @@ export default function OpportunityDetailPage() {
                 <span className="hidden sm:inline">View Listing</span>
               </a>
             ) : (
-              <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0" title="Source link unavailable">
+              <span
+                className="text-xs text-gray-400 dark:text-gray-500 shrink-0"
+                title="Source link unavailable"
+              >
                 No link
               </span>
             )}
@@ -398,10 +419,7 @@ export default function OpportunityDetailPage() {
         {opportunity.alerts.length > 0 && (
           <div className="px-4 py-2 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
             {opportunity.alerts.map((alert) => (
-              <div
-                key={alert.key}
-                className="flex items-center justify-between py-2"
-              >
+              <div key={alert.key} className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
                   <span
                     className={cn(
@@ -414,15 +432,9 @@ export default function OpportunityDetailPage() {
                   <span className="text-sm font-medium text-red-800 dark:text-red-200">
                     {alert.title}
                   </span>
-                  <span className="text-sm text-red-600 dark:text-red-300">
-                    {alert.message}
-                  </span>
+                  <span className="text-sm text-red-600 dark:text-red-300">{alert.message}</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDismissAlert(alert.key)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => handleDismissAlert(alert.key)}>
                   Dismiss
                 </Button>
               </div>
@@ -432,16 +444,16 @@ export default function OpportunityDetailPage() {
 
         <div className="p-4 space-y-4">
           {/* Next Action Card - #185 */}
-          <NextActionCard
-            analysis={analysisResult}
-            analysisTimestamp={analysisTimestamp}
-          />
+          <NextActionCard analysis={analysisResult} analysisTimestamp={analysisTimestamp} />
 
           {/* Sprint 1.5: Staleness Banner */}
           <StalenessBanner
             isStale={isStale}
             reasons={stalenessReasons}
-            analysisTimestamp={analysisTimestamp || (opportunity as OpportunityWithAnalysis).currentAnalysisRun?.createdAt}
+            analysisTimestamp={
+              analysisTimestamp ||
+              (opportunity as OpportunityWithAnalysis).currentAnalysisRun?.createdAt
+            }
             onReAnalyze={handleReAnalyze}
             isReAnalyzing={reAnalyzing}
           />
@@ -525,20 +537,25 @@ export default function OpportunityDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-500">Current Bid</span>
-                <span className="font-semibold text-lg">{formatCurrency(opportunity.current_bid)}</span>
+                <span className="font-semibold text-lg">
+                  {formatCurrency(opportunity.current_bid)}
+                </span>
               </div>
               {opportunity.max_bid_low && opportunity.max_bid_high && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">Suggested Max</span>
                   <span className="text-green-600 dark:text-green-400">
-                    {formatCurrency(opportunity.max_bid_low)} - {formatCurrency(opportunity.max_bid_high)}
+                    {formatCurrency(opportunity.max_bid_low)} -{' '}
+                    {formatCurrency(opportunity.max_bid_high)}
                   </span>
                 </div>
               )}
               {opportunity.max_bid_locked && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">Your Max Bid</span>
-                  <span className="font-semibold text-blue-600">{formatCurrency(opportunity.max_bid_locked)}</span>
+                  <span className="font-semibold text-blue-600">
+                    {formatCurrency(opportunity.max_bid_locked)}
+                  </span>
                 </div>
               )}
               {opportunity.estimated_fees && (
@@ -563,8 +580,12 @@ export default function OpportunityDetailPage() {
                     <span>Auction Ends</span>
                   </div>
                   <div className={cn('text-right', endingSoon && 'text-red-600 dark:text-red-400')}>
-                    <div className="font-medium">{formatRelativeTime(opportunity.auction_ends_at)}</div>
-                    <div className="text-xs text-gray-400">{formatDateTime(opportunity.auction_ends_at)}</div>
+                    <div className="font-medium">
+                      {formatRelativeTime(opportunity.auction_ends_at)}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {formatDateTime(opportunity.auction_ends_at)}
+                    </div>
                   </div>
                 </div>
               )}
@@ -646,21 +667,21 @@ export default function OpportunityDetailPage() {
               <CardContent>
                 <div className="space-y-2">
                   {events.map((event) => {
-                    const payload = event.payload as any;
-                    let eventLabel = '';
-                    let eventDetail = '';
-                    let icon = '';
+                    const payload = event.payload as any
+                    let eventLabel = ''
+                    let eventDetail = ''
+                    let icon = ''
 
                     if (event.event_type === 'decision_made') {
                       if (payload.decision === 'BID') {
-                        eventLabel = 'BID Decision';
-                        icon = '🎯';
+                        eventLabel = 'BID Decision'
+                        icon = '🎯'
                       } else {
-                        eventLabel = 'PASS Decision';
-                        icon = '⛔';
+                        eventLabel = 'PASS Decision'
+                        icon = '⛔'
                       }
-                      const score = payload.operator_context?.buy_box_score;
-                      eventDetail = score !== undefined ? `Score: ${score}` : '';
+                      const score = payload.operator_context?.buy_box_score
+                      eventDetail = score !== undefined ? `Score: ${score}` : ''
                     }
 
                     return (
@@ -685,7 +706,7 @@ export default function OpportunityDetailPage() {
                           {formatRelativeTime(event.emitted_at)}
                         </span>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               </CardContent>
@@ -811,9 +832,9 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    const maxBid = prompt('Enter your maximum bid:');
+                    const maxBid = prompt('Enter your maximum bid:')
                     if (maxBid) {
-                      handleStatusChange('bid', { max_bid_locked: parseFloat(maxBid) });
+                      handleStatusChange('bid', { max_bid_locked: parseFloat(maxBid) })
                     }
                   }}
                   disabled={updating || emittingEvent}
@@ -837,9 +858,9 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    const finalPrice = prompt('Enter final price:');
+                    const finalPrice = prompt('Enter final price:')
                     if (finalPrice) {
-                      handleStatusChange('won', { final_price: parseFloat(finalPrice) });
+                      handleStatusChange('won', { final_price: parseFloat(finalPrice) })
                     }
                   }}
                   disabled={updating || emittingEvent}
@@ -886,7 +907,7 @@ export default function OpportunityDetailPage() {
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   onChange={(e) => {
                     // Auto-select corresponding reason code
-                    const reason = e.target.value as RejectionReason;
+                    const reason = e.target.value as RejectionReason
                     if (reason && !selectedReasonCodes.length) {
                       // Map legacy reasons to new codes
                       const codeMap: Record<RejectionReason, DecisionReasonCode> = {
@@ -896,15 +917,17 @@ export default function OpportunityDetailPage() {
                         poor_condition: 'condition_major',
                         missing_info: 'condition_unknown',
                         other: 'other',
-                      };
+                      }
                       if (codeMap[reason]) {
-                        setSelectedReasonCodes([codeMap[reason]]);
+                        setSelectedReasonCodes([codeMap[reason]])
                       }
                     }
                   }}
                   defaultValue=""
                 >
-                  <option value="" disabled>Select primary reason...</option>
+                  <option value="" disabled>
+                    Select primary reason...
+                  </option>
                   <option value="too_far">Too Far</option>
                   <option value="too_expensive">Too Expensive</option>
                   <option value="wrong_category">Wrong Category</option>
@@ -917,12 +940,10 @@ export default function OpportunityDetailPage() {
               {/* Multi-select reason codes (#188) */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Why are you passing? <span className="text-red-500">*</span> (select all that apply)
+                  Why are you passing? <span className="text-red-500">*</span> (select all that
+                  apply)
                 </label>
-                <ReasonCodeSelect
-                  value={selectedReasonCodes}
-                  onChange={setSelectedReasonCodes}
-                />
+                <ReasonCodeSelect value={selectedReasonCodes} onChange={setSelectedReasonCodes} />
               </div>
 
               {/* Conditional notes field for "other" */}
@@ -945,9 +966,9 @@ export default function OpportunityDetailPage() {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    setShowRejectModal(false);
-                    setSelectedReasonCodes([]);
-                    setRejectionNote('');
+                    setShowRejectModal(false)
+                    setSelectedReasonCodes([])
+                    setRejectionNote('')
                   }}
                 >
                   Cancel
@@ -956,28 +977,34 @@ export default function OpportunityDetailPage() {
                   variant="danger"
                   onClick={async () => {
                     // Determine primary rejection reason from selected codes
-                    let primaryReason: RejectionReason = 'other';
-                    if (selectedReasonCodes.includes('location_too_far') || selectedReasonCodes.includes('location_restricted')) {
-                      primaryReason = 'too_far';
-                    } else if (selectedReasonCodes.includes('price_too_high') || selectedReasonCodes.includes('price_no_margin')) {
-                      primaryReason = 'too_expensive';
+                    let primaryReason: RejectionReason = 'other'
+                    if (
+                      selectedReasonCodes.includes('location_too_far') ||
+                      selectedReasonCodes.includes('location_restricted')
+                    ) {
+                      primaryReason = 'too_far'
+                    } else if (
+                      selectedReasonCodes.includes('price_too_high') ||
+                      selectedReasonCodes.includes('price_no_margin')
+                    ) {
+                      primaryReason = 'too_expensive'
                     } else if (selectedReasonCodes.includes('condition_major')) {
-                      primaryReason = 'poor_condition';
+                      primaryReason = 'poor_condition'
                     } else if (selectedReasonCodes.includes('condition_unknown')) {
-                      primaryReason = 'missing_info';
+                      primaryReason = 'missing_info'
                     }
 
                     await handleStatusChange('rejected', {
                       rejection_reason: primaryReason,
                       rejection_note: rejectionNote || undefined,
                       reason_codes: selectedReasonCodes,
-                    });
+                    })
 
                     // #188: Send decision_made event with reason codes
                     try {
                       // Map verdict from 'BUY' to 'BID' for AnalysisRecommendation type
-                      const verdict = analysisResult?.report_fields?.verdict;
-                      const mappedVerdict = verdict === 'BUY' ? 'BID' : verdict;
+                      const verdict = analysisResult?.report_fields?.verdict
+                      const mappedVerdict = verdict === 'BUY' ? 'BID' : verdict
 
                       await createDecisionEvent(opportunity!.id, {
                         decision: 'PASS',
@@ -985,15 +1012,15 @@ export default function OpportunityDetailPage() {
                         note: rejectionNote || undefined,
                         analyst_verdict: mappedVerdict,
                         analyst_confidence: analysisResult?.report_fields?.confidence,
-                      });
+                      })
                     } catch (error) {
-                      console.error('Failed to log decision event:', error);
+                      console.error('Failed to log decision event:', error)
                       // Non-blocking: continue even if event logging fails
                     }
 
-                    setShowRejectModal(false);
-                    setSelectedReasonCodes([]);
-                    setRejectionNote('');
+                    setShowRejectModal(false)
+                    setSelectedReasonCodes([])
+                    setRejectionNote('')
                   }}
                   disabled={
                     updating ||
@@ -1023,5 +1050,5 @@ export default function OpportunityDetailPage() {
         )}
       </main>
     </div>
-  );
+  )
 }

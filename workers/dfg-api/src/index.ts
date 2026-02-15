@@ -7,34 +7,30 @@
  * @version 1.1.0
  */
 
-import * as Sentry from '@sentry/cloudflare';
-import type { Env } from './core/env';
-import { json, jsonError, authorize, ErrorCodes, corsHeaders, setCurrentRequest } from './core/http';
+import * as Sentry from '@sentry/cloudflare'
+import type { Env } from './core/env'
+import { json, jsonError, authorize, ErrorCodes, corsHeaders, setCurrentRequest } from './core/http'
 
 // Route handlers
-import { handleOpportunities } from './routes/opportunities';
-import { handleDismissAlert, handleAlerts } from './routes/alerts';
-import { handleSources } from './routes/sources';
-import { handleIngestRoute } from './routes/ingest';
-import { handleEvents } from './routes/events';
-import { loadCategoryConfig, loadAllCategoryConfigs } from './lib/category-loader';
+import { handleOpportunities } from './routes/opportunities'
+import { handleDismissAlert, handleAlerts } from './routes/alerts'
+import { handleSources } from './routes/sources'
+import { handleIngestRoute } from './routes/ingest'
+import { handleEvents } from './routes/events'
+import { loadCategoryConfig, loadAllCategoryConfigs } from './lib/category-loader'
 
 // =============================================================================
 // MAIN HANDLER
 // =============================================================================
 
 const handler: ExportedHandler<Env> = {
-  async fetch(
-    request: Request,
-    env: Env,
-    _ctx: ExecutionContext
-  ): Promise<Response> {
-    const url = new URL(request.url);
-    const path = url.pathname.replace(/\/$/, ''); // Remove trailing slash
-    const method = request.method;
+  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(request.url)
+    const path = url.pathname.replace(/\/$/, '') // Remove trailing slash
+    const method = request.method
 
     // Set request for CORS helpers (#98)
-    setCurrentRequest(request);
+    setCurrentRequest(request)
 
     // CORS preflight (#98: restricted origins)
     if (method === 'OPTIONS') {
@@ -44,87 +40,86 @@ const handler: ExportedHandler<Env> = {
           ...corsHeaders(request),
           'Access-Control-Max-Age': '86400',
         },
-      });
+      })
     }
 
     // Health check (public)
     if (path === '/health' && method === 'GET') {
-      return json({ status: 'ok', service: 'dfg-api', env: env.ENVIRONMENT });
+      return json({ status: 'ok', service: 'dfg-api', env: env.ENVIRONMENT })
     }
 
     // All other endpoints require auth
     if (!authorize(request, env)) {
-      return jsonError(ErrorCodes.UNAUTHORIZED, 'Missing or invalid authorization', 401);
+      return jsonError(ErrorCodes.UNAUTHORIZED, 'Missing or invalid authorization', 401)
     }
 
     try {
       // Route: /api/opportunities/*
       if (path.startsWith('/api/opportunities')) {
         // Special case: touch endpoint for operator review tracking
-        const touchMatch = path.match(/^\/api\/opportunities\/([^/]+)\/touch$/);
+        const touchMatch = path.match(/^\/api\/opportunities\/([^/]+)\/touch$/)
         if (touchMatch && method === 'POST') {
-          const opportunityId = decodeURIComponent(touchMatch[1]);
-          return handleTouch(env, opportunityId);
+          const opportunityId = decodeURIComponent(touchMatch[1])
+          return handleTouch(env, opportunityId)
         }
 
         // Special case: dismiss alert
-        const dismissMatch = path.match(/^\/api\/opportunities\/([^/]+)\/alerts\/dismiss$/);
+        const dismissMatch = path.match(/^\/api\/opportunities\/([^/]+)\/alerts\/dismiss$/)
         if (dismissMatch && method === 'POST') {
-          const opportunityId = decodeURIComponent(dismissMatch[1]);
-          return handleDismissAlert(request, env, opportunityId);
+          const opportunityId = decodeURIComponent(dismissMatch[1])
+          return handleDismissAlert(request, env, opportunityId)
         }
 
-        return handleOpportunities(request, env, url, path, method);
+        return handleOpportunities(request, env, url, path, method)
       }
 
       // Route: /api/dashboard/attention
       if (path === '/api/dashboard/attention' && method === 'GET') {
-        return handleAttentionRequired(env, url);
+        return handleAttentionRequired(env, url)
       }
 
       // Route: /api/alerts/* (spec-compliant alert endpoints)
       if (path.startsWith('/api/alerts')) {
-        return handleAlerts(request, env, path, method);
+        return handleAlerts(request, env, path, method)
       }
 
       // Route: /api/sources/*
       if (path.startsWith('/api/sources')) {
-        return handleSources(request, env, path, method);
+        return handleSources(request, env, path, method)
       }
 
       // Route: /api/ingest/*
       if (path.startsWith('/api/ingest')) {
-        return handleIngestRoute(request, env, path, method);
+        return handleIngestRoute(request, env, path, method)
       }
 
       // Route: /api/events/* (#187: MVC event logging)
       if (path.startsWith('/api/events')) {
-        return handleEvents(request, env, path, method);
+        return handleEvents(request, env, path, method)
       }
 
       // Route: /api/categories/* (category configuration)
       if (path.startsWith('/api/categories')) {
-        return handleCategories(request, env, path, method);
+        return handleCategories(request, env, path, method)
       }
 
       // Route: /api/triggers/check (watch trigger evaluation)
       if (path === '/api/triggers/check' && method === 'POST') {
-        return handleWatchTriggers(env);
+        return handleWatchTriggers(env)
       }
 
       // Route: /api/scout/run (trigger scout via Make.com or service binding)
       if (path === '/api/scout/run' && method === 'POST') {
-        return handleScoutRun(request, env);
+        return handleScoutRun(request, env)
       }
 
       // 404
-      return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404);
-
+      return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404)
     } catch (error) {
-      console.error('[dfg-api] Unhandled error:', error);
-      Sentry.captureException(error);
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      return jsonError(ErrorCodes.INTERNAL_ERROR, message, 500);
+      console.error('[dfg-api] Unhandled error:', error)
+      Sentry.captureException(error)
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return jsonError(ErrorCodes.INTERNAL_ERROR, message, 500)
     }
   },
 
@@ -137,9 +132,9 @@ const handler: ExportedHandler<Env> = {
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
-    ctx.waitUntil(checkWatchTriggersScheduled(env));
+    ctx.waitUntil(checkWatchTriggersScheduled(env))
   },
-};
+}
 
 // =============================================================================
 // EXPORT WITH SENTRY WRAPPER
@@ -154,7 +149,7 @@ export default Sentry.withSentry(
     enabled: !!env.SENTRY_DSN,
   }),
   handler
-);
+)
 
 // =============================================================================
 // TOUCH ENDPOINT (Operator Review Tracking)
@@ -165,22 +160,26 @@ export default Sentry.withSentry(
  * Uses atomic UPDATE with 60-second dedupe window to prevent spam.
  */
 async function handleTouch(env: Env, id: string): Promise<Response> {
-  const now = new Date().toISOString();
+  const now = new Date().toISOString()
 
   // Atomic UPDATE with dedupe - only updates if not touched in last 60 seconds
-  const result = await env.DB.prepare(`
+  const result = await env.DB.prepare(
+    `
     UPDATE opportunities
     SET last_operator_review_at = ?
     WHERE id = ?
       AND (last_operator_review_at IS NULL
            OR julianday('now') - julianday(last_operator_review_at) > 60.0/86400.0)
-  `).bind(now, id).run();
+  `
+  )
+    .bind(now, id)
+    .run()
 
   if (result.meta?.changes === 0) {
     // Either not found or within dedupe window
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: 204 })
   }
-  return new Response(null, { status: 200 });
+  return new Response(null, { status: 200 })
 }
 
 // =============================================================================
@@ -191,10 +190,11 @@ async function handleTouch(env: Env, id: string): Promise<Response> {
  * Get items that need operator attention, sorted by priority.
  */
 async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
-  const limit = parseInt(url.searchParams.get('limit') || '10', 10);
-  const staleThresholdDays = parseInt(env.STALE_THRESHOLD_DAYS || '7', 10);
+  const limit = parseInt(url.searchParams.get('limit') || '10', 10)
+  const staleThresholdDays = parseInt(env.STALE_THRESHOLD_DAYS || '7', 10)
 
-  const result = await env.DB.prepare(`
+  const result = await env.DB.prepare(
+    `
     WITH attention_items AS (
       SELECT
         id, title, source, status, max_bid_locked,
@@ -264,10 +264,14 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
       auction_ends_at ASC,
       updated_at DESC
     LIMIT ?
-  `).bind(staleThresholdDays, staleThresholdDays, limit).all();
+  `
+  )
+    .bind(staleThresholdDays, staleThresholdDays, limit)
+    .all()
 
   // Get total count for "View all" link
-  const countResult = await env.DB.prepare(`
+  const countResult = await env.DB.prepare(
+    `
     SELECT COUNT(*) as count
     FROM opportunities
     WHERE status NOT IN ('rejected', 'archived', 'won', 'lost')
@@ -279,7 +283,10 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
         OR last_analyzed_at IS NULL
         OR julianday('now') - julianday(last_analyzed_at) > 7
       )
-  `).bind(staleThresholdDays).first<{ count: number }>();
+  `
+  )
+    .bind(staleThresholdDays)
+    .first<{ count: number }>()
 
   const items = (result.results || []).map((row: Record<string, unknown>) => ({
     id: row.id as string,
@@ -304,29 +311,29 @@ async function handleAttentionRequired(env: Env, url: URL): Promise<Response> {
       is_ending_soon: row.is_ending_soon === 1,
       is_analysis_stale: row.is_analysis_stale === 1,
     }),
-  }));
+  }))
 
   return json({
     items,
     total_count: countResult?.count || 0,
-  });
+  })
 }
 
 /**
  * Compute reason tags from staleness flags (inline for now, will move to utils).
  */
 function computeReasonTags(flags: {
-  is_stale: boolean;
-  is_decision_stale: boolean;
-  is_ending_soon: boolean;
-  is_analysis_stale: boolean;
+  is_stale: boolean
+  is_decision_stale: boolean
+  is_ending_soon: boolean
+  is_analysis_stale: boolean
 }): string[] {
-  const tags: string[] = [];
-  if (flags.is_decision_stale) tags.push('DECISION_STALE');
-  if (flags.is_ending_soon && !flags.is_decision_stale) tags.push('ENDING_SOON');
-  if (flags.is_stale) tags.push('STALE');
-  if (flags.is_analysis_stale) tags.push('ANALYSIS_STALE');
-  return tags;
+  const tags: string[] = []
+  if (flags.is_decision_stale) tags.push('DECISION_STALE')
+  if (flags.is_ending_soon && !flags.is_decision_stale) tags.push('ENDING_SOON')
+  if (flags.is_stale) tags.push('STALE')
+  if (flags.is_analysis_stale) tags.push('ANALYSIS_STALE')
+  return tags
 }
 
 // =============================================================================
@@ -342,35 +349,43 @@ function computeReasonTags(flags: {
  * concurrent cron + webhook triggers).
  */
 async function handleWatchTriggers(env: Env): Promise<Response> {
-  const now = new Date().toISOString();
+  const now = new Date().toISOString()
 
   // Find all watch opportunities that have passed their watch_until time
-  const result = await env.DB.prepare(`
+  const result = await env.DB.prepare(
+    `
     SELECT id, watch_until, watch_trigger, watch_threshold, watch_cycle
     FROM opportunities
     WHERE status = 'watch'
     AND watch_until IS NOT NULL
     AND watch_fired_at IS NULL
     AND datetime(watch_until) <= datetime(?)
-  `).bind(now).all();
+  `
+  )
+    .bind(now)
+    .all()
 
-  const opportunities = result.results || [];
-  let firedCount = 0;
+  const opportunities = result.results || []
+  let firedCount = 0
 
   for (const opp of opportunities) {
-    const row = opp as { id: string; watch_until: string };
+    const row = opp as { id: string; watch_until: string }
 
     // Idempotent update: only fires if watch_fired_at is still NULL
-    const updateResult = await env.DB.prepare(`
+    const updateResult = await env.DB.prepare(
+      `
       UPDATE opportunities
       SET watch_fired_at = ?, updated_at = ?
       WHERE id = ?
       AND watch_fired_at IS NULL
-    `).bind(now, now, row.id).run();
+    `
+    )
+      .bind(now, now, row.id)
+      .run()
 
     // Only count if we actually updated the row
     if (updateResult.meta?.changes && updateResult.meta.changes > 0) {
-      firedCount++;
+      firedCount++
     }
   }
 
@@ -380,7 +395,7 @@ async function handleWatchTriggers(env: Env): Promise<Response> {
       fired: firedCount,
       timestamp: now,
     },
-  });
+  })
 }
 
 // =============================================================================
@@ -396,41 +411,51 @@ async function handleWatchTriggers(env: Env): Promise<Response> {
  * concurrent cron + webhook triggers).
  */
 async function checkWatchTriggersScheduled(env: Env): Promise<void> {
-  const now = new Date().toISOString();
-  console.log(`[dfg-api] Scheduled watch trigger check at ${now}`);
+  const now = new Date().toISOString()
+  console.log(`[dfg-api] Scheduled watch trigger check at ${now}`)
 
   // Find all watch opportunities that have passed their watch_until time
-  const result = await env.DB.prepare(`
+  const result = await env.DB.prepare(
+    `
     SELECT id, watch_until, watch_trigger, watch_threshold, watch_cycle
     FROM opportunities
     WHERE status = 'watch'
     AND watch_until IS NOT NULL
     AND watch_fired_at IS NULL
     AND datetime(watch_until) <= datetime(?)
-  `).bind(now).all();
+  `
+  )
+    .bind(now)
+    .all()
 
-  const opportunities = result.results || [];
-  let firedCount = 0;
+  const opportunities = result.results || []
+  let firedCount = 0
 
   for (const opp of opportunities) {
-    const row = opp as { id: string; watch_until: string };
+    const row = opp as { id: string; watch_until: string }
 
     // Idempotent update: only fires if watch_fired_at is still NULL
-    const updateResult = await env.DB.prepare(`
+    const updateResult = await env.DB.prepare(
+      `
       UPDATE opportunities
       SET watch_fired_at = ?, updated_at = ?
       WHERE id = ?
       AND watch_fired_at IS NULL
-    `).bind(now, now, row.id).run();
+    `
+    )
+      .bind(now, now, row.id)
+      .run()
 
     // Only count and log if we actually updated the row
     if (updateResult.meta?.changes && updateResult.meta.changes > 0) {
-      firedCount++;
-      console.log(`[dfg-api] Watch fired for opportunity: ${row.id}`);
+      firedCount++
+      console.log(`[dfg-api] Watch fired for opportunity: ${row.id}`)
     }
   }
 
-  console.log(`[dfg-api] Watch trigger check complete: ${firedCount} fired out of ${opportunities.length} checked`);
+  console.log(
+    `[dfg-api] Watch trigger check complete: ${firedCount} fired out of ${opportunities.length} checked`
+  )
 }
 
 // =============================================================================
@@ -438,8 +463,8 @@ async function checkWatchTriggersScheduled(env: Env): Promise<void> {
 // =============================================================================
 
 interface ScoutRunRequest {
-  source?: string; // Optional: specific source to run
-  dryRun?: boolean;
+  source?: string // Optional: specific source to run
+  dryRun?: boolean
 }
 
 /**
@@ -447,31 +472,31 @@ interface ScoutRunRequest {
  * Supports both Make.com integration and direct worker-to-worker calls.
  */
 async function handleScoutRun(request: Request, env: Env): Promise<Response> {
-  let body: ScoutRunRequest = {};
+  let body: ScoutRunRequest = {}
   try {
-    body = await request.json() as ScoutRunRequest;
+    body = (await request.json()) as ScoutRunRequest
   } catch {
     // Empty body is fine
   }
 
-  const { source, dryRun = false } = body;
+  const { source, dryRun = false } = body
 
   // Strategy 1: Direct service binding (worker-to-worker, preferred in production)
   if (env.SCOUT) {
-    console.log('[dfg-api] Triggering scout via service binding');
+    console.log('[dfg-api] Triggering scout via service binding')
     try {
-      const scoutUrl = new URL('https://dfg-scout.internal/ops/run');
-      if (dryRun) scoutUrl.searchParams.set('dryRun', 'true');
-      if (source) scoutUrl.searchParams.set('source', source);
+      const scoutUrl = new URL('https://dfg-scout.internal/ops/run')
+      if (dryRun) scoutUrl.searchParams.set('dryRun', 'true')
+      if (source) scoutUrl.searchParams.set('source', source)
 
       const scoutResponse = await env.SCOUT.fetch(scoutUrl.toString(), {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${env.OPS_TOKEN}`,
         },
-      });
+      })
 
-      const result = await scoutResponse.json();
+      const result = await scoutResponse.json()
 
       return json({
         data: {
@@ -481,16 +506,16 @@ async function handleScoutRun(request: Request, env: Env): Promise<Response> {
           dryRun,
           result,
         },
-      });
+      })
     } catch (error) {
-      console.error('[dfg-api] Scout service binding failed:', error);
+      console.error('[dfg-api] Scout service binding failed:', error)
       // Fall through to webhook
     }
   }
 
   // Strategy 2: Make.com webhook (for external orchestration)
   if (env.MAKE_WEBHOOK_URL) {
-    console.log('[dfg-api] Triggering scout via Make.com webhook');
+    console.log('[dfg-api] Triggering scout via Make.com webhook')
     try {
       const webhookResponse = await fetch(env.MAKE_WEBHOOK_URL, {
         method: 'POST',
@@ -503,10 +528,10 @@ async function handleScoutRun(request: Request, env: Env): Promise<Response> {
           dryRun,
           triggered_at: new Date().toISOString(),
         }),
-      });
+      })
 
       if (!webhookResponse.ok) {
-        throw new Error(`Webhook returned ${webhookResponse.status}`);
+        throw new Error(`Webhook returned ${webhookResponse.status}`)
       }
 
       return json({
@@ -517,14 +542,10 @@ async function handleScoutRun(request: Request, env: Env): Promise<Response> {
           dryRun,
           message: 'Scout run triggered via Make.com',
         },
-      });
+      })
     } catch (error) {
-      console.error('[dfg-api] Make.com webhook failed:', error);
-      return jsonError(
-        ErrorCodes.INTERNAL_ERROR,
-        'Failed to trigger scout run via Make.com',
-        500
-      );
+      console.error('[dfg-api] Make.com webhook failed:', error)
+      return jsonError(ErrorCodes.INTERNAL_ERROR, 'Failed to trigger scout run via Make.com', 500)
     }
   }
 
@@ -534,7 +555,7 @@ async function handleScoutRun(request: Request, env: Env): Promise<Response> {
       triggered: false,
       message: 'No scout trigger configured. Set MAKE_WEBHOOK_URL or add SCOUT service binding.',
     },
-  });
+  })
 }
 
 // =============================================================================
@@ -554,17 +575,17 @@ async function handleCategories(
 ): Promise<Response> {
   // GET /api/categories - List all
   if (path === '/api/categories' && method === 'GET') {
-    const categories = await loadAllCategoryConfigs(env);
-    return json({ data: categories });
+    const categories = await loadAllCategoryConfigs(env)
+    return json({ data: categories })
   }
 
   // GET /api/categories/:id - Get specific
-  const idMatch = path.match(/^\/api\/categories\/([^/]+)$/);
+  const idMatch = path.match(/^\/api\/categories\/([^/]+)$/)
   if (idMatch && method === 'GET') {
-    const categoryId = decodeURIComponent(idMatch[1]);
-    const config = await loadCategoryConfig(env, categoryId);
-    return json({ data: config });
+    const categoryId = decodeURIComponent(idMatch[1])
+    const config = await loadCategoryConfig(env, categoryId)
+    return json({ data: config })
   }
 
-  return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404);
+  return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404)
 }

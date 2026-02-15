@@ -7,10 +7,10 @@ on:
   # Trigger on PR checks completing
   check_suite:
     types: [completed]
-  
+
   # Also trigger on workflow completion (covers CI)
   workflow_run:
-    workflows: ["*"]
+    workflows: ['*']
     types: [completed]
 
 jobs:
@@ -20,9 +20,9 @@ jobs:
       (github.event.check_suite.conclusion == 'success' ||
        github.event.workflow_run.conclusion == 'success') &&
       github.event.check_suite.pull_requests[0] != null
-    
+
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Get PR info
         id: pr-info
@@ -32,7 +32,7 @@ jobs:
             // Get PR from check suite or workflow run
             let prNumber;
             let headSha;
-            
+
             if (context.payload.check_suite) {
               const prs = context.payload.check_suite.pull_requests;
               if (prs && prs.length > 0) {
@@ -46,27 +46,27 @@ jobs:
                 headSha = context.payload.workflow_run.head_sha;
               }
             }
-            
+
             if (!prNumber) {
               console.log('No PR associated with this check');
               return;
             }
-            
+
             // Get linked issues from PR body
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber
             });
-            
+
             // Find "Closes #XXX" or "Fixes #XXX" patterns
             const issueMatches = pr.body?.match(/(?:closes|fixes|resolves)\s+#(\d+)/gi) || [];
             const issueNumbers = issueMatches.map(m => parseInt(m.match(/\d+/)[0]));
-            
+
             core.setOutput('pr_number', prNumber);
             core.setOutput('head_sha', headSha);
             core.setOutput('issue_numbers', JSON.stringify(issueNumbers));
-            
+
             console.log(`PR: #${prNumber}`);
             console.log(`Commit: ${headSha}`);
             console.log(`Linked issues: ${issueNumbers.join(', ') || 'none'}`);
@@ -83,7 +83,7 @@ jobs:
             const prNumber = parseInt('${{ steps.pr-info.outputs.pr_number }}');
             const headSha = '${{ steps.pr-info.outputs.head_sha }}';
             const repo = `${context.repo.owner}/${context.repo.repo}`;
-            
+
             for (const issueNumber of issueNumbers) {
               // Get issue labels
               const { data: issue } = await github.rest.issues.get({
@@ -149,4 +149,3 @@ jobs:
                 console.log(`   Error: ${JSON.stringify(result)}`);
               }
             }
-

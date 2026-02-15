@@ -83,12 +83,12 @@ curl -s -X POST "$RELAY_URL/labels" \
 
 ## Error Handling
 
-| Error | Response |
-|-------|----------|
-| No git remote | "Not a git repository or no remote configured" |
-| No question text | "No question provided. Usage: /question <issue> <text>" |
-| Relay unreachable | "Relay unavailable. Post question manually in GitHub" |
-| Issue not found | "Issue #X not found in repository" |
+| Error             | Response                                                |
+| ----------------- | ------------------------------------------------------- |
+| No git remote     | "Not a git repository or no remote configured"          |
+| No question text  | "No question provided. Usage: /question <issue> <text>" |
+| Relay unreachable | "Relay unavailable. Post question manually in GitHub"   |
+| Issue not found   | "Issue #X not found in repository"                      |
 
 ## Notes
 

@@ -7,34 +7,29 @@
  * Location: src/domain/staleness.ts
  */
 
-import type {
-  ListingFacts,
-  OperatorInputs,
-  StalenessCheck,
-  StalenessReason,
-} from '../core/types';
+import type { ListingFacts, OperatorInputs, StalenessCheck, StalenessReason } from '../core/types'
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface Assumptions {
-  version: string;
-  [key: string]: unknown;
+  version: string
+  [key: string]: unknown
 }
 
 export interface AnalysisRunSnapshot {
-  listingSnapshotHash: string;
-  assumptionsJson: string;
-  operatorInputsJson: string | null;
+  listingSnapshotHash: string
+  assumptionsJson: string
+  operatorInputsJson: string | null
   // Parsed snapshot values for comparison
   listing?: {
-    currentBid?: number;
-    endTime?: string;
-    photoCount?: number;
-  };
-  assumptions?: Assumptions;
-  operatorInputs?: OperatorInputs | null;
+    currentBid?: number
+    endTime?: string
+    photoCount?: number
+  }
+  assumptions?: Assumptions
+  operatorInputs?: OperatorInputs | null
 }
 
 // =============================================================================
@@ -53,10 +48,10 @@ export function computeListingSnapshotHash(listing: ListingFacts): string {
     vin: listing.vin,
     odometerMiles: listing.odometerMiles,
     titleStatus: listing.titleStatus,
-  };
+  }
   // Simple hash: JSON stringify and create a basic checksum
-  const json = JSON.stringify(relevantFields, Object.keys(relevantFields).sort());
-  return simpleHash(json);
+  const json = JSON.stringify(relevantFields, Object.keys(relevantFields).sort())
+  return simpleHash(json)
 }
 
 /**
@@ -64,13 +59,13 @@ export function computeListingSnapshotHash(listing: ListingFacts): string {
  * Not cryptographically secure - just for change detection.
  */
 function simpleHash(str: string): string {
-  let hash = 0;
+  let hash = 0
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32-bit integer
   }
-  return hash.toString(16);
+  return hash.toString(16)
 }
 
 // =============================================================================
@@ -88,56 +83,66 @@ export function checkStaleness(
   currentAssumptions: Assumptions,
   analysisSnapshot: AnalysisRunSnapshot
 ): StalenessCheck {
-  const reasons: StalenessReason[] = [];
+  const reasons: StalenessReason[] = []
 
   // Parse snapshot data
-  const snapshotListing = analysisSnapshot.listing;
-  const snapshotAssumptions = analysisSnapshot.assumptions ||
-    (analysisSnapshot.assumptionsJson ? JSON.parse(analysisSnapshot.assumptionsJson) : null);
-  const snapshotInputs = analysisSnapshot.operatorInputs ||
-    (analysisSnapshot.operatorInputsJson ? JSON.parse(analysisSnapshot.operatorInputsJson) : null);
+  const snapshotListing = analysisSnapshot.listing
+  const snapshotAssumptions =
+    analysisSnapshot.assumptions ||
+    (analysisSnapshot.assumptionsJson ? JSON.parse(analysisSnapshot.assumptionsJson) : null)
+  const snapshotInputs =
+    analysisSnapshot.operatorInputs ||
+    (analysisSnapshot.operatorInputsJson ? JSON.parse(analysisSnapshot.operatorInputsJson) : null)
 
   // 1. Check listing bid changes
-  if (snapshotListing?.currentBid !== undefined &&
-      currentListing.currentBid !== undefined &&
-      snapshotListing.currentBid !== currentListing.currentBid) {
+  if (
+    snapshotListing?.currentBid !== undefined &&
+    currentListing.currentBid !== undefined &&
+    snapshotListing.currentBid !== currentListing.currentBid
+  ) {
     reasons.push({
       type: 'listing_bid_changed',
       from: snapshotListing.currentBid,
       to: currentListing.currentBid,
-    });
+    })
   }
 
   // 2. Check listing end time changes
-  if (snapshotListing?.endTime !== undefined &&
-      currentListing.endTime !== undefined &&
-      snapshotListing.endTime !== currentListing.endTime) {
+  if (
+    snapshotListing?.endTime !== undefined &&
+    currentListing.endTime !== undefined &&
+    snapshotListing.endTime !== currentListing.endTime
+  ) {
     reasons.push({
       type: 'listing_end_time_changed',
       from: snapshotListing.endTime,
       to: currentListing.endTime,
-    });
+    })
   }
 
   // 3. Check photo count changes
-  if (snapshotListing?.photoCount !== undefined &&
-      currentListing.photoCount !== undefined &&
-      snapshotListing.photoCount !== currentListing.photoCount) {
+  if (
+    snapshotListing?.photoCount !== undefined &&
+    currentListing.photoCount !== undefined &&
+    snapshotListing.photoCount !== currentListing.photoCount
+  ) {
     reasons.push({
       type: 'listing_photos_changed',
       from: snapshotListing.photoCount,
       to: currentListing.photoCount,
-    });
+    })
   }
 
   // 4. Check assumptions version changes
-  if (snapshotAssumptions?.version !== undefined &&
-      currentAssumptions.version !== snapshotAssumptions.version) {
+  if (
+    snapshotAssumptions?.version !== undefined &&
+    currentAssumptions.version !== snapshotAssumptions.version
+  ) {
     reasons.push({
       type: 'assumptions_version_changed',
       from: snapshotAssumptions.version,
       to: currentAssumptions.version,
-    });
+    })
   }
 
   // 5. Check operator input changes (title fields)
@@ -147,11 +152,11 @@ export function checkStaleness(
     'lienStatus',
     'vin',
     'odometerMiles',
-  ];
+  ]
 
   for (const field of titleFields) {
-    const currentValue = currentInputs?.title?.[field]?.value;
-    const snapshotValue = snapshotInputs?.title?.[field]?.value;
+    const currentValue = currentInputs?.title?.[field]?.value
+    const snapshotValue = snapshotInputs?.title?.[field]?.value
 
     if (currentValue !== snapshotValue) {
       // Only report if at least one side has a value
@@ -161,7 +166,7 @@ export function checkStaleness(
           field,
           from: snapshotValue,
           to: currentValue,
-        });
+        })
       }
     }
   }
@@ -170,11 +175,11 @@ export function checkStaleness(
   const overrideFields: (keyof NonNullable<OperatorInputs['overrides']>)[] = [
     'maxBidOverride',
     'confirmedPrice',
-  ];
+  ]
 
   for (const field of overrideFields) {
-    const currentValue = currentInputs?.overrides?.[field]?.value;
-    const snapshotValue = snapshotInputs?.overrides?.[field]?.value;
+    const currentValue = currentInputs?.overrides?.[field]?.value
+    const snapshotValue = snapshotInputs?.overrides?.[field]?.value
 
     if (currentValue !== snapshotValue) {
       if (currentValue !== undefined || snapshotValue !== undefined) {
@@ -183,7 +188,7 @@ export function checkStaleness(
           field,
           from: snapshotValue,
           to: currentValue,
-        });
+        })
       }
     }
   }
@@ -191,7 +196,7 @@ export function checkStaleness(
   return {
     isStale: reasons.length > 0,
     reasons,
-  };
+  }
 }
 
 // =============================================================================
@@ -204,15 +209,15 @@ export function checkStaleness(
 export function formatStalenessReason(reason: StalenessReason): string {
   switch (reason.type) {
     case 'listing_bid_changed':
-      return `Bid $${reason.from}→$${reason.to}`;
+      return `Bid $${reason.from}→$${reason.to}`
     case 'listing_end_time_changed':
-      return 'End time changed';
+      return 'End time changed'
     case 'listing_photos_changed':
-      return `Photos ${reason.from}→${reason.to}`;
+      return `Photos ${reason.from}→${reason.to}`
     case 'operator_input_changed':
-      return formatFieldChange(reason.field);
+      return formatFieldChange(reason.field)
     case 'assumptions_version_changed':
-      return 'Settings updated';
+      return 'Settings updated'
   }
 }
 
@@ -225,23 +230,23 @@ function formatFieldChange(field: string): string {
     odometerMiles: 'Mileage',
     maxBidOverride: 'Max bid',
     confirmedPrice: 'Confirmed price',
-  };
-  return `${labels[field] || field} updated`;
+  }
+  return `${labels[field] || field} updated`
 }
 
 /**
  * Format staleness for banner copy.
  */
 export function formatStalenessBanner(check: StalenessCheck): string {
-  if (!check.isStale) return '';
+  if (!check.isStale) return ''
 
   if (check.reasons.length === 1) {
-    return `Stale: ${formatStalenessReason(check.reasons[0])}`;
+    return `Stale: ${formatStalenessReason(check.reasons[0])}`
   }
 
   if (check.reasons.length <= 3) {
-    return `Stale: ${check.reasons.length} changes`;
+    return `Stale: ${check.reasons.length} changes`
   }
 
-  return 'Stale: Multiple changes';
+  return 'Stale: Multiple changes'
 }

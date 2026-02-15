@@ -43,16 +43,16 @@ Your feedback reads as if we're planning to build something. We're not. We're op
 
 **Current infrastructure (all deployed, production):**
 
-| Component | Status | Function |
-|-----------|--------|----------|
-| DFG Scout | Operational | Scans Sierra + IronPlanet, classifies against buy-box, captures photos |
-| DFG Analyst | Operational | Claude-powered analysis with max bid, walk triggers, pricing plan |
-| DFG API | Operational | REST endpoints for operator console |
-| DFG App | Operational | Dashboard, opportunity detail, attention-required system |
-| D1 Database | Operational | Listings, snapshots, projections, analyses, runs |
-| R2 Storage | Operational | Immutable snapshots (HTML, images, JSON), 100% photo coverage |
-| KV Cache | Operational | Session data, rate limits |
-| dfg-relay | Operational | GitHub automation, V2 event submission, evidence storage |
+| Component   | Status      | Function                                                               |
+| ----------- | ----------- | ---------------------------------------------------------------------- |
+| DFG Scout   | Operational | Scans Sierra + IronPlanet, classifies against buy-box, captures photos |
+| DFG Analyst | Operational | Claude-powered analysis with max bid, walk triggers, pricing plan      |
+| DFG API     | Operational | REST endpoints for operator console                                    |
+| DFG App     | Operational | Dashboard, opportunity detail, attention-required system               |
+| D1 Database | Operational | Listings, snapshots, projections, analyses, runs                       |
+| R2 Storage  | Operational | Immutable snapshots (HTML, images, JSON), 100% photo coverage          |
+| KV Cache    | Operational | Session data, rate limits                                              |
+| dfg-relay   | Operational | GitHub automation, V2 event submission, evidence storage               |
 
 **Recent velocity:** 30 issues closed in the last 48 hours. We're executing, not planning.
 
@@ -67,6 +67,7 @@ Captain (the human co-founder) is NOT an experienced equipment flipper. He's a 2
 **This also raises the stakes on analysis accuracy.** Captain can't compensate for bad guidance with domain expertise. The guide must be correct, clear, and actionable—or he loses money. That's why analysis quality is P0.
 
 The sequence matters:
+
 1. **Now:** Use the tool ourselves (as the target user), generate flip profits, improve the guide
 2. **Soon:** Private beta with 3-5 users who accept rough edges
 3. **Later:** Polish for scale
@@ -77,12 +78,12 @@ Building "Assisted Flip Mode" with 8-15 questions before we've completed our fir
 
 You've framed outcome tracking as a "non-negotiable product requirement." That's too strong. Here's the actual priority stack:
 
-| Priority | Focus | Why |
-|----------|-------|-----|
-| **P0** | Analysis accuracy, clarity, consumability | This IS the product. If the guide is wrong, nothing else matters. |
-| **P1** | V2-Lite (internal efficiency) | Reduces handoff friction so we ship faster |
-| **P2** | Outcome tracking | Learning loop to improve the guide—not the product itself |
-| **P3** | SaaS rails | Future optionality |
+| Priority | Focus                                     | Why                                                               |
+| -------- | ----------------------------------------- | ----------------------------------------------------------------- |
+| **P0**   | Analysis accuracy, clarity, consumability | This IS the product. If the guide is wrong, nothing else matters. |
+| **P1**   | V2-Lite (internal efficiency)             | Reduces handoff friction so we ship faster                        |
+| **P2**   | Outcome tracking                          | Learning loop to improve the guide—not the product itself         |
+| **P3**   | SaaS rails                                | Future optionality                                                |
 
 If the Analyst can't reliably identify the hidden gem and tell the operator exactly what to do with it, tracking outcomes is just documenting failure.
 
@@ -104,19 +105,19 @@ We're not building outcome tracking. We're improving the guide itself.
 
 **Issues currently in QA (code complete, awaiting verification):**
 
-| Issue | Focus |
-|-------|-------|
-| #145 | Core Risk vs Optional Value-Add Tagging—distinguish deal-killers from nice-to-haves |
-| #146 | Buyer Impact Context on Every Defect—connect issues to resale implications |
-| #150 | Hide Empty Sections—reduce visual noise |
-| #155 | Semantic Color Discipline—consistent visual language |
+| Issue | Focus                                                                               |
+| ----- | ----------------------------------------------------------------------------------- |
+| #145  | Core Risk vs Optional Value-Add Tagging—distinguish deal-killers from nice-to-haves |
+| #146  | Buyer Impact Context on Every Defect—connect issues to resale implications          |
+| #150  | Hide Empty Sections—reduce visual noise                                             |
+| #155  | Semantic Color Discipline—consistent visual language                                |
 
 **Issues ready for development:**
 
-| Issue | Focus |
-|-------|-------|
-| #148 | Explicit Gating Logic Display—show why something passed/failed buy-box |
-| #123 | Secure Analyst Endpoints—auth before external users |
+| Issue | Focus                                                                  |
+| ----- | ---------------------------------------------------------------------- |
+| #148  | Explicit Gating Logic Display—show why something passed/failed buy-box |
+| #123  | Secure Analyst Endpoints—auth before external users                    |
 
 **What we fixed in N+7 (last week):**
 
@@ -127,13 +128,13 @@ We're not building outcome tracking. We're improving the guide itself.
 
 ### Known Gaps (We Track These)
 
-| Gap | Status | Priority |
-|-----|--------|----------|
-| Walk triggers too generic | Known | P1 for next sprint |
-| "Next action" not prominent in UI | Known | P1 |
-| Category-specific inspection guidance | Known | P2 |
-| Outcome tracking | Known | P2 (your recommendation confirms) |
-| Analyst misreads salvage status from T&C boilerplate | Issue #21 | P1 |
+| Gap                                                  | Status    | Priority                          |
+| ---------------------------------------------------- | --------- | --------------------------------- |
+| Walk triggers too generic                            | Known     | P1 for next sprint                |
+| "Next action" not prominent in UI                    | Known     | P1                                |
+| Category-specific inspection guidance                | Known     | P2                                |
+| Outcome tracking                                     | Known     | P2 (your recommendation confirms) |
+| Analyst misreads salvage status from T&C boilerplate | Issue #21 | P1                                |
 
 ### What We're Not Building Yet
 
@@ -168,6 +169,7 @@ Building outcome tracking before we've completed flips means guessing at what fi
 ### "Guided Next Step Component"
 
 **Already exists.** The Analyst outputs:
+
 - Next action signal (implicit in verdict)
 - Walk triggers (the 3 things most likely to kill the deal)
 - Inspection priorities (fastest checks that collapse uncertainty)
@@ -190,6 +192,7 @@ The gap is UI surfacing, not content generation. We're addressing this in curren
 ### 1. Category Expansion Strategy
 
 We currently cover trailers well. Light equipment categories (skid steers, mini-excavators, scissor lifts) are in scope but less developed. Should we:
+
 - Deepen trailer expertise first (prove one category exhaustively)?
 - Broaden to 2-3 equipment categories (prove the model generalizes)?
 
@@ -198,6 +201,7 @@ Our bias: depth first, breadth second. But market feedback might say otherwise.
 ### 2. Private Beta Selection
 
 We're targeting 3-5 beta users in February. What profile predicts success?
+
 - Experienced dealers who will stress-test the analysis?
 - Motivated novices who will stress-test the guidance?
 - Geographic overlap with our Southwest focus?
@@ -212,21 +216,21 @@ What metric would give you confidence that the system works?
 
 ## Summary
 
-| Your Recommendation | Our Response |
-|---------------------|--------------|
-| Proof as product feature | Agree in principle—but analysis quality comes first |
-| Flight Recorder (Outcome Tracker) | Accept, prioritize P2 after analysis quality |
-| Progressive disclosure proof | Adopt the tiering framework |
-| Decision reasons taxonomy | Accept, will implement |
-| Guided next step | Already exists—UI surfacing is the gap |
-| SaaS-ready rails | Accept, will implement |
-| Assisted Flip Mode | Defer—premature for current stage |
-| Sprint sequencing | Partial reject—V2-Lite is orthogonal |
+| Your Recommendation               | Our Response                                        |
+| --------------------------------- | --------------------------------------------------- |
+| Proof as product feature          | Agree in principle—but analysis quality comes first |
+| Flight Recorder (Outcome Tracker) | Accept, prioritize P2 after analysis quality        |
+| Progressive disclosure proof      | Adopt the tiering framework                         |
+| Decision reasons taxonomy         | Accept, will implement                              |
+| Guided next step                  | Already exists—UI surfacing is the gap              |
+| SaaS-ready rails                  | Accept, will implement                              |
+| Assisted Flip Mode                | Defer—premature for current stage                   |
+| Sprint sequencing                 | Partial reject—V2-Lite is orthogonal                |
 
 **The meta-point:** We're not missing the insights you've shared. We're sequencing deliberately. Analysis accuracy is the product. Outcome tracking is how we improve the product. Building the learning loop before the guide is reliable would be instrumenting failure.
 
 ---
 
-*Respectfully submitted,*
+_Respectfully submitted,_
 
 **DFG Product Management**

@@ -117,21 +117,21 @@ curl -s -X POST "$RELAY_URL/close" \
 
 ## Safety Checks
 
-| Check | Required? | Behavior if Fails |
-|-------|-----------|-------------------|
-| `status:verified` label | **Yes** | Block merge, show error |
-| PR exists and is open | Yes | Block merge, show error |
-| PR is mergeable | Yes | Block merge, show error |
-| CI passing | No (warn) | Warn but proceed |
+| Check                   | Required? | Behavior if Fails       |
+| ----------------------- | --------- | ----------------------- |
+| `status:verified` label | **Yes**   | Block merge, show error |
+| PR exists and is open   | Yes       | Block merge, show error |
+| PR is mergeable         | Yes       | Block merge, show error |
+| CI passing              | No (warn) | Warn but proceed        |
 
 ## Error Handling
 
-| Error | Response |
-|-------|----------|
-| No `status:verified` | "Missing: status:verified label. QA must pass before merge." |
-| PR not found | "No PR found linked to issue #X" |
-| Merge conflicts | "PR is not mergeable. Check for conflicts." |
-| Branch already deleted | "Branch may have been merged already. Check issue status." |
+| Error                  | Response                                                     |
+| ---------------------- | ------------------------------------------------------------ |
+| No `status:verified`   | "Missing: status:verified label. QA must pass before merge." |
+| PR not found           | "No PR found linked to issue #X"                             |
+| Merge conflicts        | "PR is not mergeable. Check for conflicts."                  |
+| Branch already deleted | "Branch may have been merged already. Check issue status."   |
 
 ## Notes
 

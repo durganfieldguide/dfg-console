@@ -1,58 +1,51 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import {
-  Database,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  Clock,
-  ExternalLink,
-} from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { cn, formatRelativeTime } from '@/lib/utils';
-import { listSources, triggerScoutRun } from '@/lib/api';
-import type { Source } from '@dfg/types';
+import { useEffect, useState } from 'react'
+import { Database, RefreshCw, CheckCircle, XCircle, Clock, ExternalLink } from 'lucide-react'
+import { Navigation } from '@/components/Navigation'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { cn, formatRelativeTime } from '@/lib/utils'
+import { listSources, triggerScoutRun } from '@/lib/api'
+import type { Source } from '@dfg/types'
 
 export default function SourcesPage() {
-  const [sources, setSources] = useState<Source[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [triggering, setTriggering] = useState(false);
-  const [triggerMessage, setTriggerMessage] = useState<string | null>(null);
+  const [sources, setSources] = useState<Source[]>([])
+  const [loading, setLoading] = useState(true)
+  const [triggering, setTriggering] = useState(false)
+  const [triggerMessage, setTriggerMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchSources();
-  }, []);
+    fetchSources()
+  }, [])
 
   const fetchSources = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const data = await listSources();
-      setSources(data);
+      const data = await listSources()
+      setSources(data)
     } catch (error) {
-      console.error('Failed to fetch sources:', error);
+      console.error('Failed to fetch sources:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleTriggerScout = async () => {
-    setTriggering(true);
-    setTriggerMessage(null);
+    setTriggering(true)
+    setTriggerMessage(null)
     try {
-      const result = await triggerScoutRun();
-      setTriggerMessage(result.message);
+      const result = await triggerScoutRun()
+      setTriggerMessage(result.message)
       // Refresh sources to show updated last_run_at
-      setTimeout(fetchSources, 2000);
+      setTimeout(fetchSources, 2000)
     } catch (error) {
-      console.error('Failed to trigger scout:', error);
-      setTriggerMessage('Failed to trigger scout run');
+      console.error('Failed to trigger scout:', error)
+      setTriggerMessage('Failed to trigger scout run')
     } finally {
-      setTriggering(false);
+      setTriggering(false)
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -62,11 +55,11 @@ export default function SourcesPage() {
           <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
         </main>
       </div>
-    );
+    )
   }
 
-  const enabledSources = sources.filter((s) => s.enabled);
-  const disabledSources = sources.filter((s) => !s.enabled);
+  const enabledSources = sources.filter((s) => s.enabled)
+  const disabledSources = sources.filter((s) => !s.enabled)
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -76,15 +69,8 @@ export default function SourcesPage() {
         {/* Header - hidden on mobile, Navigation provides it (#82) */}
         <header className="hidden md:block sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between px-4 h-14">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Sources
-            </h1>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleTriggerScout}
-              disabled={triggering}
-            >
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Sources</h1>
+            <Button variant="primary" size="sm" onClick={handleTriggerScout} disabled={triggering}>
               {triggering ? (
                 <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
               ) : (
@@ -117,9 +103,7 @@ export default function SourcesPage() {
           {triggerMessage && (
             <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
               <CardContent>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  {triggerMessage}
-                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">{triggerMessage}</p>
               </CardContent>
             </Card>
           )}
@@ -163,16 +147,14 @@ export default function SourcesPage() {
               <div className="flex items-start gap-3">
                 <Database className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <p className="font-medium text-gray-900 dark:text-white mb-1">
-                    About Sources
-                  </p>
+                  <p className="font-medium text-gray-900 dark:text-white mb-1">About Sources</p>
                   <p>
-                    Sources are auction platforms that DFG Scout monitors for opportunities.
-                    Each source has configurable buyer premiums and pickup windows.
+                    Sources are auction platforms that DFG Scout monitors for opportunities. Each
+                    source has configurable buyer premiums and pickup windows.
                   </p>
                   <p className="mt-2">
-                    The scout runs automatically every few hours. Use &ldquo;Run Scout&rdquo; to trigger
-                    an immediate scan.
+                    The scout runs automatically every few hours. Use &ldquo;Run Scout&rdquo; to
+                    trigger an immediate scan.
                   </p>
                 </div>
               </div>
@@ -181,7 +163,7 @@ export default function SourcesPage() {
         </div>
       </main>
     </div>
-  );
+  )
 }
 
 function SourceCard({ source }: { source: Source }) {
@@ -195,12 +177,14 @@ function SourceCard({ source }: { source: Source }) {
             <XCircle className="h-5 w-5 text-gray-400 shrink-0" />
           )}
           <div className="min-w-0">
-            <p className={cn(
-              "font-medium truncate",
-              source.enabled
-                ? "text-gray-900 dark:text-white"
-                : "text-gray-500 dark:text-gray-400"
-            )}>
+            <p
+              className={cn(
+                'font-medium truncate',
+                source.enabled
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-500 dark:text-gray-400'
+              )}
+            >
               {source.display_name}
             </p>
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
@@ -232,5 +216,5 @@ function SourceCard({ source }: { source: Source }) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

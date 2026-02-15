@@ -5,46 +5,46 @@
  * This enables pluggable categories where new category = D1 row + prompt file.
  */
 
-import type { Env } from '../core/env';
+import type { Env } from '../core/env'
 
 /**
  * Category configuration loaded from D1
  */
 export interface CategoryConfigData {
-  id: string;
-  name: string;
-  min_profit_dollars: number;
-  min_margin_percent: number;
-  max_acquisition: number;
-  target_days_to_sell: number;
-  max_distance_miles: number;
-  min_photos: number;
-  required_evidence: string[];
+  id: string
+  name: string
+  min_profit_dollars: number
+  min_margin_percent: number
+  max_acquisition: number
+  target_days_to_sell: number
+  max_distance_miles: number
+  min_photos: number
+  required_evidence: string[]
   verdict_thresholds: {
-    buy: { min_profit: number; min_margin: number };
-    watch: { min_profit: number; min_margin: number };
-    pass?: { max_profit: number };
-  };
-  prompt_file: string;
-  market_comps_file: string;
+    buy: { min_profit: number; min_margin: number }
+    watch: { min_profit: number; min_margin: number }
+    pass?: { max_profit: number }
+  }
+  prompt_file: string
+  market_comps_file: string
 }
 
 /**
  * Raw row from D1 category_defs table
  */
 interface CategoryDefRow {
-  id: string;
-  name: string;
-  min_profit_dollars: number | null;
-  min_margin_percent: number | null;
-  max_acquisition: number | null;
-  target_days_to_sell: number | null;
-  max_distance_miles: number | null;
-  min_photos: number | null;
-  required_evidence: string | null;
-  verdict_thresholds: string | null;
-  prompt_file: string | null;
-  market_comps_file: string | null;
+  id: string
+  name: string
+  min_profit_dollars: number | null
+  min_margin_percent: number | null
+  max_acquisition: number | null
+  target_days_to_sell: number | null
+  max_distance_miles: number | null
+  min_photos: number | null
+  required_evidence: string | null
+  verdict_thresholds: string | null
+  prompt_file: string | null
+  market_comps_file: string | null
 }
 
 /**
@@ -62,7 +62,7 @@ const DEFAULTS: Record<string, CategoryConfigData> = {
     min_photos: 4,
     required_evidence: ['frame_integrity', 'axle_status', 'tires'],
     verdict_thresholds: {
-      buy: { min_profit: 600, min_margin: 0.40 },
+      buy: { min_profit: 600, min_margin: 0.4 },
       watch: { min_profit: 400, min_margin: 0.25 },
       pass: { max_profit: 400 },
     },
@@ -80,7 +80,7 @@ const DEFAULTS: Record<string, CategoryConfigData> = {
     min_photos: 6,
     required_evidence: ['year', 'make', 'model', 'mileage', 'title_status'],
     verdict_thresholds: {
-      buy: { min_profit: 1500, min_margin: 0.20 },
+      buy: { min_profit: 1500, min_margin: 0.2 },
       watch: { min_profit: 1000, min_margin: 0.15 },
       pass: { max_profit: 1000 },
     },
@@ -98,14 +98,14 @@ const DEFAULTS: Record<string, CategoryConfigData> = {
     min_photos: 2,
     required_evidence: ['tool_type', 'make', 'power_source'],
     verdict_thresholds: {
-      buy: { min_profit: 40, min_margin: 0.30 },
-      watch: { min_profit: 25, min_margin: 0.20 },
+      buy: { min_profit: 40, min_margin: 0.3 },
+      watch: { min_profit: 25, min_margin: 0.2 },
       pass: { max_profit: 25 },
     },
     prompt_file: 'prompts-power-tools.ts',
     market_comps_file: 'analysis-power-tools.ts',
   },
-};
+}
 
 /**
  * Load category configuration from D1
@@ -114,10 +114,11 @@ export async function loadCategoryConfig(
   env: Env,
   categoryId: string | undefined
 ): Promise<CategoryConfigData> {
-  const id = categoryId?.toLowerCase() || 'buy_box';
+  const id = categoryId?.toLowerCase() || 'buy_box'
 
   try {
-    const row = await env.DB.prepare(`
+    const row = (await env.DB.prepare(
+      `
       SELECT
         id, name,
         min_profit_dollars, min_margin_percent,
@@ -127,7 +128,10 @@ export async function loadCategoryConfig(
         prompt_file, market_comps_file
       FROM category_defs
       WHERE id = ? AND enabled = 1
-    `).bind(id).first() as CategoryDefRow | null;
+    `
+    )
+      .bind(id)
+      .first()) as CategoryDefRow | null
 
     if (row) {
       return {
@@ -140,32 +144,38 @@ export async function loadCategoryConfig(
         max_distance_miles: row.max_distance_miles ?? 100,
         min_photos: row.min_photos ?? 4,
         required_evidence: parseJsonSafe(row.required_evidence) || [],
-        verdict_thresholds: parseJsonSafe(row.verdict_thresholds) || DEFAULTS.buy_box.verdict_thresholds,
+        verdict_thresholds:
+          parseJsonSafe(row.verdict_thresholds) || DEFAULTS.buy_box.verdict_thresholds,
         prompt_file: row.prompt_file || 'prompts.ts',
         market_comps_file: row.market_comps_file || 'analysis.ts',
-      };
+      }
     }
   } catch (error) {
-    console.error(`[CategoryLoader] Error loading category ${id}:`, error);
+    console.error(`[CategoryLoader] Error loading category ${id}:`, error)
   }
 
   // Fallback to defaults
   if (DEFAULTS[id]) {
-    return DEFAULTS[id];
+    return DEFAULTS[id]
   }
 
   // Check for vehicle category
-  if (id.includes('vehicle') || id.includes('truck') || id.includes('car') || id === 'fleet_trucks') {
-    return DEFAULTS.fleet_trucks;
+  if (
+    id.includes('vehicle') ||
+    id.includes('truck') ||
+    id.includes('car') ||
+    id === 'fleet_trucks'
+  ) {
+    return DEFAULTS.fleet_trucks
   }
 
   // Check for power tools
   if (id.includes('power') || id.includes('tool')) {
-    return DEFAULTS.power_tools;
+    return DEFAULTS.power_tools
   }
 
   // Default to buy_box (trailers)
-  return DEFAULTS.buy_box;
+  return DEFAULTS.buy_box
 }
 
 /**
@@ -173,7 +183,8 @@ export async function loadCategoryConfig(
  */
 export async function loadAllCategoryConfigs(env: Env): Promise<CategoryConfigData[]> {
   try {
-    const result = await env.DB.prepare(`
+    const result = await env.DB.prepare(
+      `
       SELECT
         id, name,
         min_profit_dollars, min_margin_percent,
@@ -184,10 +195,11 @@ export async function loadAllCategoryConfigs(env: Env): Promise<CategoryConfigDa
       FROM category_defs
       WHERE enabled = 1
       ORDER BY display_order
-    `).all();
+    `
+    ).all()
 
     return (result.results || []).map((row: unknown) => {
-      const r = row as CategoryDefRow;
+      const r = row as CategoryDefRow
       return {
         id: r.id,
         name: r.name,
@@ -198,14 +210,15 @@ export async function loadAllCategoryConfigs(env: Env): Promise<CategoryConfigDa
         max_distance_miles: r.max_distance_miles ?? 100,
         min_photos: r.min_photos ?? 4,
         required_evidence: parseJsonSafe(r.required_evidence) || [],
-        verdict_thresholds: parseJsonSafe(r.verdict_thresholds) || DEFAULTS.buy_box.verdict_thresholds,
+        verdict_thresholds:
+          parseJsonSafe(r.verdict_thresholds) || DEFAULTS.buy_box.verdict_thresholds,
         prompt_file: r.prompt_file || 'prompts.ts',
         market_comps_file: r.market_comps_file || 'analysis.ts',
-      };
-    });
+      }
+    })
   } catch (error) {
-    console.error('[CategoryLoader] Error loading all categories:', error);
-    return Object.values(DEFAULTS);
+    console.error('[CategoryLoader] Error loading all categories:', error)
+    return Object.values(DEFAULTS)
   }
 }
 
@@ -213,10 +226,10 @@ export async function loadAllCategoryConfigs(env: Env): Promise<CategoryConfigDa
  * Safe JSON parse helper
  */
 function parseJsonSafe<T>(json: string | null | undefined): T | null {
-  if (!json) return null;
+  if (!json) return null
   try {
-    return JSON.parse(json) as T;
+    return JSON.parse(json) as T
   } catch {
-    return null;
+    return null
   }
 }

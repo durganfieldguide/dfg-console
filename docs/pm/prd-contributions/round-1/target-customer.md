@@ -10,7 +10,7 @@
 
 I'm Scott. I buy undervalued physical assets at auction -- trailers, trucks, equipment, power tools -- and flip them for profit. I'm a one-person operation. My day looks like this: I wake up, check auction sites on my phone while I'm having coffee, drive to a pickup or a lot inspection, list something on Facebook Marketplace from the truck, answer buyer messages, and then maybe check auctions again before bed. I don't sit at a desk. I don't have a team. Every dollar I deploy on a bad acquisition is a dollar I can't use on the next good one.
 
-The hardest part of this job isn't selling -- it's *finding*. Finding the deal before someone else does, knowing the real value before I bid, and not getting burned by a trailer with a hidden bent axle or a truck with a salvage title that the listing conveniently omitted. I can process maybe 20-30 listings a day manually. There are thousands going through Sierra and IronPlanet every week. I'm leaving money on the table every single day because I physically cannot look at everything.
+The hardest part of this job isn't selling -- it's _finding_. Finding the deal before someone else does, knowing the real value before I bid, and not getting burned by a trailer with a hidden bent axle or a truck with a salvage title that the listing conveniently omitted. I can process maybe 20-30 listings a day manually. There are thousands going through Sierra and IronPlanet every week. I'm leaving money on the table every single day because I physically cannot look at everything.
 
 ---
 

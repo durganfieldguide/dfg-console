@@ -61,9 +61,9 @@
 
 ## Session Essentials
 
-| Resource | Value |
-|----------|-------|
-| Relay URL | `https://dfg-relay.automation-ab6.workers.dev/directive` |
+| Resource    | Value                                                              |
+| ----------- | ------------------------------------------------------------------ |
+| Relay URL   | `https://dfg-relay.automation-ab6.workers.dev/directive`           |
 | Relay Token | `056b6f9859f5f315c704e9cebfd1bc88f3e1c0a74b904460a2de96ec9bceac2f` |
-| Repo | `https://github.com/durganfieldguide/dfg-console` |
-| App | `https://app.durganfieldguide.com/` |
+| Repo        | `https://github.com/durganfieldguide/dfg-console`                  |
+| App         | `https://app.durganfieldguide.com/`                                |

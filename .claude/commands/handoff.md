@@ -54,6 +54,7 @@ fi
 - CI should be passing (warn if not, don't block)
 
 If no PR found:
+
 ```
 ❌ No PR found for branch '$BRANCH'
    Create a PR first: gh pr create
@@ -101,19 +102,19 @@ curl -s -X POST "$RELAY_URL/labels" \
 
 ## Error Handling
 
-| Error | Response |
-|-------|----------|
-| No git remote | "Not a git repository or no remote configured" |
-| No PR found | "No PR found for branch. Create one first: gh pr create" |
+| Error             | Response                                                  |
+| ----------------- | --------------------------------------------------------- |
+| No git remote     | "Not a git repository or no remote configured"            |
+| No PR found       | "No PR found for branch. Create one first: gh pr create"  |
 | Relay unreachable | "Relay unavailable. Manual update needed: [instructions]" |
-| Issue not found | "Issue #X not found in repository" |
+| Issue not found   | "Issue #X not found in repository"                        |
 
 ## Environment
 
-| Variable | Source | Purpose |
-|----------|--------|---------|
-| RELAY_TOKEN | Hardcoded | Crane Relay authentication |
-| REPO | Auto-detected | Target GitHub repository |
+| Variable    | Source        | Purpose                    |
+| ----------- | ------------- | -------------------------- |
+| RELAY_TOKEN | Hardcoded     | Crane Relay authentication |
+| REPO        | Auto-detected | Target GitHub repository   |
 
 ## Notes
 

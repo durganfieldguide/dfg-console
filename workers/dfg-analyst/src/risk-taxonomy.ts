@@ -20,61 +20,61 @@
  */
 
 // CRITICAL: Observed = we SAW it. Unverified = pattern match, NOT confirmed.
-export type EvidenceStatus = 'observed' | 'unverified' | 'info_gap';
-export type RiskSeverity = 'deal_breaker' | 'major_concern' | 'minor_issue' | 'info_gap';
+export type EvidenceStatus = 'observed' | 'unverified' | 'info_gap'
+export type RiskSeverity = 'deal_breaker' | 'major_concern' | 'minor_issue' | 'info_gap'
 
 export interface RiskItem {
-  id: string;
-  severity: RiskSeverity;
-  evidence: EvidenceStatus;
-  title: string;
-  description: string;
+  id: string
+  severity: RiskSeverity
+  evidence: EvidenceStatus
+  title: string
+  description: string
   // Action the operator should take
-  action: string;
+  action: string
   // If true, can be cleared by operator verification
-  clearable: boolean;
+  clearable: boolean
   // Category this applies to (null = all)
-  categories?: ('vehicle' | 'trailer' | 'power_tool')[] | null;
+  categories?: ('vehicle' | 'trailer' | 'power_tool')[] | null
 }
 
 // Two-axis verdict
-export type EconomicsVerdict = 'BUY' | 'PASS';
-export type ReadinessVerdict = 'CLEARED' | 'GATED';
+export type EconomicsVerdict = 'BUY' | 'PASS'
+export type ReadinessVerdict = 'CLEARED' | 'GATED'
 
 export interface TwoAxisVerdict {
-  economics: EconomicsVerdict;
-  readiness: ReadinessVerdict;
+  economics: EconomicsVerdict
+  readiness: ReadinessVerdict
   // Combined display: "BUY (CLEARED)" or "BUY (GATED)" etc.
-  display: string;
+  display: string
   // Gates that are blocking readiness
-  gates: string[];
+  gates: string[]
   // Human-readable explanation
-  explanation: string;
+  explanation: string
 }
 
 export interface RiskAssessment {
   // Observed issues - we have direct evidence
-  observed_issues: RiskItem[];
+  observed_issues: RiskItem[]
   // Unverified risks - pattern triggered, needs verification
-  unverified_risks: RiskItem[];
+  unverified_risks: RiskItem[]
   // Info gaps - unknowns that block confidence
-  info_gaps: RiskItem[];
+  info_gaps: RiskItem[]
   // Two-axis verdict
-  verdict: TwoAxisVerdict;
+  verdict: TwoAxisVerdict
   // Summary for banner display
   summary: {
-    observed_count: number;
-    unverified_count: number;
-    info_gap_count: number;
+    observed_count: number
+    unverified_count: number
+    info_gap_count: number
     // TRUE only if there's an OBSERVED deal breaker
-    has_deal_breakers: boolean;
+    has_deal_breakers: boolean
     // Severity breakdown for OBSERVED issues only
-    observed_deal_breakers: number;
-    observed_major_concerns: number;
-    observed_minor_issues: number;
+    observed_deal_breakers: number
+    observed_major_concerns: number
+    observed_minor_issues: number
     // Gates blocking readiness
-    gates_blocking: string[];
-  };
+    gates_blocking: string[]
+  }
 }
 
 /**
@@ -83,33 +83,33 @@ export interface RiskAssessment {
  * Otherwise: "X Concerns Found" with severity counts
  */
 export function getRiskBannerText(summary: RiskAssessment['summary']): {
-  headline: string;
-  subtext: string;
-  severity: 'critical' | 'warning' | 'info' | 'success';
+  headline: string
+  subtext: string
+  severity: 'critical' | 'warning' | 'info' | 'success'
 } {
   // Only show "Deal Killer" if we have OBSERVED deal breakers
   if (summary.has_deal_breakers && summary.observed_deal_breakers > 0) {
     return {
       headline: `${summary.observed_deal_breakers} Deal Killer${summary.observed_deal_breakers > 1 ? 's' : ''} Found`,
       subtext: 'Confirmed issues that block this deal',
-      severity: 'critical'
-    };
+      severity: 'critical',
+    }
   }
 
   // Observed issues but no deal breakers
   if (summary.observed_count > 0) {
-    const parts: string[] = [];
+    const parts: string[] = []
     if (summary.observed_major_concerns > 0) {
-      parts.push(`${summary.observed_major_concerns} major`);
+      parts.push(`${summary.observed_major_concerns} major`)
     }
     if (summary.observed_minor_issues > 0) {
-      parts.push(`${summary.observed_minor_issues} minor`);
+      parts.push(`${summary.observed_minor_issues} minor`)
     }
     return {
       headline: `${summary.observed_count} Observed Issue${summary.observed_count > 1 ? 's' : ''}`,
       subtext: parts.length > 0 ? parts.join(', ') : 'See details below',
-      severity: summary.observed_major_concerns > 0 ? 'warning' : 'info'
-    };
+      severity: summary.observed_major_concerns > 0 ? 'warning' : 'info',
+    }
   }
 
   // Only unverified risks
@@ -117,8 +117,8 @@ export function getRiskBannerText(summary: RiskAssessment['summary']): {
     return {
       headline: `${summary.unverified_count} Unverified Risk${summary.unverified_count > 1 ? 's' : ''}`,
       subtext: 'Patterns detected - needs verification before bidding',
-      severity: 'warning'
-    };
+      severity: 'warning',
+    }
   }
 
   // Only info gaps
@@ -126,15 +126,15 @@ export function getRiskBannerText(summary: RiskAssessment['summary']): {
     return {
       headline: `${summary.info_gap_count} Information Gap${summary.info_gap_count > 1 ? 's' : ''}`,
       subtext: 'Missing data - verify before bidding',
-      severity: 'info'
-    };
+      severity: 'info',
+    }
   }
 
   return {
     headline: 'No Issues Detected',
     subtext: 'Analysis found no significant concerns',
-    severity: 'success'
-  };
+    severity: 'success',
+  }
 }
 
 /**
@@ -146,42 +146,41 @@ function computeTwoAxisVerdict(
   infoGaps: RiskItem[],
   hasAuctionEndTime: boolean
 ): TwoAxisVerdict {
-  const economics: EconomicsVerdict = economicsOk ? 'BUY' : 'PASS';
+  const economics: EconomicsVerdict = economicsOk ? 'BUY' : 'PASS'
 
   // Gates that block readiness
-  const gates: string[] = [];
+  const gates: string[] = []
 
   // Observed deal breakers are absolute gates
-  observedDealBreakers.forEach(db => {
-    gates.push(`CONFIRMED: ${db.title}`);
-  });
+  observedDealBreakers.forEach((db) => {
+    gates.push(`CONFIRMED: ${db.title}`)
+  })
 
   // Missing auction end time is a HARD gate
   if (!hasAuctionEndTime) {
-    gates.push('Auction end time unknown');
+    gates.push('Auction end time unknown')
   }
 
   // Critical info gaps gate readiness
-  const criticalGaps = infoGaps.filter(gap =>
-    gap.id === 'title_unknown' ||
-    gap.id === 'mileage_unknown'
-  );
-  criticalGaps.forEach(gap => {
-    gates.push(gap.title);
-  });
+  const criticalGaps = infoGaps.filter(
+    (gap) => gap.id === 'title_unknown' || gap.id === 'mileage_unknown'
+  )
+  criticalGaps.forEach((gap) => {
+    gates.push(gap.title)
+  })
 
-  const readiness: ReadinessVerdict = gates.length === 0 ? 'CLEARED' : 'GATED';
+  const readiness: ReadinessVerdict = gates.length === 0 ? 'CLEARED' : 'GATED'
 
   // Build explanation
-  let explanation: string;
+  let explanation: string
   if (economics === 'BUY' && readiness === 'CLEARED') {
-    explanation = 'Economics work and all verification gates cleared. Ready to bid.';
+    explanation = 'Economics work and all verification gates cleared. Ready to bid.'
   } else if (economics === 'BUY' && readiness === 'GATED') {
-    explanation = `Economics work, but ${gates.length} gate${gates.length > 1 ? 's' : ''} must be cleared before bidding.`;
+    explanation = `Economics work, but ${gates.length} gate${gates.length > 1 ? 's' : ''} must be cleared before bidding.`
   } else if (economics === 'PASS' && readiness === 'CLEARED') {
-    explanation = 'Economics do not support this deal at current pricing.';
+    explanation = 'Economics do not support this deal at current pricing.'
   } else {
-    explanation = 'Economics fail and info gaps exist. Do not bid.';
+    explanation = 'Economics fail and info gaps exist. Do not bid.'
   }
 
   return {
@@ -189,8 +188,8 @@ function computeTwoAxisVerdict(
     readiness,
     display: `${economics} (${readiness})`,
     gates,
-    explanation
-  };
+    explanation,
+  }
 }
 
 /**
@@ -204,9 +203,9 @@ export function evaluateRisks(
   economicsOk: boolean = true,
   hasAuctionEndTime: boolean = false
 ): RiskAssessment {
-  const observed_issues: RiskItem[] = [];
-  const unverified_risks: RiskItem[] = [];
-  const info_gaps: RiskItem[] = [];
+  const observed_issues: RiskItem[] = []
+  const unverified_risks: RiskItem[] = []
+  const info_gaps: RiskItem[] = []
 
   // ============================================
   // OBSERVED ISSUES - We have DIRECT EVIDENCE
@@ -223,8 +222,8 @@ export function evaluateRisks(
       description: 'Listing explicitly states salvage title - significantly reduces resale value',
       action: 'PASS unless discount is >50%',
       clearable: false,
-      categories: null
-    });
+      categories: null,
+    })
   }
 
   if (condition.title_status === 'missing') {
@@ -236,8 +235,8 @@ export function evaluateRisks(
       description: 'Listing states no title available - may be unsellable',
       action: 'Do not bid',
       clearable: false,
-      categories: null
-    });
+      categories: null,
+    })
   }
 
   // Structural damage - OBSERVED only if visible in photos
@@ -250,8 +249,8 @@ export function evaluateRisks(
       description: 'Photos show frame or structural damage',
       action: 'PASS - repair costs exceed value',
       clearable: false,
-      categories: null
-    });
+      categories: null,
+    })
   }
 
   // Severe rust visible in photos
@@ -264,8 +263,8 @@ export function evaluateRisks(
       description: 'Photos show severe rust compromising integrity',
       action: 'PASS',
       clearable: false,
-      categories: ['vehicle', 'trailer']
-    });
+      categories: ['vehicle', 'trailer'],
+    })
   }
 
   // High mileage - OBSERVED if stated/shown in listing
@@ -278,8 +277,8 @@ export function evaluateRisks(
       description: 'Odometer reading exceeds 150k - increased wear',
       action: 'Factor in higher repair reserve',
       clearable: false,
-      categories: ['vehicle']
-    });
+      categories: ['vehicle'],
+    })
   }
 
   // Confirmed repair needs from photos/description
@@ -292,8 +291,8 @@ export function evaluateRisks(
       description: 'Photos show worn tires requiring replacement',
       action: 'Add $400-800 to budget',
       clearable: false,
-      categories: ['vehicle', 'trailer']
-    });
+      categories: ['vehicle', 'trailer'],
+    })
   }
 
   // Damage mentioned in description
@@ -306,8 +305,8 @@ export function evaluateRisks(
       description: condition.damage_description || 'Seller disclosed damage - see listing',
       action: 'Verify extent before bidding',
       clearable: true,
-      categories: null
-    });
+      categories: null,
+    })
   }
 
   // ============================================
@@ -317,13 +316,18 @@ export function evaluateRisks(
 
   // Former fleet/police - UNVERIFIED pattern match
   if (assetType === 'vehicle') {
-    const titleLower = (condition.title || '').toLowerCase();
-    const descLower = (condition.description || '').toLowerCase();
-    const combined = `${titleLower} ${descLower}`;
+    const titleLower = (condition.title || '').toLowerCase()
+    const descLower = (condition.description || '').toLowerCase()
+    const combined = `${titleLower} ${descLower}`
 
-    if (combined.includes('police') || combined.includes('fleet') ||
-        combined.includes('government') || combined.includes('taxi') ||
-        combined.includes('crown victoria') || combined.includes('interceptor')) {
+    if (
+      combined.includes('police') ||
+      combined.includes('fleet') ||
+      combined.includes('government') ||
+      combined.includes('taxi') ||
+      combined.includes('crown victoria') ||
+      combined.includes('interceptor')
+    ) {
       unverified_risks.push({
         id: 'fleet_vehicle_pattern',
         severity: 'major_concern',
@@ -332,14 +336,18 @@ export function evaluateRisks(
         description: 'Keywords suggest fleet use - may have high idle hours. NOT confirmed.',
         action: 'Request service records to verify',
         clearable: true,
-        categories: ['vehicle']
-      });
+        categories: ['vehicle'],
+      })
     }
   }
 
   // Flood risk pattern - UNVERIFIED unless explicitly stated
-  const descriptionLower = (condition.description || '').toLowerCase();
-  if (descriptionLower.includes('water') && !descriptionLower.includes('water bottle') && !descriptionLower.includes('waterproof')) {
+  const descriptionLower = (condition.description || '').toLowerCase()
+  if (
+    descriptionLower.includes('water') &&
+    !descriptionLower.includes('water bottle') &&
+    !descriptionLower.includes('waterproof')
+  ) {
     unverified_risks.push({
       id: 'flood_risk_pattern',
       severity: 'major_concern',
@@ -348,12 +356,12 @@ export function evaluateRisks(
       description: 'Description mentions water - verify not flood damaged',
       action: 'Check VIN history, inspect carpets/electrical',
       clearable: true,
-      categories: ['vehicle']
-    });
+      categories: ['vehicle'],
+    })
   }
 
   // Thin economics - this IS a fact from our calculation
-  const qs = scenarios?.quick_sale;
+  const qs = scenarios?.quick_sale
   if (qs && typeof qs.gross_profit === 'number' && typeof qs.margin === 'number') {
     if (qs.gross_profit < 300 && qs.margin < 0.15) {
       observed_issues.push({
@@ -364,8 +372,8 @@ export function evaluateRisks(
         description: `Quick-sale profit $${Math.round(qs.gross_profit)} at ${Math.round(qs.margin * 100)}%`,
         action: 'Only proceed if confident in premium sale',
         clearable: false,
-        categories: null
-      });
+        categories: null,
+      })
     }
   }
 
@@ -374,7 +382,7 @@ export function evaluateRisks(
   // ============================================
 
   // Limited photos
-  const photoCount = condition.photos_analyzed ?? 0;
+  const photoCount = condition.photos_analyzed ?? 0
   if (photoCount < 4) {
     info_gaps.push({
       id: 'limited_photos',
@@ -384,12 +392,16 @@ export function evaluateRisks(
       description: 'Insufficient visual evidence for reliable assessment',
       action: 'Request additional photos or inspect in person',
       clearable: true,
-      categories: null
-    });
+      categories: null,
+    })
   }
 
   // Unknown title status
-  if (!condition.title_status || condition.title_status === 'unknown' || condition.title_status === 'on_file') {
+  if (
+    !condition.title_status ||
+    condition.title_status === 'unknown' ||
+    condition.title_status === 'on_file'
+  ) {
     info_gaps.push({
       id: 'title_unknown',
       severity: 'info_gap',
@@ -398,8 +410,8 @@ export function evaluateRisks(
       description: 'Cannot verify clean title from listing',
       action: 'Call auction to confirm clean title in hand',
       clearable: true,
-      categories: null
-    });
+      categories: null,
+    })
   }
 
   // Unknown mileage for vehicles
@@ -412,12 +424,16 @@ export function evaluateRisks(
       description: 'Cannot assess wear without odometer reading',
       action: 'Request odometer photo or VIN history',
       clearable: true,
-      categories: ['vehicle']
-    });
+      categories: ['vehicle'],
+    })
   }
 
   // Unknown brakes on tandem trailer
-  if (assetType === 'trailer' && condition.axle_status === 'tandem' && condition.brakes === 'unknown') {
+  if (
+    assetType === 'trailer' &&
+    condition.axle_status === 'tandem' &&
+    condition.brakes === 'unknown'
+  ) {
     info_gaps.push({
       id: 'brakes_unknown',
       severity: 'info_gap',
@@ -426,8 +442,8 @@ export function evaluateRisks(
       description: 'Tandem requires working brakes - status not verified',
       action: 'Verify brake type and condition',
       clearable: true,
-      categories: ['trailer']
-    });
+      categories: ['trailer'],
+    })
   }
 
   // Unknown mechanical condition for vehicles
@@ -440,8 +456,8 @@ export function evaluateRisks(
       description: 'Engine/transmission status not assessed',
       action: 'Plan for OBD scan at pickup',
       clearable: true,
-      categories: ['vehicle']
-    });
+      categories: ['vehicle'],
+    })
   }
 
   // ============================================
@@ -449,16 +465,16 @@ export function evaluateRisks(
   // ============================================
 
   const filterByType = (items: RiskItem[]) =>
-    items.filter(item => !item.categories || item.categories.includes(assetType));
+    items.filter((item) => !item.categories || item.categories.includes(assetType))
 
-  const filteredObserved = filterByType(observed_issues);
-  const filteredUnverified = filterByType(unverified_risks);
-  const filteredGaps = filterByType(info_gaps);
+  const filteredObserved = filterByType(observed_issues)
+  const filteredUnverified = filterByType(unverified_risks)
+  const filteredGaps = filterByType(info_gaps)
 
   // Find observed deal breakers ONLY
-  const observedDealBreakers = filteredObserved.filter(i => i.severity === 'deal_breaker');
-  const observedMajorConcerns = filteredObserved.filter(i => i.severity === 'major_concern');
-  const observedMinorIssues = filteredObserved.filter(i => i.severity === 'minor_issue');
+  const observedDealBreakers = filteredObserved.filter((i) => i.severity === 'deal_breaker')
+  const observedMajorConcerns = filteredObserved.filter((i) => i.severity === 'major_concern')
+  const observedMinorIssues = filteredObserved.filter((i) => i.severity === 'minor_issue')
 
   // Compute two-axis verdict
   const verdict = computeTwoAxisVerdict(
@@ -466,7 +482,7 @@ export function evaluateRisks(
     observedDealBreakers,
     filteredGaps,
     hasAuctionEndTime
-  );
+  )
 
   return {
     observed_issues: filteredObserved,
@@ -481,9 +497,9 @@ export function evaluateRisks(
       observed_deal_breakers: observedDealBreakers.length,
       observed_major_concerns: observedMajorConcerns.length,
       observed_minor_issues: observedMinorIssues.length,
-      gates_blocking: verdict.gates
-    }
-  };
+      gates_blocking: verdict.gates,
+    },
+  }
 }
 
 /**
@@ -495,19 +511,19 @@ export function buildPreBidChecklist(
   assetType: 'vehicle' | 'trailer' | 'power_tool',
   hasAuctionEndTime: boolean = false
 ): Array<{
-  id: string;
-  label: string;
-  action: string;
-  critical: boolean;
-  autoChecked: boolean;
+  id: string
+  label: string
+  action: string
+  critical: boolean
+  autoChecked: boolean
 }> {
   const checklist: Array<{
-    id: string;
-    label: string;
-    action: string;
-    critical: boolean;
-    autoChecked: boolean;
-  }> = [];
+    id: string
+    label: string
+    action: string
+    critical: boolean
+    autoChecked: boolean
+  }> = []
 
   // Auction end time - ALWAYS first if missing (HARD GATE)
   if (!hasAuctionEndTime) {
@@ -516,60 +532,60 @@ export function buildPreBidChecklist(
       label: 'Confirm auction end time',
       action: 'Cannot plan bid timing without end time',
       critical: true,
-      autoChecked: false
-    });
+      autoChecked: false,
+    })
   }
 
   // Add all info gaps as checklist items
-  risks.info_gaps.forEach(gap => {
+  risks.info_gaps.forEach((gap) => {
     checklist.push({
       id: gap.id,
       label: gap.title,
       action: gap.action,
       critical: gap.id === 'title_unknown' || gap.id === 'mileage_unknown',
-      autoChecked: false
-    });
-  });
+      autoChecked: false,
+    })
+  })
 
   // Add clearable unverified risks
   risks.unverified_risks
-    .filter(r => r.clearable)
-    .forEach(r => {
+    .filter((r) => r.clearable)
+    .forEach((r) => {
       checklist.push({
         id: r.id,
         label: `Verify: ${r.title}`,
         action: r.action,
         critical: r.severity === 'deal_breaker' || r.severity === 'major_concern',
-        autoChecked: false
-      });
-    });
+        autoChecked: false,
+      })
+    })
 
   // Asset-type specific standard checks
   if (assetType === 'vehicle') {
-    if (!checklist.some(c => c.id.includes('vin'))) {
+    if (!checklist.some((c) => c.id.includes('vin'))) {
       checklist.push({
         id: 'vin_checked',
         label: 'Run VIN history',
         action: 'Carfax/AutoCheck for accidents and title history',
         critical: false,
-        autoChecked: false
-      });
+        autoChecked: false,
+      })
     }
   }
 
   if (assetType === 'trailer') {
-    if (!checklist.some(c => c.id.includes('hitch'))) {
+    if (!checklist.some((c) => c.id.includes('hitch'))) {
       checklist.push({
         id: 'hitch_compatible',
         label: 'Confirm hitch/ball size',
         action: 'Verify coupler size (2" or 2-5/16")',
         critical: false,
-        autoChecked: false
-      });
+        autoChecked: false,
+      })
     }
   }
 
-  return checklist;
+  return checklist
 }
 
 /**
@@ -577,12 +593,12 @@ export function buildPreBidChecklist(
  * CRITICAL: Don't show 4.0/5 when everything is unknown
  */
 export function getConditionConfidenceLabel(condition: any): {
-  label: string;
-  level: 'high' | 'medium' | 'low' | 'insufficient';
-  reason: string;
-  coverage: { known: number; total: number };
+  label: string
+  level: 'high' | 'medium' | 'low' | 'insufficient'
+  reason: string
+  coverage: { known: number; total: number }
 } {
-  const photoCount = condition.photos_analyzed ?? 0;
+  const photoCount = condition.photos_analyzed ?? 0
 
   // Count known vs unknown fields
   const fields = [
@@ -591,21 +607,22 @@ export function getConditionConfidenceLabel(condition: any): {
     { name: 'mechanical', known: condition.mechanical && condition.mechanical !== 'unknown' },
     { name: 'exterior', known: condition.exterior && condition.exterior !== 'unknown' },
     { name: 'interior', known: condition.interior && condition.interior !== 'unknown' },
-  ];
+  ]
 
-  const knownCount = fields.filter(f => f.known).length;
-  const totalFields = fields.length;
+  const knownCount = fields.filter((f) => f.known).length
+  const totalFields = fields.length
 
   // Insufficient evidence
   if (photoCount < 3 || knownCount < 2) {
     return {
       label: 'Insufficient Evidence',
       level: 'insufficient',
-      reason: photoCount < 3
-        ? `Only ${photoCount} photos available`
-        : `Only ${knownCount}/${totalFields} data points verified`,
-      coverage: { known: knownCount, total: totalFields }
-    };
+      reason:
+        photoCount < 3
+          ? `Only ${photoCount} photos available`
+          : `Only ${knownCount}/${totalFields} data points verified`,
+      coverage: { known: knownCount, total: totalFields },
+    }
   }
 
   // Low confidence
@@ -614,8 +631,8 @@ export function getConditionConfidenceLabel(condition: any): {
       label: 'Low Confidence',
       level: 'low',
       reason: `${knownCount}/${totalFields} verified, ${photoCount} photos`,
-      coverage: { known: knownCount, total: totalFields }
-    };
+      coverage: { known: knownCount, total: totalFields },
+    }
   }
 
   // Medium confidence
@@ -624,8 +641,8 @@ export function getConditionConfidenceLabel(condition: any): {
       label: 'Medium Confidence',
       level: 'medium',
       reason: `${knownCount}/${totalFields} verified`,
-      coverage: { known: knownCount, total: totalFields }
-    };
+      coverage: { known: knownCount, total: totalFields },
+    }
   }
 
   // High confidence
@@ -633,6 +650,6 @@ export function getConditionConfidenceLabel(condition: any): {
     label: 'High Confidence',
     level: 'high',
     reason: 'Good coverage and photo evidence',
-    coverage: { known: knownCount, total: totalFields }
-  };
+    coverage: { known: knownCount, total: totalFields },
+  }
 }

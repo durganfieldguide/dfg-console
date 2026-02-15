@@ -3,7 +3,7 @@
  * Handles CRUD operations for opportunities with state machine enforcement.
  */
 
-import type { Env } from '../core/env';
+import type { Env } from '../core/env'
 import type {
   OpportunityRow,
   OpportunityStatus,
@@ -12,10 +12,14 @@ import type {
   OperatorInputs,
   AnalysisRunRow,
   ListingFacts,
-} from '../core/types';
-import { canTransition } from '../core/types';
-import { computeGates, checkHardGateFailures, formatAutoRejectMessage } from '../domain/gates';
-import { computeListingSnapshotHash, checkStaleness, type AnalysisRunSnapshot } from '../domain/staleness';
+} from '../core/types'
+import { canTransition } from '../core/types'
+import { computeGates, checkHardGateFailures, formatAutoRejectMessage } from '../domain/gates'
+import {
+  computeListingSnapshotHash,
+  checkStaleness,
+  type AnalysisRunSnapshot,
+} from '../domain/staleness'
 import {
   json,
   jsonError,
@@ -24,7 +28,7 @@ import {
   getQueryParam,
   getQueryParamInt,
   getQueryParamBool,
-} from '../core/http';
+} from '../core/http'
 import {
   generateId,
   nowISO,
@@ -32,8 +36,8 @@ import {
   subtractHours,
   isFuture,
   parseJsonSafe,
-} from '../lib/utils';
-import { computeAlertsForOpportunity } from './alerts';
+} from '../lib/utils'
+import { computeAlertsForOpportunity } from './alerts'
 
 // =============================================================================
 // CUSTOM ERRORS
@@ -44,9 +48,12 @@ import { computeAlertsForOpportunity } from './alerts';
  * Used to distinguish analyst-specific failures from other errors.
  */
 class AnalystWorkerError extends Error {
-  constructor(message: string, public readonly statusCode?: number) {
-    super(message);
-    this.name = 'AnalystWorkerError';
+  constructor(
+    message: string,
+    public readonly statusCode?: number
+  ) {
+    super(message)
+    this.name = 'AnalystWorkerError'
   }
 }
 
@@ -63,54 +70,54 @@ export async function handleOpportunities(
 ): Promise<Response> {
   // GET /api/opportunities/stats
   if (path === '/api/opportunities/stats' && method === 'GET') {
-    return getStats(env);
+    return getStats(env)
   }
 
   // POST /api/opportunities/batch
   if (path === '/api/opportunities/batch' && method === 'POST') {
-    return batchOperation(request, env);
+    return batchOperation(request, env)
   }
 
   // GET /api/opportunities
   if (path === '/api/opportunities' && method === 'GET') {
-    return listOpportunities(env, url);
+    return listOpportunities(env, url)
   }
 
   // Routes with :id parameter
-  const idMatch = path.match(/^\/api\/opportunities\/([^/]+)$/);
+  const idMatch = path.match(/^\/api\/opportunities\/([^/]+)$/)
   if (idMatch) {
-    const id = decodeURIComponent(idMatch[1]);
+    const id = decodeURIComponent(idMatch[1])
 
     if (method === 'GET') {
-      return getOpportunity(env, id);
+      return getOpportunity(env, id)
     }
     if (method === 'PATCH') {
-      return updateOpportunity(request, env, id);
+      return updateOpportunity(request, env, id)
     }
   }
 
   // POST /api/opportunities/:id/actions
-  const actionsMatch = path.match(/^\/api\/opportunities\/([^/]+)\/actions$/);
+  const actionsMatch = path.match(/^\/api\/opportunities\/([^/]+)\/actions$/)
   if (actionsMatch && method === 'POST') {
-    const id = decodeURIComponent(actionsMatch[1]);
-    return createAction(request, env, id);
+    const id = decodeURIComponent(actionsMatch[1])
+    return createAction(request, env, id)
   }
 
   // PATCH /api/opportunities/:id/inputs - Update operator inputs
-  const inputsMatch = path.match(/^\/api\/opportunities\/([^/]+)\/inputs$/);
+  const inputsMatch = path.match(/^\/api\/opportunities\/([^/]+)\/inputs$/)
   if (inputsMatch && method === 'PATCH') {
-    const id = decodeURIComponent(inputsMatch[1]);
-    return updateOperatorInputs(request, env, id);
+    const id = decodeURIComponent(inputsMatch[1])
+    return updateOperatorInputs(request, env, id)
   }
 
   // POST /api/opportunities/:id/analyze - Create new analysis run
-  const analyzeMatch = path.match(/^\/api\/opportunities\/([^/]+)\/analyze$/);
+  const analyzeMatch = path.match(/^\/api\/opportunities\/([^/]+)\/analyze$/)
   if (analyzeMatch && method === 'POST') {
-    const id = decodeURIComponent(analyzeMatch[1]);
-    return analyzeOpportunity(request, env, id);
+    const id = decodeURIComponent(analyzeMatch[1])
+    return analyzeOpportunity(request, env, id)
   }
 
-  return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404);
+  return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404)
 }
 
 // =============================================================================
@@ -118,34 +125,34 @@ export async function handleOpportunities(
 // =============================================================================
 
 async function listOpportunities(env: Env, url: URL): Promise<Response> {
-  const status = getQueryParam(url, 'status');
-  const endingWithin = getQueryParam(url, 'ending_within');
-  const scoreBand = getQueryParam(url, 'score_band');
-  const categoryId = getQueryParam(url, 'category_id');
+  const status = getQueryParam(url, 'status')
+  const endingWithin = getQueryParam(url, 'ending_within')
+  const scoreBand = getQueryParam(url, 'score_band')
+  const categoryId = getQueryParam(url, 'category_id')
   // Note: has_active_alert filter is TODO for v2
-  const needsAttention = getQueryParamBool(url, 'needs_attention');
-  const staleQualifying = getQueryParamBool(url, 'stale_qualifying');
+  const needsAttention = getQueryParamBool(url, 'needs_attention')
+  const staleQualifying = getQueryParamBool(url, 'stale_qualifying')
   // Sprint N+1: Combined attention filter (matches dashboard Attention Required)
-  const attention = getQueryParamBool(url, 'attention');
+  const attention = getQueryParamBool(url, 'attention')
   // Sprint N+1: New staleness filters
-  const stale = getQueryParamBool(url, 'stale');
-  const analysisStale = getQueryParamBool(url, 'analysis_stale');
-  const decisionStale = getQueryParamBool(url, 'decision_stale');
-  const endingSoon = getQueryParamBool(url, 'ending_soon');
+  const stale = getQueryParamBool(url, 'stale')
+  const analysisStale = getQueryParamBool(url, 'analysis_stale')
+  const decisionStale = getQueryParamBool(url, 'decision_stale')
+  const endingSoon = getQueryParamBool(url, 'ending_soon')
   // Sprint N+3: Strike Zone filter (high-value inbox items ready for action)
-  const strikeZone = getQueryParamBool(url, 'strike_zone');
+  const strikeZone = getQueryParamBool(url, 'strike_zone')
   // Sprint N+3: Verification Needed filter (opportunities with open critical gates)
-  const verificationNeeded = getQueryParamBool(url, 'verification_needed');
+  const verificationNeeded = getQueryParamBool(url, 'verification_needed')
   // Sprint N+4: New today filter (#71)
-  const newToday = getQueryParamBool(url, 'new_today');
-  const limit = Math.min(getQueryParamInt(url, 'limit', 50), 100);
-  const offset = getQueryParamInt(url, 'offset', 0);
-  const sort = getQueryParam(url, 'sort') || 'auction_ends_at';
-  const order = getQueryParam(url, 'order') || 'asc';
+  const newToday = getQueryParamBool(url, 'new_today')
+  const limit = Math.min(getQueryParamInt(url, 'limit', 50), 100)
+  const offset = getQueryParamInt(url, 'offset', 0)
+  const sort = getQueryParam(url, 'sort') || 'auction_ends_at'
+  const order = getQueryParam(url, 'order') || 'asc'
 
   // Staleness thresholds (matching dashboard/attention endpoint)
-  const STALE_THRESHOLD_DAYS = 3;
-  const ANALYSIS_STALE_DAYS = 7;
+  const STALE_THRESHOLD_DAYS = 3
+  const ANALYSIS_STALE_DAYS = 7
 
   let query = `
     SELECT
@@ -182,50 +189,50 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
 
     FROM opportunities
     WHERE 1=1
-  `;
-  const params: (string | number)[] = [STALE_THRESHOLD_DAYS, ANALYSIS_STALE_DAYS];
+  `
+  const params: (string | number)[] = [STALE_THRESHOLD_DAYS, ANALYSIS_STALE_DAYS]
 
   // Status filter (comma-separated)
   if (status) {
-    const statuses = status.split(',').map((s) => s.trim());
-    const placeholders = statuses.map(() => '?').join(', ');
-    query += ` AND status IN (${placeholders})`;
-    params.push(...statuses);
+    const statuses = status.split(',').map((s) => s.trim())
+    const placeholders = statuses.map(() => '?').join(', ')
+    query += ` AND status IN (${placeholders})`
+    params.push(...statuses)
   }
 
   // Ending within filter (#99: parameterized)
   if (endingWithin) {
-    const hoursMap: Record<string, number> = { '24h': 24, '48h': 48, '7d': 168 };
-    const hours = hoursMap[endingWithin];
+    const hoursMap: Record<string, number> = { '24h': 24, '48h': 48, '7d': 168 }
+    const hours = hoursMap[endingWithin]
     if (hours) {
-      query += ` AND auction_ends_at IS NOT NULL`;
-      query += ` AND datetime(auction_ends_at) > datetime('now')`;
-      query += ` AND julianday(auction_ends_at) - julianday('now') <= ?`;
-      params.push(hours / 24); // Convert hours to days for julianday comparison
+      query += ` AND auction_ends_at IS NOT NULL`
+      query += ` AND datetime(auction_ends_at) > datetime('now')`
+      query += ` AND julianday(auction_ends_at) - julianday('now') <= ?`
+      params.push(hours / 24) // Convert hours to days for julianday comparison
     }
   }
 
   // Score band filter
   if (scoreBand) {
     if (scoreBand === 'high') {
-      query += ` AND buy_box_score >= 70`;
+      query += ` AND buy_box_score >= 70`
     } else if (scoreBand === 'medium') {
-      query += ` AND buy_box_score >= 40 AND buy_box_score < 70`;
+      query += ` AND buy_box_score >= 40 AND buy_box_score < 70`
     } else if (scoreBand === 'low') {
-      query += ` AND buy_box_score < 40`;
+      query += ` AND buy_box_score < 40`
     }
   }
 
   // Category filter
   if (categoryId) {
-    query += ` AND category_id = ?`;
-    params.push(categoryId);
+    query += ` AND category_id = ?`
+    params.push(categoryId)
   }
 
   // Stale qualifying filter
   if (staleQualifying === true) {
-    query += ` AND status = 'qualifying'`;
-    query += ` AND datetime(status_changed_at) < datetime('now', '-24 hours')`;
+    query += ` AND status = 'qualifying'`
+    query += ` AND datetime(status_changed_at) < datetime('now', '-24 hours')`
   }
 
   // Needs attention filter (watch fired OR stale qualifying)
@@ -233,43 +240,43 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
     query += ` AND (
       (status = 'watch' AND watch_fired_at IS NOT NULL)
       OR (status = 'qualifying' AND datetime(status_changed_at) < datetime('now', '-24 hours'))
-    )`;
+    )`
   }
 
   // TODO: has_active_alert filter requires checking dismissals - implement in v2
 
   // Sprint N+1: Staleness filters (#99: parameterized)
   if (stale === true) {
-    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    query += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?`;
-    params.push(STALE_THRESHOLD_DAYS);
+    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`
+    query += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?`
+    params.push(STALE_THRESHOLD_DAYS)
   }
 
   if (analysisStale === true) {
-    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`
     // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix, #99: parameterized)
-    query += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ?)`;
-    params.push(ANALYSIS_STALE_DAYS);
+    query += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ?)`
+    params.push(ANALYSIS_STALE_DAYS)
   }
 
   if (decisionStale === true) {
-    query += ` AND status IN ('bid', 'watch')`;
-    query += ` AND auction_ends_at IS NOT NULL`;
-    query += ` AND julianday(auction_ends_at) - julianday('now') <= 1`;
-    query += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+    query += ` AND status IN ('bid', 'watch')`
+    query += ` AND auction_ends_at IS NOT NULL`
+    query += ` AND julianday(auction_ends_at) - julianday('now') <= 1`
+    query += ` AND julianday(auction_ends_at) - julianday('now') > 0`
   }
 
   if (endingSoon === true) {
-    query += ` AND auction_ends_at IS NOT NULL`;
-    query += ` AND julianday(auction_ends_at) - julianday('now') <= 2`;
-    query += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+    query += ` AND auction_ends_at IS NOT NULL`
+    query += ` AND julianday(auction_ends_at) - julianday('now') <= 2`
+    query += ` AND julianday(auction_ends_at) - julianday('now') > 0`
   }
 
   // Combined attention filter (matches dashboard /api/dashboard/attention logic)
   // Returns all items needing operator attention: stale, decision stale, ending soon, or analysis stale
   // (#99: parameterized)
   if (attention === true) {
-    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    query += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`
     query += ` AND (
       -- Stale: no activity for STALE_THRESHOLD_DAYS
       julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?
@@ -285,16 +292,16 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
       -- Analysis stale: needs re-analysis
       OR (last_analyzed_at IS NOT NULL
           AND julianday('now') - julianday(last_analyzed_at) > ?)
-    )`;
-    params.push(STALE_THRESHOLD_DAYS, ANALYSIS_STALE_DAYS);
+    )`
+    params.push(STALE_THRESHOLD_DAYS, ANALYSIS_STALE_DAYS)
   }
 
   // Strike Zone filter: High-value inbox items ready for immediate action
   // Criteria: inbox/qualifying, high score (70+), analyzed, ending soon OR fresh
   if (strikeZone === true) {
-    query += ` AND status IN ('inbox', 'qualifying')`;
-    query += ` AND buy_box_score >= 70`;
-    query += ` AND last_analyzed_at IS NOT NULL`;
+    query += ` AND status IN ('inbox', 'qualifying')`
+    query += ` AND buy_box_score >= 70`
+    query += ` AND last_analyzed_at IS NOT NULL`
     query += ` AND (
       -- Ending within 48 hours
       (auction_ends_at IS NOT NULL
@@ -302,14 +309,14 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
        AND datetime(auction_ends_at) <= datetime('now', '+48 hours'))
       -- OR created within last 12 hours (fresh opportunity)
       OR datetime(created_at) > datetime('now', '-12 hours')
-    )`;
+    )`
   }
 
   // Verification Needed filter: Opportunities with open critical gates needing operator input
   // These are analyzed opportunities where critical gates are still blocking bid action
   if (verificationNeeded === true) {
-    query += ` AND status IN ('inbox', 'qualifying', 'watch', 'inspect')`;
-    query += ` AND last_analyzed_at IS NOT NULL`;
+    query += ` AND status IN ('inbox', 'qualifying', 'watch', 'inspect')`
+    query += ` AND last_analyzed_at IS NOT NULL`
     // Check for missing or incomplete operator inputs on critical gates
     // We look for opportunities that have been analyzed but still have:
     // - No operator_inputs_json OR
@@ -327,99 +334,109 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
       OR json_extract(operator_inputs_json, '$.title.lienStatus.verificationLevel') = 'unverified'
       OR json_extract(operator_inputs_json, '$.title.odometerMiles.value') IS NULL
       OR json_extract(operator_inputs_json, '$.title.odometerMiles.verificationLevel') = 'unverified'
-    )`;
+    )`
   }
 
   // Sprint N+4: New today filter - created within last 24 hours (#71)
   if (newToday === true) {
-    query += ` AND datetime(created_at) > datetime('now', '-24 hours')`;
+    query += ` AND datetime(created_at) > datetime('now', '-24 hours')`
   }
 
   // Sorting
-  const allowedSorts = ['auction_ends_at', 'buy_box_score', 'created_at', 'updated_at', 'status_changed_at'];
-  const sortField = allowedSorts.includes(sort) ? sort : 'auction_ends_at';
-  const sortOrder = order === 'desc' ? 'DESC' : 'ASC';
+  const allowedSorts = [
+    'auction_ends_at',
+    'buy_box_score',
+    'created_at',
+    'updated_at',
+    'status_changed_at',
+  ]
+  const sortField = allowedSorts.includes(sort) ? sort : 'auction_ends_at'
+  const sortOrder = order === 'desc' ? 'DESC' : 'ASC'
 
   // Handle NULL auction_ends_at (put at end for ASC, start for DESC)
   if (sortField === 'auction_ends_at') {
-    query += ` ORDER BY CASE WHEN auction_ends_at IS NULL THEN 1 ELSE 0 END, ${sortField} ${sortOrder}`;
+    query += ` ORDER BY CASE WHEN auction_ends_at IS NULL THEN 1 ELSE 0 END, ${sortField} ${sortOrder}`
   } else {
-    query += ` ORDER BY ${sortField} ${sortOrder}`;
+    query += ` ORDER BY ${sortField} ${sortOrder}`
   }
 
-  query += ` LIMIT ? OFFSET ?`;
-  params.push(limit, offset);
+  query += ` LIMIT ? OFFSET ?`
+  params.push(limit, offset)
 
   // Execute query
-  const result = await env.DB.prepare(query).bind(...params).all();
+  const result = await env.DB.prepare(query)
+    .bind(...params)
+    .all()
 
   // Get total count (without pagination)
-  let countQuery = `SELECT COUNT(*) as count FROM opportunities WHERE 1=1`;
-  const countParams: (string | number)[] = [];
+  let countQuery = `SELECT COUNT(*) as count FROM opportunities WHERE 1=1`
+  const countParams: (string | number)[] = []
 
   if (status) {
-    const statuses = status.split(',').map((s) => s.trim());
-    const placeholders = statuses.map(() => '?').join(', ');
-    countQuery += ` AND status IN (${placeholders})`;
-    countParams.push(...statuses);
+    const statuses = status.split(',').map((s) => s.trim())
+    const placeholders = statuses.map(() => '?').join(', ')
+    countQuery += ` AND status IN (${placeholders})`
+    countParams.push(...statuses)
   }
   if (categoryId) {
-    countQuery += ` AND category_id = ?`;
-    countParams.push(categoryId);
+    countQuery += ` AND category_id = ?`
+    countParams.push(categoryId)
   }
   if (staleQualifying === true) {
-    countQuery += ` AND status = 'qualifying'`;
-    countQuery += ` AND datetime(status_changed_at) < datetime('now', '-24 hours')`;
+    countQuery += ` AND status = 'qualifying'`
+    countQuery += ` AND datetime(status_changed_at) < datetime('now', '-24 hours')`
   }
   if (needsAttention === true) {
     countQuery += ` AND (
       (status = 'watch' AND watch_fired_at IS NOT NULL)
       OR (status = 'qualifying' AND datetime(status_changed_at) < datetime('now', '-24 hours'))
-    )`;
+    )`
   }
 
   // Sprint N+1: Staleness filters for count query (#99: parameterized)
   if (stale === true) {
-    countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
-    countQuery += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?`;
-    countParams.push(STALE_THRESHOLD_DAYS);
+    countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`
+    countQuery += ` AND julianday('now') - julianday(COALESCE(last_operator_review_at, status_changed_at)) > ?`
+    countParams.push(STALE_THRESHOLD_DAYS)
   }
   if (analysisStale === true) {
-    countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`;
+    countQuery += ` AND status NOT IN ('rejected', 'archived', 'won', 'lost')`
     // Include items never analyzed OR analyzed more than ANALYSIS_STALE_DAYS ago (#76 fix, #99: parameterized)
-    countQuery += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ?)`;
-    countParams.push(ANALYSIS_STALE_DAYS);
+    countQuery += ` AND (last_analyzed_at IS NULL OR julianday('now') - julianday(last_analyzed_at) > ?)`
+    countParams.push(ANALYSIS_STALE_DAYS)
   }
   if (decisionStale === true) {
-    countQuery += ` AND status IN ('bid', 'watch')`;
-    countQuery += ` AND auction_ends_at IS NOT NULL`;
-    countQuery += ` AND julianday(auction_ends_at) - julianday('now') <= 1`;
-    countQuery += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+    countQuery += ` AND status IN ('bid', 'watch')`
+    countQuery += ` AND auction_ends_at IS NOT NULL`
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') <= 1`
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') > 0`
   }
   if (endingSoon === true) {
-    countQuery += ` AND auction_ends_at IS NOT NULL`;
-    countQuery += ` AND julianday(auction_ends_at) - julianday('now') <= 2`;
-    countQuery += ` AND julianday(auction_ends_at) - julianday('now') > 0`;
+    countQuery += ` AND auction_ends_at IS NOT NULL`
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') <= 2`
+    countQuery += ` AND julianday(auction_ends_at) - julianday('now') > 0`
   }
   // Sprint N+4: New today filter for count query (#71)
   if (newToday === true) {
-    countQuery += ` AND datetime(created_at) > datetime('now', '-24 hours')`;
+    countQuery += ` AND datetime(created_at) > datetime('now', '-24 hours')`
   }
 
-  const countResult = await env.DB.prepare(countQuery).bind(...countParams).first();
-  const total = (countResult as { count: number } | null)?.count || 0;
+  const countResult = await env.DB.prepare(countQuery)
+    .bind(...countParams)
+    .first()
+  const total = (countResult as { count: number } | null)?.count || 0
 
   // Transform rows - include computed staleness fields
   interface OpportunityRowWithStaleness extends OpportunityRow {
-    is_stale: number;
-    is_decision_stale: number;
-    is_ending_soon: number;
-    is_analysis_stale: number;
-    stale_days: number;
+    is_stale: number
+    is_decision_stale: number
+    is_ending_soon: number
+    is_analysis_stale: number
+    stale_days: number
   }
 
   const opportunities = (result.results || []).map((row) => {
-    const r = row as unknown as OpportunityRowWithStaleness;
+    const r = row as unknown as OpportunityRowWithStaleness
     return {
       id: r.id,
       source: r.source,
@@ -443,13 +460,13 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
       is_ending_soon: r.is_ending_soon === 1,
       is_analysis_stale: r.is_analysis_stale === 1,
       stale_days: r.stale_days || 0,
-    };
-  });
+    }
+  })
 
   return json({
     data: { opportunities, total },
     meta: { limit, offset },
-  });
+  })
 }
 
 // =============================================================================
@@ -457,26 +474,38 @@ async function listOpportunities(env: Env, url: URL): Promise<Response> {
 // =============================================================================
 
 async function getOpportunity(env: Env, id: string): Promise<Response> {
-  const row = await env.DB.prepare(`
+  const row = (await env.DB.prepare(
+    `
     SELECT * FROM opportunities WHERE id = ?
-  `).bind(id).first() as OpportunityRow | null;
+  `
+  )
+    .bind(id)
+    .first()) as OpportunityRow | null
 
   if (!row) {
-    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
+    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404)
   }
 
   // Get source defaults
-  const source = await env.DB.prepare(`
+  const source = await env.DB.prepare(
+    `
     SELECT * FROM sources WHERE id = ?
-  `).bind(row.source).first();
+  `
+  )
+    .bind(row.source)
+    .first()
 
   // Get actions history
-  const actionsResult = await env.DB.prepare(`
+  const actionsResult = await env.DB.prepare(
+    `
     SELECT * FROM operator_actions
     WHERE opportunity_id = ?
     ORDER BY created_at DESC
     LIMIT 50
-  `).bind(id).all();
+  `
+  )
+    .bind(id)
+    .all()
 
   const actions = (actionsResult.results || []).map((a: Record<string, unknown>) => ({
     id: a.id,
@@ -486,20 +515,24 @@ async function getOpportunity(env: Env, id: string): Promise<Response> {
     alert_key: a.alert_key,
     payload: parseJsonSafe(a.payload as string),
     created_at: a.created_at,
-  }));
+  }))
 
   // Compute alerts for this opportunity
-  const alerts = await computeAlertsForOpportunity(env, row);
+  const alerts = await computeAlertsForOpportunity(env, row)
 
   // Sprint 1.5: Parse operator inputs
-  const operatorInputs = parseJsonSafe<OperatorInputs>(row.operator_inputs_json);
+  const operatorInputs = parseJsonSafe<OperatorInputs>(row.operator_inputs_json)
 
   // Sprint 1.5: Get current analysis run
-  let currentAnalysisRun = null;
+  let currentAnalysisRun = null
   if (row.current_analysis_run_id) {
-    const analysisRow = await env.DB.prepare(`
+    const analysisRow = (await env.DB.prepare(
+      `
       SELECT * FROM analysis_runs WHERE id = ?
-    `).bind(row.current_analysis_run_id).first() as AnalysisRunRow | null;
+    `
+    )
+      .bind(row.current_analysis_run_id)
+      .first()) as AnalysisRunRow | null
 
     if (analysisRow) {
       currentAnalysisRun = {
@@ -510,13 +543,15 @@ async function getOpportunity(env: Env, id: string): Promise<Response> {
         recommendation: analysisRow.recommendation,
         derived: parseJsonSafe(analysisRow.derived_json),
         gates: parseJsonSafe(analysisRow.gates_json),
-        modelMeta: analysisRow.calc_version ? {
-          calcVersion: analysisRow.calc_version,
-          gatesVersion: analysisRow.gates_version,
-        } : null,
+        modelMeta: analysisRow.calc_version
+          ? {
+              calcVersion: analysisRow.calc_version,
+              gatesVersion: analysisRow.gates_version,
+            }
+          : null,
         // Sprint N+3 (#54): Include persisted AI analysis
         aiAnalysis: parseJsonSafe(analysisRow.ai_analysis_json),
-      };
+      }
     }
   }
 
@@ -525,13 +560,13 @@ async function getOpportunity(env: Env, id: string): Promise<Response> {
     currentBid: row.current_bid ?? undefined,
     endTime: row.auction_ends_at ?? undefined,
     photoCount: (parseJsonSafe<string[]>(row.photos) || []).length,
-  };
+  }
 
   // Sprint 1.5: Compute live gates from current data
-  const computedGates = computeGates(listingFacts, operatorInputs);
+  const computedGates = computeGates(listingFacts, operatorInputs)
 
   // Sprint 1.5: Check staleness if we have an analysis run
-  let stalenessCheck = null;
+  let stalenessCheck = null
   if (currentAnalysisRun) {
     const snapshot: AnalysisRunSnapshot = {
       listingSnapshotHash: currentAnalysisRun.listingSnapshotHash,
@@ -542,13 +577,13 @@ async function getOpportunity(env: Env, id: string): Promise<Response> {
         endTime: row.auction_ends_at ?? undefined,
         photoCount: listingFacts.photoCount,
       },
-    };
+    }
     stalenessCheck = checkStaleness(
       listingFacts,
       operatorInputs,
       { version: '1.0' }, // TODO: Get current assumptions version
       snapshot
-    );
+    )
   }
 
   // Build response
@@ -597,7 +632,8 @@ async function getOpportunity(env: Env, id: string): Promise<Response> {
     updated_at: row.updated_at,
     source_defaults: source
       ? {
-          buyer_premium_pct: (source as { default_buyer_premium_pct: number }).default_buyer_premium_pct,
+          buyer_premium_pct: (source as { default_buyer_premium_pct: number })
+            .default_buyer_premium_pct,
           pickup_days: (source as { default_pickup_days: number }).default_pickup_days,
         }
       : null,
@@ -609,44 +645,44 @@ async function getOpportunity(env: Env, id: string): Promise<Response> {
     gates: computedGates,
     inputsChangedSinceAnalysis: stalenessCheck?.isStale ?? false,
     analysisStaleReason: stalenessCheck?.isStale
-      ? stalenessCheck.reasons.map(r => r.type).join(', ')
+      ? stalenessCheck.reasons.map((r) => r.type).join(', ')
       : null,
-  };
+  }
 
-  return json({ data: opportunity });
+  return json({ data: opportunity })
 }
 
 // =============================================================================
 // UPDATE OPPORTUNITY (State Machine)
 // =============================================================================
 
-async function updateOpportunity(
-  request: Request,
-  env: Env,
-  id: string
-): Promise<Response> {
-  const body = await parseJsonBody<UpdateOpportunityRequest>(request);
+async function updateOpportunity(request: Request, env: Env, id: string): Promise<Response> {
+  const body = await parseJsonBody<UpdateOpportunityRequest>(request)
   if (!body) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400)
   }
 
   // Get current opportunity
-  const current = await env.DB.prepare(`
+  const current = (await env.DB.prepare(
+    `
     SELECT * FROM opportunities WHERE id = ?
-  `).bind(id).first() as OpportunityRow | null;
+  `
+  )
+    .bind(id)
+    .first()) as OpportunityRow | null
 
   if (!current) {
-    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
+    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404)
   }
 
-  const now = nowISO();
-  const updates: string[] = [];
-  const updateParams: (string | number | null)[] = [];
+  const now = nowISO()
+  const updates: string[] = []
+  const updateParams: (string | number | null)[] = []
 
   // Status transition
   if (body.status && body.status !== current.status) {
-    const from = current.status;
-    const to = body.status;
+    const from = current.status
+    const to = body.status
 
     // Validate transition
     if (!canTransition(from, to)) {
@@ -654,22 +690,22 @@ async function updateOpportunity(
         ErrorCodes.INVALID_TRANSITION,
         `Cannot transition from ${from} to ${to}`,
         400
-      );
+      )
     }
 
     // Validate required fields for specific transitions
-    const validation = validateTransition(to, body, current);
+    const validation = validateTransition(to, body, current)
     if (!validation.valid) {
-      return jsonError(ErrorCodes.MISSING_FIELD, validation.error!, 400);
+      return jsonError(ErrorCodes.MISSING_FIELD, validation.error!, 400)
     }
 
-    updates.push('status = ?', 'status_changed_at = ?');
-    updateParams.push(to, now);
+    updates.push('status = ?', 'status_changed_at = ?')
+    updateParams.push(to, now)
 
     // Handle rejection
     if (to === 'rejected') {
-      updates.push('rejection_reason = ?', 'rejection_note = ?');
-      updateParams.push(body.rejection_reason!, body.rejection_note || null);
+      updates.push('rejection_reason = ?', 'rejection_note = ?')
+      updateParams.push(body.rejection_reason!, body.rejection_note || null)
 
       // Create tuning event
       await createTuningEvent(env, {
@@ -683,14 +719,14 @@ async function updateOpportunity(
           buy_box_score: current.buy_box_score,
           time_in_pipeline_hours: hoursSince(current.created_at),
         },
-      });
+      })
     }
 
     // Handle watch
     if (to === 'watch') {
-      const watchResult = handleWatchTransition(body, current);
+      const watchResult = handleWatchTransition(body, current)
       if (!watchResult.valid) {
-        return jsonError(ErrorCodes.INVALID_VALUE, watchResult.error!, 400);
+        return jsonError(ErrorCodes.INVALID_VALUE, watchResult.error!, 400)
       }
       updates.push(
         'watch_cycle = watch_cycle + 1',
@@ -698,24 +734,24 @@ async function updateOpportunity(
         'watch_trigger = ?',
         'watch_threshold = ?',
         'watch_fired_at = NULL'
-      );
+      )
       updateParams.push(
         watchResult.watchUntil!,
         body.watch_trigger!,
         JSON.stringify(body.watch_threshold!)
-      );
+      )
     }
 
     // Handle bid
     if (to === 'bid') {
-      updates.push('max_bid_locked = ?', 'bid_strategy = ?');
-      updateParams.push(body.max_bid_locked!, body.bid_strategy || 'manual');
+      updates.push('max_bid_locked = ?', 'bid_strategy = ?')
+      updateParams.push(body.max_bid_locked!, body.bid_strategy || 'manual')
     }
 
     // Handle won
     if (to === 'won') {
-      updates.push('final_price = ?');
-      updateParams.push(body.final_price!);
+      updates.push('final_price = ?')
+      updateParams.push(body.final_price!)
     }
 
     // Clear watch fields when leaving watch
@@ -725,7 +761,7 @@ async function updateOpportunity(
         'watch_trigger = NULL',
         'watch_threshold = NULL',
         'watch_fired_at = NULL'
-      );
+      )
     }
 
     // Log status change action
@@ -735,41 +771,45 @@ async function updateOpportunity(
       from_status: from,
       to_status: to,
       payload: body,
-    });
+    })
   }
 
   // Update observed_facts (can happen without status change)
   if (body.observed_facts) {
-    updates.push('observed_facts = ?');
-    updateParams.push(JSON.stringify(body.observed_facts));
+    updates.push('observed_facts = ?')
+    updateParams.push(JSON.stringify(body.observed_facts))
 
     await createOperatorAction(env, {
       opportunity_id: id,
       action_type: 'augmentation',
       payload: body.observed_facts,
-    });
+    })
   }
 
   // Update outcome_notes
   if (body.outcome_notes !== undefined) {
-    updates.push('outcome_notes = ?');
-    updateParams.push(body.outcome_notes);
+    updates.push('outcome_notes = ?')
+    updateParams.push(body.outcome_notes)
   }
 
   // Apply updates
   if (updates.length > 0) {
-    updates.push('updated_at = ?');
-    updateParams.push(now);
-    updateParams.push(id);
+    updates.push('updated_at = ?')
+    updateParams.push(now)
+    updateParams.push(id)
 
-    const setClause = updates.join(', ');
-    await env.DB.prepare(`
+    const setClause = updates.join(', ')
+    await env.DB.prepare(
+      `
       UPDATE opportunities SET ${setClause} WHERE id = ?
-    `).bind(...updateParams).run();
+    `
+    )
+      .bind(...updateParams)
+      .run()
   }
 
   // Return updated opportunity
-  return getOpportunity(env, id);
+  return getOpportunity(env, id)
 }
 
 // =============================================================================
@@ -784,36 +824,36 @@ function validateTransition(
   switch (to) {
     case 'rejected':
       if (!data.rejection_reason) {
-        return { valid: false, error: 'rejection_reason required' };
+        return { valid: false, error: 'rejection_reason required' }
       }
       if (data.rejection_reason === 'other' && !data.rejection_note) {
-        return { valid: false, error: 'rejection_note required when reason is other' };
+        return { valid: false, error: 'rejection_note required when reason is other' }
       }
-      return { valid: true };
+      return { valid: true }
 
     case 'watch':
       if (!data.watch_trigger) {
-        return { valid: false, error: 'watch_trigger required' };
+        return { valid: false, error: 'watch_trigger required' }
       }
       if (!data.watch_threshold) {
-        return { valid: false, error: 'watch_threshold required' };
+        return { valid: false, error: 'watch_threshold required' }
       }
-      return { valid: true };
+      return { valid: true }
 
     case 'bid':
       if (!data.max_bid_locked || data.max_bid_locked <= 0) {
-        return { valid: false, error: 'max_bid_locked must be positive' };
+        return { valid: false, error: 'max_bid_locked must be positive' }
       }
-      return { valid: true };
+      return { valid: true }
 
     case 'won':
       if (!data.final_price || data.final_price <= 0) {
-        return { valid: false, error: 'final_price must be positive' };
+        return { valid: false, error: 'final_price must be positive' }
       }
-      return { valid: true };
+      return { valid: true }
 
     default:
-      return { valid: true };
+      return { valid: true }
   }
 }
 
@@ -821,42 +861,42 @@ function handleWatchTransition(
   data: UpdateOpportunityRequest,
   current: OpportunityRow
 ): { valid: boolean; error?: string; watchUntil?: string } {
-  const trigger = data.watch_trigger!;
-  const threshold = data.watch_threshold!;
+  const trigger = data.watch_trigger!
+  const threshold = data.watch_threshold!
 
   // Validate and compute watch_until
   switch (trigger) {
     case 'ending_soon': {
       if (!current.auction_ends_at) {
-        return { valid: false, error: 'ending_soon requires auction end time' };
+        return { valid: false, error: 'ending_soon requires auction end time' }
       }
       if (!isFuture(current.auction_ends_at)) {
-        return { valid: false, error: 'auction has already ended' };
+        return { valid: false, error: 'auction has already ended' }
       }
-      const hours = threshold.hours_before ?? 4;
-      const watchUntil = subtractHours(current.auction_ends_at, hours);
+      const hours = threshold.hours_before ?? 4
+      const watchUntil = subtractHours(current.auction_ends_at, hours)
       if (!isFuture(watchUntil)) {
         return {
           valid: false,
           error: `auction ends in less than ${hours} hours; use a shorter window`,
-        };
+        }
       }
-      return { valid: true, watchUntil };
+      return { valid: true, watchUntil }
     }
 
     case 'time_window':
     case 'manual': {
       if (!threshold.remind_at) {
-        return { valid: false, error: 'remind_at is required' };
+        return { valid: false, error: 'remind_at is required' }
       }
       if (!isFuture(threshold.remind_at)) {
-        return { valid: false, error: 'remind_at must be in the future' };
+        return { valid: false, error: 'remind_at must be in the future' }
       }
-      return { valid: true, watchUntil: threshold.remind_at };
+      return { valid: true, watchUntil: threshold.remind_at }
     }
 
     default:
-      return { valid: false, error: `invalid watch_trigger: ${trigger}` };
+      return { valid: false, error: `invalid watch_trigger: ${trigger}` }
   }
 }
 
@@ -865,54 +905,63 @@ function handleWatchTransition(
 // =============================================================================
 
 async function batchOperation(request: Request, env: Env): Promise<Response> {
-  const body = await parseJsonBody<BatchRequest>(request);
+  const body = await parseJsonBody<BatchRequest>(request)
   if (!body) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400)
   }
 
-  const { opportunity_ids, action, rejection_reason, rejection_note } = body;
+  const { opportunity_ids, action, rejection_reason, rejection_note } = body
 
   // Validate batch size
   if (!opportunity_ids || opportunity_ids.length === 0) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'opportunity_ids required', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'opportunity_ids required', 400)
   }
   if (opportunity_ids.length > 50) {
-    return jsonError(ErrorCodes.BATCH_TOO_LARGE, 'Max 50 items per batch', 400);
+    return jsonError(ErrorCodes.BATCH_TOO_LARGE, 'Max 50 items per batch', 400)
   }
 
   // Validate rejection params
   if (action === 'reject') {
     if (!rejection_reason) {
-      return jsonError(ErrorCodes.MISSING_FIELD, 'rejection_reason required', 400);
+      return jsonError(ErrorCodes.MISSING_FIELD, 'rejection_reason required', 400)
     }
     if (rejection_reason === 'other' && !rejection_note) {
-      return jsonError(ErrorCodes.MISSING_FIELD, 'rejection_note required when reason is other', 400);
+      return jsonError(
+        ErrorCodes.MISSING_FIELD,
+        'rejection_note required when reason is other',
+        400
+      )
     }
   }
 
-  const results: Array<{ id: string; success: boolean; error?: string }> = [];
-  const now = nowISO();
-  const targetStatus = action === 'reject' ? 'rejected' : 'archived';
+  const results: Array<{ id: string; success: boolean; error?: string }> = []
+  const now = nowISO()
+  const targetStatus = action === 'reject' ? 'rejected' : 'archived'
 
   for (const id of opportunity_ids) {
     try {
-      const opp = await env.DB.prepare(`
+      const opp = (await env.DB.prepare(
+        `
         SELECT id, status, source, category_id, buy_box_score, created_at
         FROM opportunities WHERE id = ?
-      `).bind(id).first() as OpportunityRow | null;
+      `
+      )
+        .bind(id)
+        .first()) as OpportunityRow | null
 
       if (!opp) {
-        results.push({ id, success: false, error: 'NOT_FOUND' });
-        continue;
+        results.push({ id, success: false, error: 'NOT_FOUND' })
+        continue
       }
 
       if (!canTransition(opp.status, targetStatus)) {
-        results.push({ id, success: false, error: 'INVALID_TRANSITION' });
-        continue;
+        results.push({ id, success: false, error: 'INVALID_TRANSITION' })
+        continue
       }
 
       if (action === 'reject') {
-        await env.DB.prepare(`
+        await env.DB.prepare(
+          `
           UPDATE opportunities
           SET status = 'rejected',
               rejection_reason = ?,
@@ -920,7 +969,10 @@ async function batchOperation(request: Request, env: Env): Promise<Response> {
               status_changed_at = ?,
               updated_at = ?
           WHERE id = ?
-        `).bind(rejection_reason!, rejection_note || null, now, now, id).run();
+        `
+        )
+          .bind(rejection_reason!, rejection_note || null, now, now, id)
+          .run()
 
         // Create tuning event
         await createTuningEvent(env, {
@@ -933,15 +985,19 @@ async function batchOperation(request: Request, env: Env): Promise<Response> {
             batch: true,
             buy_box_score: opp.buy_box_score,
           },
-        });
+        })
       } else {
-        await env.DB.prepare(`
+        await env.DB.prepare(
+          `
           UPDATE opportunities
           SET status = 'archived',
               status_changed_at = ?,
               updated_at = ?
           WHERE id = ?
-        `).bind(now, now, id).run();
+        `
+        )
+          .bind(now, now, id)
+          .run()
       }
 
       // Log action
@@ -951,12 +1007,12 @@ async function batchOperation(request: Request, env: Env): Promise<Response> {
         from_status: opp.status,
         to_status: targetStatus,
         payload: { batch_size: opportunity_ids.length },
-      });
+      })
 
-      results.push({ id, success: true });
+      results.push({ id, success: true })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      results.push({ id, success: false, error: message });
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      results.push({ id, success: false, error: message })
     }
   }
 
@@ -966,39 +1022,39 @@ async function batchOperation(request: Request, env: Env): Promise<Response> {
       failed: results.filter((r) => !r.success).length,
       results,
     },
-  });
+  })
 }
 
 // =============================================================================
 // CREATE ACTION
 // =============================================================================
 
-async function createAction(
-  request: Request,
-  env: Env,
-  opportunityId: string
-): Promise<Response> {
-  const body = await parseJsonBody<{ action_type: string; payload: object }>(request);
+async function createAction(request: Request, env: Env, opportunityId: string): Promise<Response> {
+  const body = await parseJsonBody<{ action_type: string; payload: object }>(request)
   if (!body) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400)
   }
 
   // Verify opportunity exists
-  const opp = await env.DB.prepare(`
+  const opp = await env.DB.prepare(
+    `
     SELECT id FROM opportunities WHERE id = ?
-  `).bind(opportunityId).first();
+  `
+  )
+    .bind(opportunityId)
+    .first()
 
   if (!opp) {
-    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
+    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404)
   }
 
   const action = await createOperatorAction(env, {
     opportunity_id: opportunityId,
     action_type: body.action_type as any,
     payload: body.payload,
-  });
+  })
 
-  return json({ data: action });
+  return json({ data: action })
 }
 
 // =============================================================================
@@ -1007,9 +1063,11 @@ async function createAction(
 
 async function getStats(env: Env): Promise<Response> {
   // Status counts
-  const statusResult = await env.DB.prepare(`
+  const statusResult = await env.DB.prepare(
+    `
     SELECT status, COUNT(*) as count FROM opportunities GROUP BY status
-  `).all();
+  `
+  ).all()
 
   const byStatus: Record<string, number> = {
     inbox: 0,
@@ -1021,61 +1079,74 @@ async function getStats(env: Env): Promise<Response> {
     lost: 0,
     rejected: 0,
     archived: 0,
-  };
+  }
 
   for (const row of statusResult.results || []) {
-    const r = row as { status: string; count: number };
-    byStatus[r.status] = r.count;
+    const r = row as { status: string; count: number }
+    byStatus[r.status] = r.count
   }
 
   // Ending soon counts
-  const ending24h = await env.DB.prepare(`
+  const ending24h = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE status IN ('inbox', 'qualifying', 'watch', 'inspect', 'bid')
     AND auction_ends_at IS NOT NULL
     AND datetime(auction_ends_at) > datetime('now')
     AND datetime(auction_ends_at) <= datetime('now', '+24 hours')
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
-  const ending48h = await env.DB.prepare(`
+  const ending48h = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE status IN ('inbox', 'qualifying', 'watch', 'inspect', 'bid')
     AND auction_ends_at IS NOT NULL
     AND datetime(auction_ends_at) > datetime('now')
     AND datetime(auction_ends_at) <= datetime('now', '+48 hours')
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
   // New today
-  const newToday = await env.DB.prepare(`
+  const newToday = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE datetime(created_at) > datetime('now', '-24 hours')
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
   // Stale qualifying
-  const staleOver24h = await env.DB.prepare(`
+  const staleOver24h = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE status = 'qualifying'
     AND datetime(status_changed_at) < datetime('now', '-24 hours')
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
-  const staleOver48h = await env.DB.prepare(`
+  const staleOver48h = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE status = 'qualifying'
     AND datetime(status_changed_at) < datetime('now', '-48 hours')
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
   // Watch alerts fired
-  const watchFired = await env.DB.prepare(`
+  const watchFired = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE status = 'watch' AND watch_fired_at IS NOT NULL
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
   // Needs attention (watch fired + stale qualifying)
-  const needsAttention = (watchFired?.count || 0) + (staleOver24h?.count || 0);
+  const needsAttention = (watchFired?.count || 0) + (staleOver24h?.count || 0)
 
   // Strike Zone: High-value inbox items ready for immediate action
   // Criteria: inbox/qualifying, high score (70+), analyzed, ending soon OR fresh
-  const strikeZone = await env.DB.prepare(`
+  const strikeZone = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE status IN ('inbox', 'qualifying')
       AND buy_box_score >= 70
@@ -1088,10 +1159,12 @@ async function getStats(env: Env): Promise<Response> {
         -- OR created within last 12 hours (fresh opportunity)
         OR datetime(created_at) > datetime('now', '-12 hours')
       )
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
   // Verification Needed: Opportunities with open critical gates needing operator input
-  const verificationNeeded = await env.DB.prepare(`
+  const verificationNeeded = (await env.DB.prepare(
+    `
     SELECT COUNT(*) as count FROM opportunities
     WHERE status IN ('inbox', 'qualifying', 'watch', 'inspect')
       AND last_analyzed_at IS NOT NULL
@@ -1106,7 +1179,8 @@ async function getStats(env: Env): Promise<Response> {
         OR json_extract(operator_inputs_json, '$.title.odometerMiles.value') IS NULL
         OR json_extract(operator_inputs_json, '$.title.odometerMiles.verificationLevel') = 'unverified'
       )
-  `).first() as { count: number } | null;
+  `
+  ).first()) as { count: number } | null
 
   return json({
     data: {
@@ -1131,7 +1205,7 @@ async function getStats(env: Env): Promise<Response> {
     meta: {
       timestamp: nowISO(),
     },
-  });
+  })
 }
 
 // =============================================================================
@@ -1139,36 +1213,40 @@ async function getStats(env: Env): Promise<Response> {
 // =============================================================================
 
 interface CreateActionParams {
-  opportunity_id: string;
-  action_type: string;
-  from_status?: string | null;
-  to_status?: string | null;
-  alert_key?: string | null;
-  payload?: object;
+  opportunity_id: string
+  action_type: string
+  from_status?: string | null
+  to_status?: string | null
+  alert_key?: string | null
+  payload?: object
 }
 
 async function createOperatorAction(
   env: Env,
   params: CreateActionParams
 ): Promise<{ id: string; action_type: string; created_at: string }> {
-  const id = generateId();
-  const now = nowISO();
+  const id = generateId()
+  const now = nowISO()
 
-  await env.DB.prepare(`
+  await env.DB.prepare(
+    `
     INSERT INTO operator_actions (id, opportunity_id, action_type, from_status, to_status, alert_key, payload, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(
-    id,
-    params.opportunity_id,
-    params.action_type,
-    params.from_status || null,
-    params.to_status || null,
-    params.alert_key || null,
-    params.payload ? JSON.stringify(params.payload) : null,
-    now
-  ).run();
+  `
+  )
+    .bind(
+      id,
+      params.opportunity_id,
+      params.action_type,
+      params.from_status || null,
+      params.to_status || null,
+      params.alert_key || null,
+      params.payload ? JSON.stringify(params.payload) : null,
+      now
+    )
+    .run()
 
-  return { id, action_type: params.action_type, created_at: now };
+  return { id, action_type: params.action_type, created_at: now }
 }
 
 // =============================================================================
@@ -1176,80 +1254,85 @@ async function createOperatorAction(
 // =============================================================================
 
 interface CreateTuningEventParams {
-  event_type: string;
-  opportunity_id?: string | null;
-  source?: string | null;
-  category_id?: string | null;
-  signal_data: object;
+  event_type: string
+  opportunity_id?: string | null
+  source?: string | null
+  category_id?: string | null
+  signal_data: object
 }
 
-async function createTuningEvent(
-  env: Env,
-  params: CreateTuningEventParams
-): Promise<void> {
-  const id = generateId();
-  const now = nowISO();
+async function createTuningEvent(env: Env, params: CreateTuningEventParams): Promise<void> {
+  const id = generateId()
+  const now = nowISO()
 
-  await env.DB.prepare(`
+  await env.DB.prepare(
+    `
     INSERT INTO tuning_events (id, event_type, opportunity_id, source, category_id, signal_data, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).bind(
-    id,
-    params.event_type,
-    params.opportunity_id || null,
-    params.source || null,
-    params.category_id || null,
-    JSON.stringify(params.signal_data),
-    now
-  ).run();
+  `
+  )
+    .bind(
+      id,
+      params.event_type,
+      params.opportunity_id || null,
+      params.source || null,
+      params.category_id || null,
+      JSON.stringify(params.signal_data),
+      now
+    )
+    .run()
 }
 
 // =============================================================================
 // SPRINT 1.5: UPDATE OPERATOR INPUTS
 // =============================================================================
 
-async function updateOperatorInputs(
-  request: Request,
-  env: Env,
-  id: string
-): Promise<Response> {
-  const body = await parseJsonBody<OperatorInputs>(request);
+async function updateOperatorInputs(request: Request, env: Env, id: string): Promise<Response> {
+  const body = await parseJsonBody<OperatorInputs>(request)
   if (!body) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'Invalid JSON body', 400)
   }
 
   // Get current opportunity
-  const current = await env.DB.prepare(`
+  const current = (await env.DB.prepare(
+    `
     SELECT id, status, operator_inputs_json, current_analysis_run_id FROM opportunities WHERE id = ?
-  `).bind(id).first() as Pick<OpportunityRow, 'id' | 'status' | 'operator_inputs_json' | 'current_analysis_run_id'> | null;
+  `
+  )
+    .bind(id)
+    .first()) as Pick<
+    OpportunityRow,
+    'id' | 'status' | 'operator_inputs_json' | 'current_analysis_run_id'
+  > | null
 
   if (!current) {
-    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
+    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404)
   }
 
   // Merge with existing inputs (deep merge for title/overrides)
-  const existingInputs = parseJsonSafe<OperatorInputs>(current.operator_inputs_json) || {};
+  const existingInputs = parseJsonSafe<OperatorInputs>(current.operator_inputs_json) || {}
   const mergedInputs: OperatorInputs = {
     title: { ...existingInputs.title, ...body.title },
     overrides: { ...existingInputs.overrides, ...body.overrides },
-  };
+  }
 
-  const now = nowISO();
+  const now = nowISO()
 
   // ==========================================================================
   // SPRINT N+3: Check for hard gate failures (auto-rejection)
   // ==========================================================================
-  const hardGateFailures = checkHardGateFailures(mergedInputs);
-  let autoRejected = false;
+  const hardGateFailures = checkHardGateFailures(mergedInputs)
+  let autoRejected = false
 
   if (hardGateFailures.length > 0) {
     // Only auto-reject if not already in a terminal state
-    const terminalStatuses: OpportunityStatus[] = ['won', 'lost', 'rejected', 'archived'];
+    const terminalStatuses: OpportunityStatus[] = ['won', 'lost', 'rejected', 'archived']
     if (!terminalStatuses.includes(current.status as OpportunityStatus)) {
-      const rejectionNote = formatAutoRejectMessage(hardGateFailures);
+      const rejectionNote = formatAutoRejectMessage(hardGateFailures)
 
       // Update to rejected status with 'other' reason (auto-reject due to hard gate failures)
-      await env.DB.prepare(`
+      await env.DB.prepare(
+        `
         UPDATE opportunities
         SET status = 'rejected',
             status_changed_at = ?,
@@ -1258,7 +1341,10 @@ async function updateOperatorInputs(
             operator_inputs_json = ?,
             updated_at = ?
         WHERE id = ?
-      `).bind(now, rejectionNote, JSON.stringify(mergedInputs), now, id).run();
+      `
+      )
+        .bind(now, rejectionNote, JSON.stringify(mergedInputs), now, id)
+        .run()
 
       // Log status change action
       await createOperatorAction(env, {
@@ -1271,7 +1357,7 @@ async function updateOperatorInputs(
           reason: 'hard_gate_failure',
           failures: hardGateFailures,
         },
-      });
+      })
 
       // Create tuning event for ML feedback
       await createTuningEvent(env, {
@@ -1284,19 +1370,23 @@ async function updateOperatorInputs(
           auto_rejected: true,
           hard_gate_failures: hardGateFailures,
         },
-      });
+      })
 
-      autoRejected = true;
+      autoRejected = true
     }
   }
 
   // If not auto-rejected, just update operator inputs normally
   if (!autoRejected) {
-    await env.DB.prepare(`
+    await env.DB.prepare(
+      `
       UPDATE opportunities
       SET operator_inputs_json = ?, updated_at = ?
       WHERE id = ?
-    `).bind(JSON.stringify(mergedInputs), now, id).run();
+    `
+    )
+      .bind(JSON.stringify(mergedInputs), now, id)
+      .run()
   }
 
   // Log the augmentation action
@@ -1304,13 +1394,13 @@ async function updateOperatorInputs(
     opportunity_id: id,
     action_type: 'augmentation',
     payload: { type: 'operator_inputs', inputs: body },
-  });
+  })
 
   // Check if inputs changed since last analysis
-  let inputsChangedSinceAnalysis = false;
+  let inputsChangedSinceAnalysis = false
   if (current.current_analysis_run_id) {
     // If there's an existing analysis, inputs have changed
-    inputsChangedSinceAnalysis = true;
+    inputsChangedSinceAnalysis = true
   }
 
   return json({
@@ -1319,7 +1409,7 @@ async function updateOperatorInputs(
     inputsChangedSinceAnalysis,
     autoRejected,
     hardGateFailures: autoRejected ? hardGateFailures : undefined,
-  });
+  })
 }
 
 // =============================================================================
@@ -1329,44 +1419,44 @@ async function updateOperatorInputs(
 
 interface AnalyzeRequest {
   // Optional: pass assumptions to use
-  assumptions?: Record<string, unknown>;
+  assumptions?: Record<string, unknown>
   // Optional: skip AI analysis (for quick gate-only refresh)
-  skipAiAnalysis?: boolean;
+  skipAiAnalysis?: boolean
 }
 
 // AI Analysis result type (subset of DualLensReport from dfg-analyst)
 interface AiAnalysisResult {
   investor_lens?: {
-    verdict: string;
-    max_bid: number;
-    verdict_reasoning: string;
-    phoenix_resale_range?: { quick_sale: number; market_rate: number; premium: number };
-    repair_plan?: { items: Array<{ item: string; cost: number }>; grand_total: number };
-    deal_killers?: string[];
-    inspection_priorities?: string[];
-  };
+    verdict: string
+    max_bid: number
+    verdict_reasoning: string
+    phoenix_resale_range?: { quick_sale: number; market_rate: number; premium: number }
+    repair_plan?: { items: Array<{ item: string; cost: number }>; grand_total: number }
+    deal_killers?: string[]
+    inspection_priorities?: string[]
+  }
   buyer_lens?: {
-    perceived_value_range?: { low: number; high: number };
-    buyer_confidence?: string;
-  };
+    perceived_value_range?: { low: number; high: number }
+    buyer_confidence?: string
+  }
   condition?: {
-    overall_grade?: string;
-    assessment_confidence?: string;
-    red_flags?: Array<{ category: string; severity: string; description: string }>;
-    tires?: { condition: string; estimated_remaining_life: string };
-  };
+    overall_grade?: string
+    assessment_confidence?: string
+    red_flags?: Array<{ category: string; severity: string; description: string }>
+    tires?: { condition: string; estimated_remaining_life: string }
+  }
   asset_summary?: {
-    title: string;
-    source: string;
-    current_bid: number;
-  };
+    title: string
+    source: string
+    current_bid: number
+  }
   next_steps?: {
-    if_bidding?: string[];
-    if_won?: string[];
-    listing_prep?: string[];
-  };
-  analysis_timestamp?: string;
-  total_tokens_used?: number;
+    if_bidding?: string[]
+    if_won?: string[]
+    listing_prep?: string[]
+  }
+  analysis_timestamp?: string
+  total_tokens_used?: number
 }
 
 /**
@@ -1377,107 +1467,120 @@ async function callAnalystWorker(
   env: Env,
   listingData: Record<string, unknown>
 ): Promise<AiAnalysisResult> {
-  console.log('[callAnalystWorker] Starting AI analysis, ANALYST binding:', !!env.ANALYST, 'ANALYST_URL:', env.ANALYST_URL);
+  console.log(
+    '[callAnalystWorker] Starting AI analysis, ANALYST binding:',
+    !!env.ANALYST,
+    'ANALYST_URL:',
+    env.ANALYST_URL
+  )
 
   // Use service binding if available (production), otherwise use URL
-  let response: Response;
+  let response: Response
 
   // Set up 25 second timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 25000)
 
   try {
     if (env.ANALYST) {
       // Service binding - direct worker-to-worker call
-      console.log('[callAnalystWorker] Using ANALYST service binding');
+      console.log('[callAnalystWorker] Using ANALYST service binding')
       response = await env.ANALYST.fetch('https://dfg-analyst/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(listingData),
         signal: controller.signal,
-      });
-      console.log('[callAnalystWorker] Service binding response status:', response.status);
+      })
+      console.log('[callAnalystWorker] Service binding response status:', response.status)
     } else if (env.ANALYST_URL) {
       // Fallback to URL (development)
-      console.log('[callAnalystWorker] Using ANALYST_URL fallback:', env.ANALYST_URL);
+      console.log('[callAnalystWorker] Using ANALYST_URL fallback:', env.ANALYST_URL)
       response = await fetch(`${env.ANALYST_URL}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(listingData),
         signal: controller.signal,
-      });
+      })
     } else {
-      console.log('[callAnalystWorker] No ANALYST binding or ANALYST_URL configured');
-      throw new AnalystWorkerError('No ANALYST binding or ANALYST_URL configured');
+      console.log('[callAnalystWorker] No ANALYST binding or ANALYST_URL configured')
+      throw new AnalystWorkerError('No ANALYST binding or ANALYST_URL configured')
     }
   } catch (error) {
     if (error instanceof AnalystWorkerError) {
-      throw error;
+      throw error
     }
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error('[callAnalystWorker] Request timed out after 25 seconds');
-      throw new AnalystWorkerError('Analyst worker request timed out after 25 seconds');
+      console.error('[callAnalystWorker] Request timed out after 25 seconds')
+      throw new AnalystWorkerError('Analyst worker request timed out after 25 seconds')
     }
-    console.error('[callAnalystWorker] Failed to call analyst worker:', error);
-    throw new AnalystWorkerError(`Failed to call analyst worker: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('[callAnalystWorker] Failed to call analyst worker:', error)
+    throw new AnalystWorkerError(
+      `Failed to call analyst worker: ${error instanceof Error ? error.message : String(error)}`
+    )
   } finally {
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId)
   }
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[callAnalystWorker] Analyst worker error:', response.status, errorText);
-    throw new AnalystWorkerError(`Analyst returned ${response.status}: ${errorText}`, response.status);
+    const errorText = await response.text()
+    console.error('[callAnalystWorker] Analyst worker error:', response.status, errorText)
+    throw new AnalystWorkerError(
+      `Analyst returned ${response.status}: ${errorText}`,
+      response.status
+    )
   }
 
-  const result = await response.json() as AiAnalysisResult;
-  console.log('[callAnalystWorker] AI analysis successful, verdict:', result?.investor_lens?.verdict);
-  return result;
+  const result = (await response.json()) as AiAnalysisResult
+  console.log(
+    '[callAnalystWorker] AI analysis successful, verdict:',
+    result?.investor_lens?.verdict
+  )
+  return result
 }
 
-async function analyzeOpportunity(
-  request: Request,
-  env: Env,
-  id: string
-): Promise<Response> {
-  const body = await parseJsonBody<AnalyzeRequest>(request);
+async function analyzeOpportunity(request: Request, env: Env, id: string): Promise<Response> {
+  const body = await parseJsonBody<AnalyzeRequest>(request)
 
   // Get current opportunity
-  const row = await env.DB.prepare(`
+  const row = (await env.DB.prepare(
+    `
     SELECT * FROM opportunities WHERE id = ?
-  `).bind(id).first() as OpportunityRow | null;
+  `
+  )
+    .bind(id)
+    .first()) as OpportunityRow | null
 
   if (!row) {
-    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
+    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404)
   }
 
   // Capture original updated_at for optimistic locking (#237)
-  const originalUpdatedAt = row.updated_at;
+  const originalUpdatedAt = row.updated_at
 
-  const now = nowISO();
-  const analysisRunId = generateId();
+  const now = nowISO()
+  const analysisRunId = generateId()
 
   // Parse operator inputs
-  const operatorInputs = parseJsonSafe<OperatorInputs>(row.operator_inputs_json);
+  const operatorInputs = parseJsonSafe<OperatorInputs>(row.operator_inputs_json)
 
   // Build listing facts for gate computation
-  const photos = parseJsonSafe<string[]>(row.photos) || [];
+  const photos = parseJsonSafe<string[]>(row.photos) || []
   const listingFacts: ListingFacts = {
     currentBid: row.current_bid ?? undefined,
     endTime: row.auction_ends_at ?? undefined,
     photoCount: photos.length,
-  };
+  }
 
   // Compute listing snapshot hash
-  const listingSnapshotHash = computeListingSnapshotHash(listingFacts);
+  const listingSnapshotHash = computeListingSnapshotHash(listingFacts)
 
   // Compute gates
-  const gates = computeGates(listingFacts, operatorInputs);
+  const gates = computeGates(listingFacts, operatorInputs)
 
   // ==========================================================================
   // Call dfg-analyst for AI analysis (unless skipAiAnalysis is set)
   // ==========================================================================
-  let aiAnalysisResult: AiAnalysisResult | null = null;
+  let aiAnalysisResult: AiAnalysisResult | null = null
 
   if (!body?.skipAiAnalysis) {
     // Build listing data for analyst
@@ -1498,25 +1601,29 @@ async function analyzeOpportunity(
       },
       ends_at: row.auction_ends_at,
       // Include operator inputs for the analyst
-      operator_inputs: operatorInputs ? {
-        title_status: operatorInputs.title?.titleStatus?.value,
-        title_in_hand: operatorInputs.title?.titleInHand?.value,
-        lien_status: operatorInputs.title?.lienStatus?.value,
-        vin: operatorInputs.title?.vin?.value,
-        odometer_miles: operatorInputs.title?.odometerMiles?.value,
-        title_status_verified: operatorInputs.title?.titleStatus?.verificationLevel !== 'unverified',
-        odometer_verified: operatorInputs.title?.odometerMiles?.verificationLevel !== 'unverified',
-      } : undefined,
-    };
+      operator_inputs: operatorInputs
+        ? {
+            title_status: operatorInputs.title?.titleStatus?.value,
+            title_in_hand: operatorInputs.title?.titleInHand?.value,
+            lien_status: operatorInputs.title?.lienStatus?.value,
+            vin: operatorInputs.title?.vin?.value,
+            odometer_miles: operatorInputs.title?.odometerMiles?.value,
+            title_status_verified:
+              operatorInputs.title?.titleStatus?.verificationLevel !== 'unverified',
+            odometer_verified:
+              operatorInputs.title?.odometerMiles?.verificationLevel !== 'unverified',
+          }
+        : undefined,
+    }
 
     try {
-      aiAnalysisResult = await callAnalystWorker(env, listingData);
+      aiAnalysisResult = await callAnalystWorker(env, listingData)
     } catch (error) {
       if (error instanceof AnalystWorkerError) {
-        console.error('[analyzeOpportunity] AI analysis failed:', error.message);
+        console.error('[analyzeOpportunity] AI analysis failed:', error.message)
         // Continue without AI analysis - aiAnalysisResult stays null
       } else {
-        throw error; // Re-throw unexpected errors
+        throw error // Re-throw unexpected errors
       }
     }
   }
@@ -1524,34 +1631,34 @@ async function analyzeOpportunity(
   // ==========================================================================
   // Determine recommendation (prefer AI verdict, fall back to gate-based)
   // ==========================================================================
-  let recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO' = 'NEEDS_INFO';
+  let recommendation: 'BID' | 'WATCH' | 'PASS' | 'NEEDS_INFO' = 'NEEDS_INFO'
 
   if (aiAnalysisResult?.investor_lens?.verdict) {
     // Map AI verdict to our recommendation format
-    const aiVerdict = aiAnalysisResult.investor_lens.verdict;
+    const aiVerdict = aiAnalysisResult.investor_lens.verdict
     if (aiVerdict === 'STRONG_BUY' || aiVerdict === 'BUY') {
-      recommendation = gates.allCriticalCleared ? 'BID' : 'WATCH';
+      recommendation = gates.allCriticalCleared ? 'BID' : 'WATCH'
     } else if (aiVerdict === 'MARGINAL') {
-      recommendation = 'WATCH';
+      recommendation = 'WATCH'
     } else if (aiVerdict === 'PASS') {
-      recommendation = 'PASS';
+      recommendation = 'PASS'
     }
   } else {
     // Fall back to gate-based recommendation
     if (gates.allCriticalCleared) {
-      recommendation = 'BID';
+      recommendation = 'BID'
     } else if (gates.criticalOpen <= 2) {
-      recommendation = 'WATCH';
+      recommendation = 'WATCH'
     }
   }
 
   // Default assumptions (TODO: Get from config/env)
   const assumptions = body?.assumptions || {
     version: '1.0',
-    targetRoiPct: 0.20,
+    targetRoiPct: 0.2,
     listingFees: 150,
     paymentFeesPct: 0.03,
-  };
+  }
 
   // Build derived values (prefer AI values, fall back to existing)
   const derived = {
@@ -1566,11 +1673,11 @@ async function analyzeOpportunity(
     aiMaxBid: aiAnalysisResult?.investor_lens?.max_bid || null,
     repairEstimate: aiAnalysisResult?.investor_lens?.repair_plan?.grand_total || null,
     conditionGrade: aiAnalysisResult?.condition?.overall_grade || null,
-  };
+  }
 
   // Build trace
   const trace = {
-    gates: gates.gates.map(g => ({
+    gates: gates.gates.map((g) => ({
       id: g.id,
       status: g.status,
       clearedBy: g.clearedBy,
@@ -1581,18 +1688,20 @@ async function analyzeOpportunity(
     },
     assumptions,
     aiAnalysisSuccess: aiAnalysisResult !== null,
-  };
+  }
 
   // Insert analysis run and update opportunity atomically using D1 batch
   // This ensures both operations succeed or fail together
-  const insertStatement = env.DB.prepare(`
+  const insertStatement = env.DB.prepare(
+    `
     INSERT INTO analysis_runs (
       id, opportunity_id, created_at,
       listing_snapshot_hash, assumptions_json, operator_inputs_json,
       derived_json, gates_json, recommendation, trace_json,
       calc_version, gates_version, ai_analysis_json
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(
+  `
+  ).bind(
     analysisRunId,
     id,
     now,
@@ -1605,14 +1714,15 @@ async function analyzeOpportunity(
     JSON.stringify(trace),
     '1.0', // calc_version
     '1.0', // gates_version
-    aiAnalysisResult ? JSON.stringify(aiAnalysisResult) : null,
-  );
+    aiAnalysisResult ? JSON.stringify(aiAnalysisResult) : null
+  )
 
   // Build UPDATE statement with optimistic lock check (#237)
   // The WHERE clause includes updated_at = originalUpdatedAt to detect concurrent modifications
   // Also update last_operator_review_at to clear STALE badge (analysis = operator review)
   const updateStatement = aiAnalysisResult?.investor_lens?.max_bid
-    ? env.DB.prepare(`
+    ? env.DB.prepare(
+        `
         UPDATE opportunities
         SET current_analysis_run_id = ?,
             last_analyzed_at = ?,
@@ -1621,7 +1731,8 @@ async function analyzeOpportunity(
             max_bid_low = ?,
             max_bid_high = ?
         WHERE id = ? AND updated_at = ?
-      `).bind(
+      `
+      ).bind(
         analysisRunId,
         now,
         now,
@@ -1631,41 +1742,43 @@ async function analyzeOpportunity(
         id,
         originalUpdatedAt
       )
-    : env.DB.prepare(`
+    : env.DB.prepare(
+        `
         UPDATE opportunities
         SET current_analysis_run_id = ?,
             last_analyzed_at = ?,
             last_operator_review_at = ?,
             updated_at = ?
         WHERE id = ? AND updated_at = ?
-      `).bind(analysisRunId, now, now, now, id, originalUpdatedAt);
+      `
+      ).bind(analysisRunId, now, now, now, id, originalUpdatedAt)
 
   // Execute both statements atomically
   try {
-    const batchResults = await env.DB.batch([insertStatement, updateStatement]);
+    const batchResults = await env.DB.batch([insertStatement, updateStatement])
 
     // Verify both operations succeeded
     for (const result of batchResults) {
       if (!result.success) {
-        console.error('[analyzeOpportunity] Batch operation failed:', result);
-        return jsonError(ErrorCodes.INTERNAL_ERROR, 'Failed to persist analysis', 500);
+        console.error('[analyzeOpportunity] Batch operation failed:', result)
+        return jsonError(ErrorCodes.INTERNAL_ERROR, 'Failed to persist analysis', 500)
       }
     }
 
     // Check if the UPDATE affected any rows (optimistic lock check) (#237)
-    const updateResult = batchResults[1];
+    const updateResult = batchResults[1]
     if (updateResult.meta.changes === 0) {
       // The opportunity was modified by another request - delete the orphaned analysis_runs record
-      await env.DB.prepare(`DELETE FROM analysis_runs WHERE id = ?`).bind(analysisRunId).run();
+      await env.DB.prepare(`DELETE FROM analysis_runs WHERE id = ?`).bind(analysisRunId).run()
       return jsonError(
         ErrorCodes.CONFLICT,
         'Opportunity was modified by another request. Please try again.',
         409
-      );
+      )
     }
   } catch (error) {
-    console.error('[analyzeOpportunity] DB error:', error);
-    return jsonError(ErrorCodes.INTERNAL_ERROR, 'Database error during analysis', 500);
+    console.error('[analyzeOpportunity] DB error:', error)
+    return jsonError(ErrorCodes.INTERNAL_ERROR, 'Database error during analysis', 500)
   }
 
   // Log the re-analyze action
@@ -1678,27 +1791,34 @@ async function analyzeOpportunity(
       aiAnalysisSuccess: aiAnalysisResult !== null,
       aiVerdict: aiAnalysisResult?.investor_lens?.verdict || null,
     },
-  });
+  })
 
   // Get previous analysis for delta computation (if exists)
-  let delta = null;
+  let delta = null
   if (row.current_analysis_run_id) {
-    const prevRun = await env.DB.prepare(`
+    const prevRun = (await env.DB.prepare(
+      `
       SELECT recommendation, derived_json FROM analysis_runs WHERE id = ?
-    `).bind(row.current_analysis_run_id).first() as { recommendation: string; derived_json: string } | null;
+    `
+    )
+      .bind(row.current_analysis_run_id)
+      .first()) as { recommendation: string; derived_json: string } | null
 
     if (prevRun) {
-      const prevDerived = parseJsonSafe<typeof derived>(prevRun.derived_json);
+      const prevDerived = parseJsonSafe<typeof derived>(prevRun.derived_json)
       delta = {
         recommendation: {
           from: prevRun.recommendation,
           to: recommendation,
         },
-        maxBid: prevDerived?.maxBidHigh !== derived.maxBidHigh ? {
-          from: prevDerived?.maxBidHigh,
-          to: derived.maxBidHigh,
-        } : null,
-      };
+        maxBid:
+          prevDerived?.maxBidHigh !== derived.maxBidHigh
+            ? {
+                from: prevDerived?.maxBidHigh,
+                to: derived.maxBidHigh,
+              }
+            : null,
+      }
     }
   }
 
@@ -1715,5 +1835,5 @@ async function analyzeOpportunity(
       aiAnalysis: aiAnalysisResult,
     },
     delta,
-  });
+  })
 }

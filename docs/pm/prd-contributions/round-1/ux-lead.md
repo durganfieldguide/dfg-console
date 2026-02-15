@@ -37,6 +37,7 @@ The MVP user journey has two primary flows: the Daily Triage Loop and the Deep E
 
 **Step 1: Open Console (Dashboard)**
 Scott opens the app from his iPhone home screen. The Dashboard loads and immediately shows:
+
 - Attention Required list at the top (priority-sorted items that need action, with inline quick actions for pass/watch/re-analyze)
 - Quick Stats grid (Inbox count, Strike Zone count, Verification Needed count, Qualifying count, Watching count, Bidding count)
 - Ending Soon list (items with countdown timers, sorted by urgency)
@@ -65,6 +66,7 @@ Scott navigates to an opportunity detail page. The page loads with the opportuni
 
 **Step 2: Review AI Analysis**
 If no analysis exists, Scott taps "Analyze" in the header. Analysis runs (p95 under 45 seconds) and populates the tabbed analysis interface:
+
 - Report tab: Full AI-generated report with original listing link
 - Summary tab: Quick numbers (max bid, retail estimate, expected profit, margin)
 - Condition tab: Graded condition assessment with red flags separated into Core Risks vs Optional Issues
@@ -79,6 +81,7 @@ The Gates Display card shows which critical and confidence gates have passed, fa
 
 **Step 5: Decision**
 With analysis reviewed, title verified, and gates checked, Scott makes a decision:
+
 - **Bid:** Tap "Set Bid", enter maximum bid amount. Status moves to `bid`.
 - **Watch:** Tap "Watch", set trigger conditions. Status moves to `watch`.
 - **Reject:** Tap "Reject", select reason codes (multi-select from 13 options across 8 categories), optionally add a note. Status moves to `rejected`.
@@ -97,12 +100,14 @@ If Scott changes operator inputs after running analysis, a Staleness Banner appe
 The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent) and a hamburger slide-over menu on mobile (fixed header with logo/title, slide-in panel from left).
 
 #### 1. Login (`/login`)
+
 - DFG Console branding (logo icon, title, "Internal Use Only" tagline)
 - Email + password form (hardcoded credentials, prototype-grade)
 - Error alert for invalid credentials
 - No registration flow (founder-only)
 
 #### 2. Dashboard (`/`)
+
 - **Attention Required card:** Priority-sorted list of items needing operator action, with rank badges (top 3 highlighted in red), reason chips (Decision Needed, Ending Soon, Stale, Re-analyze), inline quick actions (re-analyze, touch/mark reviewed, pass, watch), current bid and time remaining. Tappable rows link to detail. "View all" link when truncated.
 - **Quick Stats grid:** 2-column grid of tappable cards linking to filtered opportunity lists. Cards: Inbox (blue), Strike Zone (orange), Verify (purple), Qualifying (amber), Watching (blue), Bidding (green). Counts update on refresh. Cards highlight with colored border when count > 0.
 - **Ending Soon list:** Items with countdown timers sorted by auction end time, linking to detail pages.
@@ -112,6 +117,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent
 - **Desktop header:** "Dashboard" title, refresh button. Mobile header provided by Navigation component.
 
 #### 3. Opportunities List (`/opportunities`)
+
 - **Desktop header:** Title with result count, refresh button, Buy Box quick toggle, Filters button with active count badge. Below: active filter chips row with dismiss buttons and "Clear all" (shown when 2+ filters active).
 - **Mobile toolbar:** Result count, refresh, Buy Box toggle (icon only), Filters button (links to full-page filter screen).
 - **Mobile active filter chips:** Same dismiss-able chip row as desktop.
@@ -121,6 +127,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent
 - **Loading state:** Centered spinner.
 
 #### 4. Filters (Mobile Full-Page) (`/opportunities/filters`)
+
 - **Header:** Back button, "Filters" title, "Clear" text button.
 - **Dropdown selects:** Status (all statuses), Score (High/Medium/Low), Ending (24h/48h/7d).
 - **Checkbox toggles section 1:** Stale, Re-analyze, Verification Needed.
@@ -128,6 +135,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent
 - **Fixed bottom button:** "Apply Filters" (full-width primary button with safe area padding).
 
 #### 5. Opportunity Detail (`/opportunities/[id]`)
+
 - **Header:** Desktop: back button + title + Analyze button + View Listing link. Mobile: back button in Navigation, title in Navigation, Analyze button and View Listing link in header row.
 - **Alerts bar:** Red background bar showing active alerts with severity badge, title, message, and dismiss button. Only visible when alerts exist.
 - **Next Action Card:** Prominent card showing verdict-derived next action (Bid/Inspect/Pass) in large text with color coding (green/yellow/red). "Why" section with up to 3 bullet points. "Walk Triggers" section with top 3 inspection priorities. Max Bid display. Staleness warning if analysis is old. Empty dashed-border placeholder when no analysis exists.
@@ -157,6 +165,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent
 - **Photo Lightbox:** Full-screen dark overlay showing selected photo at maximum resolution, tap to dismiss.
 
 #### 6. Sources (`/sources`)
+
 - **Header:** Desktop: "Sources" title + "Run Scout" button. Mobile: full-width "Run Scout Now" button below navigation.
 - **Trigger message card:** Blue-bordered feedback card shown after triggering scout run.
 - **Active Sources section:** Section header with count. Source cards showing: enabled indicator (green checkmark), display name, buyer premium percentage, pickup days, last run relative time, external link to source website.
@@ -164,6 +173,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent
 - **Info card:** Explanatory text about what sources are and how scout runs work.
 
 #### 7. Settings (`/settings`)
+
 - **Auction Sources card:** List of sources with display name, buyer premium, pickup days, last run time, and enabled/disabled toggle button.
 - **API Configuration card:** API URL (from env), auth status indicator.
 - **About card:** Version number (0.1.0), environment (NODE_ENV).
@@ -171,12 +181,14 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent
 ### Navigation Structure
 
 **Primary navigation items (4):**
+
 1. Dashboard (`/`) -- LayoutDashboard icon
 2. Opportunities (`/opportunities`) -- Search icon
 3. Sources (`/sources`) -- Database icon
 4. Settings (`/settings`) -- Settings icon
 
 **Navigation behavior:**
+
 - Desktop: Persistent left sidebar (w-64), sticky to viewport, logo at top, nav items mid, version footer at bottom.
 - Mobile: Fixed top header (h-14) with hamburger/back button (left), logo or page title (center), placeholder right slot (w-10). Hamburger opens a slide-over panel (w-72) from left with backdrop, same nav items in larger touch targets (py-3), close button, version footer with safe area padding.
 - Detail pages: Mobile header shows back arrow instead of hamburger, page title instead of logo.
@@ -191,6 +203,7 @@ The MVP has 7 screens. Navigation is a sidebar on desktop (64px-wide, persistent
 The opportunity lifecycle is a directed graph with 9 states. The UI enforces valid transitions by showing only contextually appropriate action buttons.
 
 **State machine:**
+
 ```
 inbox --> qualifying --> inspect --> bid --> won
   |           |            |          |
@@ -202,18 +215,22 @@ inbox --> qualifying --> inspect --> bid --> won
 ```
 
 **Transition triggers:**
+
 - Button tap in fixed bottom action bar (all status changes)
 - `prompt()` dialog for numeric input on Set Bid (max_bid_locked) and Won (final_price). Note: these use browser-native `prompt()`, not custom modals.
 
 **Loading states:**
+
 - Action buttons show disabled state while updating (`updating` or `emittingEvent` flags).
 - Button text does not change during status updates (no "Loading..." text on status buttons).
 
 **Error handling:**
+
 - Status update failures logged to console; no user-facing error toast or retry mechanism currently exists.
 - MVC event emission failures block status transitions to `bid` and `rejected` (event must succeed before state change proceeds). Event error banner appears fixed above the bottom action bar with dismiss button.
 
 **Optimistic updates:**
+
 - Status changes wait for server response before updating local state (not optimistic).
 - Attention Required list uses optimistic updates for inline actions (pass, watch, re-analyze, touch) with rollback on failure.
 
@@ -272,27 +289,33 @@ inbox --> qualifying --> inspect --> bid --> won
 The following constraints are derived from CLAUDE.md and verified against the codebase.
 
 **Viewport handling:**
+
 - All pages use `min-h-screen` instead of `h-screen` to avoid iOS Safari's dynamic viewport height issues (URL bar show/hide changes available height).
 - Horizontal overflow is explicitly prevented with `max-w-[100vw] overflow-x-hidden` on both the page container and the main content area. This addresses a known iOS Safari issue where content can escape the viewport horizontally.
 
 **Fixed positioning:**
+
 - The mobile navigation header uses `position: fixed` (top: 0, left: 0, right: 0, z-index: 50). A spacer `div` (h-14) immediately follows to prevent content from being hidden behind it.
 - The opportunity detail bottom action bar uses `position: fixed` (bottom: 0) with `pb-safe` for safe area inset padding (home indicator on notch iPhones). Content area has `pb-24` to prevent content from being hidden behind this bar.
 - The codebase avoids `-webkit-transform: translateZ(0)` on body or ancestor elements, as this breaks `position: fixed` in iOS Safari.
 - `position: sticky` is preferred over `position: fixed` for elements that should scroll out of view (desktop headers, results footer).
 
 **Safe area insets:**
+
 - `pb-safe` class is applied to fixed bottom elements (action bar, mobile menu footer, filter page apply button) to respect the home indicator area on modern iPhones.
 
 **Touch targets:**
+
 - All interactive elements must meet 44x44px minimum touch target size. Current implementation uses: `p-2` padding on icon buttons (32px icon + 8px padding = ~48px), `py-3` on mobile nav items, `h-5 w-5` checkboxes (which may be below the 44px minimum -- see Gaps below).
 
 **Scroll behavior:**
+
 - Body scroll is locked (`overflow: hidden`) when the mobile menu is open, preventing background scroll-through.
 - Horizontal photo strip uses native `overflow-x-auto` scrolling.
 - Tab bar in analysis interface uses `overflow-x-auto` with `-webkit-overflow-scrolling: touch` implicitly (default behavior in modern iOS Safari).
 
 **Known iOS Safari gaps in current implementation:**
+
 1. Checkbox touch targets in the Filters page (`h-5 w-5` = 20x20px) are below the 44px minimum. The `<label>` wrapper provides a larger tap target, but the visual checkbox itself is small.
 2. The `prompt()` dialogs used for Set Bid and Won amounts are functional on iOS Safari but provide a poor experience (no number formatting, no input validation, no way to cancel on some iOS versions). These should be replaced with custom modals in a future iteration.
 3. No pull-to-refresh mechanism exists. The operator must tap the refresh button in the header.
@@ -317,6 +340,7 @@ Given that this is an internal tool used by a single operator today, with a 3-5 
 ### Current State Assessment
 
 **Strengths (already in the codebase):**
+
 - `aria-label` attributes on icon-only buttons (back button, menu open/close, go back)
 - Semantic HTML structure: `<nav>`, `<header>`, `<main>`, `<footer>` elements used correctly
 - `<label>` elements properly associated with form inputs via `htmlFor` in Login, and wrapper `<label>` elements in Filters
@@ -356,6 +380,7 @@ Given that this is an internal tool used by a single operator today, with a 3-5 
 ### Recommended Remediation Priority
 
 **Before private beta (Phase 1):**
+
 1. Make opportunity cards focusable and keyboard-activatable (`<button>` or `tabIndex={0}` with `onKeyDown`)
 2. Trap focus inside modals (reject modal, photo lightbox); add Escape key handler for lightbox
 3. Increase touch targets on external link buttons and inline CTA buttons to 44px minimum
@@ -363,6 +388,7 @@ Given that this is an internal tool used by a single operator today, with a 3-5 
 5. Audit and fix color contrast ratios to meet 4.5:1 minimum
 
 **Acceptable for MVP (founder-only use):**
+
 - Current accessibility state is functional for a sighted, mouse/touch-capable sole operator
 - Screen reader support gaps are not blocking for MVP
 - The above items should be tracked and addressed before any additional users access the system

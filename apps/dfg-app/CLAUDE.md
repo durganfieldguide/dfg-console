@@ -29,19 +29,23 @@ npm run lint             # ESLint
 DFG operators primarily use the app on **iOS Safari**. All UI changes must follow these patterns:
 
 ### Layout
+
 - Use `flex flex-col md:flex-row` for page containers
 - Navigation renders a fixed mobile header (h-14) - add spacer div on mobile
 - Use `min-h-screen` instead of `h-screen` to avoid viewport issues
 
 ### Fixed/Sticky Elements
+
 - Prefer `position: sticky` over `position: fixed`
 - Never use `-webkit-transform: translateZ(0)` on body/ancestors (breaks fixed positioning)
 - For bottom-fixed elements, use `pb-safe` class for safe area inset
 
 ### Touch Targets
+
 - Minimum 44x44px tap targets for all interactive elements
 
 ### Example Page Layout
+
 ```tsx
 <div className="flex flex-col md:flex-row min-h-screen w-full">
   <Navigation />
@@ -63,15 +67,18 @@ DFG operators primarily use the app on **iOS Safari**. All UI changes must follo
 ## Component Patterns
 
 ### Server vs Client Components
+
 - **Server components (default)**: Data fetching, layout, static content
 - **Client components**: Interactive UI, hooks, browser APIs, event handlers
 
 ### Data Fetching
+
 - Use server components for initial data loads
 - Use `fetch()` with Next.js cache options
 - Client-side fetching with `useSWR` or `useQuery` for dynamic updates
 
 ### Forms
+
 - Use React Hook Form for validation
 - Server Actions for mutations (Next.js 14)
 - Toast notifications for user feedback
@@ -79,27 +86,31 @@ DFG operators primarily use the app on **iOS Safari**. All UI changes must follo
 ## API Integration
 
 Base URL from environment variable:
+
 ```typescript
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.dfg.dev'
 ```
 
 Authentication headers:
+
 ```typescript
 const headers = {
-  'Authorization': `Bearer ${session.accessToken}`,
-  'Content-Type': 'application/json'
+  Authorization: `Bearer ${session.accessToken}`,
+  'Content-Type': 'application/json',
 }
 ```
 
 ## Money Math Display
 
 Always use these exact definitions when displaying financials:
+
 - **Acquisition Cost** = Bid + Buyer Premium + Transport + Immediate Repairs
 - **Net Proceeds** = Sale Price − Listing Fees − Payment Processing
 - **Profit** = Net Proceeds − Acquisition Cost
-- **Margin %** = (Profit / Acquisition Cost) * 100
+- **Margin %** = (Profit / Acquisition Cost) \* 100
 
 Format currency with `Intl.NumberFormat`:
+
 ```typescript
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', {
@@ -113,18 +124,21 @@ const formatCurrency = (amount: number) =>
 ## Common Tasks
 
 ### Adding a New Page
+
 1. Create `app/[route]/page.tsx`
 2. Use server component by default
 3. Add to navigation if needed
 4. Test on iOS Safari
 
 ### Adding a New Component
+
 1. Create in `src/components/` (shared) or `app/[route]/_components/` (route-specific)
 2. Use TypeScript interfaces for props
 3. Add `'use client'` only if needed
 4. Test responsive behavior
 
 ### Styling Guidelines
+
 - Mobile-first: Start with mobile styles, add `md:` for desktop
 - Use Tailwind's spacing scale (4px increments)
 - Prefer utility classes over custom CSS

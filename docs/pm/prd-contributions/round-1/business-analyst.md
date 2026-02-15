@@ -394,60 +394,60 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ### Financial Rules (Non-Negotiable)
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-008 | Profit = Net Proceeds - Acquisition Cost. Margin % = (Profit / Acquisition Cost) * 100. | CLAUDE.md, canonical money math |
-| BR-009 | Sierra Auction buyer premium uses `SIERRA_FEE_SCHEDULE` from `@dfg/money-math` (tiered: flat fees, percent fees, caps). | `calculation-spine.ts` line 106-108 |
-| BR-010 | `max_bid_low` = AI max bid * 0.9; `max_bid_high` = AI max bid * 1.0. | `opportunities.ts` line 1558-1561 |
-| BR-029 | Gated economics: 20% haircut on max bid when gates NOT cleared (`NOT_BID_READY`). | `calculation-spine.ts` line 279 |
-| BR-030 | `final_price` must be positive (> 0) for `won` transitions. | `opportunities.ts` line 810-813 |
-| BR-032 | Realized margin = (net_profit / acquisition_cost) * 100. Listing fees are SELLING COSTS ONLY, never included in acquisition cost. | CLAUDE.md |
+| ID     | Rule                                                                                                                               | Source                              |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| BR-008 | Profit = Net Proceeds - Acquisition Cost. Margin % = (Profit / Acquisition Cost) \* 100.                                           | CLAUDE.md, canonical money math     |
+| BR-009 | Sierra Auction buyer premium uses `SIERRA_FEE_SCHEDULE` from `@dfg/money-math` (tiered: flat fees, percent fees, caps).            | `calculation-spine.ts` line 106-108 |
+| BR-010 | `max_bid_low` = AI max bid _ 0.9; `max_bid_high` = AI max bid _ 1.0.                                                               | `opportunities.ts` line 1558-1561   |
+| BR-029 | Gated economics: 20% haircut on max bid when gates NOT cleared (`NOT_BID_READY`).                                                  | `calculation-spine.ts` line 279     |
+| BR-030 | `final_price` must be positive (> 0) for `won` transitions.                                                                        | `opportunities.ts` line 810-813     |
+| BR-032 | Realized margin = (net_profit / acquisition_cost) \* 100. Listing fees are SELLING COSTS ONLY, never included in acquisition cost. | CLAUDE.md                           |
 
 ### Category Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-043 | Trailers (default): min_profit=$600, min_margin=40%, max_acquisition=$6,000, target_days_to_sell=14, max_distance=100mi. | `category-config.ts` |
-| BR-044 | Fleet Trucks: min_profit=$1,500, min_margin=20%, max_acquisition=$15,000, target_days_to_sell=21, max_distance=150mi. | `category-config.ts` |
-| BR-045 | Power Tools: min_profit=$40, min_margin=30%, max_acquisition=$500, target_days_to_sell=7, max_distance=50mi. | `category-config.ts` |
+| ID     | Rule                                                                                                                                     | Source                                    |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| BR-043 | Trailers (default): min_profit=$600, min_margin=40%, max_acquisition=$6,000, target_days_to_sell=14, max_distance=100mi.                 | `category-config.ts`                      |
+| BR-044 | Fleet Trucks: min_profit=$1,500, min_margin=20%, max_acquisition=$15,000, target_days_to_sell=21, max_distance=150mi.                    | `category-config.ts`                      |
+| BR-045 | Power Tools: min_profit=$40, min_margin=30%, max_acquisition=$500, target_days_to_sell=7, max_distance=50mi.                             | `category-config.ts`                      |
 | BR-046 | Category detection falls through: explicit category_id match > vehicle keyword match > vehicle make/model title match > default trailer. | `category-config.ts` detectCategoryType() |
 
 ### Workflow Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-012 | State machine transitions are enforced server-side. Invalid transitions return 400. | `@dfg/types` STATE_TRANSITIONS |
-| BR-013 | Every status change creates an `operator_actions` record AND an MVC event. | `opportunities.ts` |
-| BR-022 | Batch operations: reject and archive only, max 50 items, sequential (not atomic). | `opportunities.ts` batchOperation() |
-| BR-026 | Hard gate auto-rejection: title `salvage` or `missing` (verified). | `opportunities.ts` updateOperatorInputs() |
-| BR-047 | Optimistic locking on analysis runs: `updated_at` mismatch returns 409 Conflict and cleans up orphaned records. | `opportunities.ts` line 1611-1665 |
+| ID     | Rule                                                                                                            | Source                                    |
+| ------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| BR-012 | State machine transitions are enforced server-side. Invalid transitions return 400.                             | `@dfg/types` STATE_TRANSITIONS            |
+| BR-013 | Every status change creates an `operator_actions` record AND an MVC event.                                      | `opportunities.ts`                        |
+| BR-022 | Batch operations: reject and archive only, max 50 items, sequential (not atomic).                               | `opportunities.ts` batchOperation()       |
+| BR-026 | Hard gate auto-rejection: title `salvage` or `missing` (verified).                                              | `opportunities.ts` updateOperatorInputs() |
+| BR-047 | Optimistic locking on analysis runs: `updated_at` mismatch returns 409 Conflict and cleans up orphaned records. | `opportunities.ts` line 1611-1665         |
 
 ### Scoring and Analysis Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-003 | Score bands: high >= 70, medium 40-69, low < 40. | `opportunities.ts` line 209-217 |
-| BR-048 | AI verdict mapping: STRONG_BUY/BUY -> BID (if gates clear) or WATCH (if not); MARGINAL -> WATCH; PASS -> PASS. | `opportunities.ts` line 1529-1546 |
-| BR-049 | Gate-based fallback: if AI unavailable, allCriticalCleared -> BID, criticalOpen <= 2 -> WATCH, else NEEDS_INFO. | `opportunities.ts` line 1540-1546 |
-| BR-050 | Bid readiness: `DO_NOT_BID` for PASS economics, confirmed deal breakers, or salvage/missing title. `NOT_BID_READY` for missing auction end time or unverified title/mileage. `BID_READY` when economics work and all gates cleared. | `calculation-spine.ts` evaluateBidReadiness() |
-| BR-051 | Confidence breakdown has 4 dimensions: price, title, condition, timing. Each scored independently. Overall score 0-5. | `calculation-spine.ts` evaluateConfidenceBreakdown() |
+| ID     | Rule                                                                                                                                                                                                                                | Source                                               |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| BR-003 | Score bands: high >= 70, medium 40-69, low < 40.                                                                                                                                                                                    | `opportunities.ts` line 209-217                      |
+| BR-048 | AI verdict mapping: STRONG_BUY/BUY -> BID (if gates clear) or WATCH (if not); MARGINAL -> WATCH; PASS -> PASS.                                                                                                                      | `opportunities.ts` line 1529-1546                    |
+| BR-049 | Gate-based fallback: if AI unavailable, allCriticalCleared -> BID, criticalOpen <= 2 -> WATCH, else NEEDS_INFO.                                                                                                                     | `opportunities.ts` line 1540-1546                    |
+| BR-050 | Bid readiness: `DO_NOT_BID` for PASS economics, confirmed deal breakers, or salvage/missing title. `NOT_BID_READY` for missing auction end time or unverified title/mileage. `BID_READY` when economics work and all gates cleared. | `calculation-spine.ts` evaluateBidReadiness()        |
+| BR-051 | Confidence breakdown has 4 dimensions: price, title, condition, timing. Each scored independently. Overall score 0-5.                                                                                                               | `calculation-spine.ts` evaluateConfidenceBreakdown() |
 
 ### Alert Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-052 | Auction ending alerts: < 4 hours = critical, < 24 hours = high, < 48 hours = medium. | `alerts.ts` line 49-101 |
-| BR-053 | Stale qualifying alert fires after 24 hours in qualifying status. Severity upgrades to high after 48 hours. | `alerts.ts` line 106-124 |
-| BR-054 | Bid threshold alert fires when current_bid >= 90% of max_bid_locked. | `alerts.ts` line 127-148 |
-| BR-055 | Alert dismissals are per-key, stored in `operator_actions`. Dismissing an alert does not prevent future alerts of different keys. | `alerts.ts` |
+| ID     | Rule                                                                                                                              | Source                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| BR-052 | Auction ending alerts: < 4 hours = critical, < 24 hours = high, < 48 hours = medium.                                              | `alerts.ts` line 49-101  |
+| BR-053 | Stale qualifying alert fires after 24 hours in qualifying status. Severity upgrades to high after 48 hours.                       | `alerts.ts` line 106-124 |
+| BR-054 | Bid threshold alert fires when current_bid >= 90% of max_bid_locked.                                                              | `alerts.ts` line 127-148 |
+| BR-055 | Alert dismissals are per-key, stored in `operator_actions`. Dismissing an alert does not prevent future alerts of different keys. | `alerts.ts`              |
 
 ### Data Integrity Rules
 
-| ID | Rule | Source |
-|----|------|--------|
-| BR-056 | All SQL queries must use `.bind()` parameterization. No template literal interpolation in SQL. | CLAUDE.md |
-| BR-057 | R2 snapshots are immutable. New data creates a new key; existing keys are never overwritten. | CLAUDE.md |
-| BR-058 | MVC events are immutable. Once emitted, events cannot be modified or deleted. | Product Principle #6 |
+| ID     | Rule                                                                                           | Source               |
+| ------ | ---------------------------------------------------------------------------------------------- | -------------------- |
+| BR-056 | All SQL queries must use `.bind()` parameterization. No template literal interpolation in SQL. | CLAUDE.md            |
+| BR-057 | R2 snapshots are immutable. New data creates a new key; existing keys are never overwritten.   | CLAUDE.md            |
+| BR-058 | MVC events are immutable. Once emitted, events cannot be modified or deleted.                  | Product Principle #6 |
 
 ---
 
@@ -553,15 +553,15 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ## Open Questions
 
-| ID | Question | Impact | Suggested Resolution |
-|----|----------|--------|---------------------|
-| OQ-001 | Should the `applyVerdictThresholds` function use OR logic (current) or AND logic for buy/watch thresholds? Currently, meeting EITHER min_profit OR min_margin triggers BUY. This means a deal with $600 profit but only 5% margin would be recommended as BUY for trailers. | High -- affects recommendation accuracy | Recommend AND logic for BUY threshold (must meet BOTH profit AND margin), OR logic for WATCH (meet either). Flag for PM decision. |
-| OQ-002 | The `tuning_events` table CHECK constraint allows: `rejection`, `win`, `loss`, `score_override`, `time_in_stage`. But code inserts `event_type = 'status_change'` for auto-rejections. Will this insert fail in production? | High -- data loss on auto-rejection events | Verify D1 behavior with CHECK constraints. If strict, add `status_change` to allowed values via migration. |
-| OQ-003 | The stats endpoint `last_scout_run` and `last_ingest` are both `null` (TODO). Without these, the operator cannot verify pipeline health from the dashboard. What is the timeline for implementation? | Medium -- relates to Scout failure alerting (P1 gap) | Implement as part of P1 scout failure alerting work. |
-| OQ-004 | The `outcomes` table exists in schema but has no API endpoints or UI. ADR-003 recommends simple win/loss with final price for MVP. Is this sufficient to validate the success metric "Realized margin >= 25%"? | High -- cannot validate core success metric without outcome data | `final_price` on won deals is necessary but not sufficient. Need at minimum `sold_price` to calculate profit. Recommend adding a simple outcome entry for won deals in MVP. |
-| OQ-005 | What happens when the operator's location changes? The `max_distance_miles` category config and `distance_miles` on opportunities are static. Does re-analysis update distance? | Low for MVP (single operator, fixed location) | Defer to Phase 1 when per-user location preferences are implemented. |
-| OQ-006 | The `attention` filter includes analysis_stale items (last_analyzed_at > 7 days ago). Should items that have NEVER been analyzed (`last_analyzed_at IS NULL`) also appear in the attention count? Currently `analysisStale` filter includes them, but `attention` does not. | Medium -- missed items in attention view | The `analysisStale` filter correctly includes NULL with `(last_analyzed_at IS NULL OR ...)` but the `attention` filter only checks `last_analyzed_at IS NOT NULL AND ...`. Recommend aligning the attention filter to also include never-analyzed items. |
-| OQ-007 | The bid entry UI uses `prompt()` (browser native dialog) for entering max bid amount and final price. This is functional but does not validate input format. What if the operator enters "$1,500" or "1500.50"? | Medium -- data integrity risk | Replace `prompt()` with a proper form modal that validates numeric input, strips currency formatting, and enforces positive values before submission. |
+| ID     | Question                                                                                                                                                                                                                                                                    | Impact                                                           | Suggested Resolution                                                                                                                                                                                                                                     |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OQ-001 | Should the `applyVerdictThresholds` function use OR logic (current) or AND logic for buy/watch thresholds? Currently, meeting EITHER min_profit OR min_margin triggers BUY. This means a deal with $600 profit but only 5% margin would be recommended as BUY for trailers. | High -- affects recommendation accuracy                          | Recommend AND logic for BUY threshold (must meet BOTH profit AND margin), OR logic for WATCH (meet either). Flag for PM decision.                                                                                                                        |
+| OQ-002 | The `tuning_events` table CHECK constraint allows: `rejection`, `win`, `loss`, `score_override`, `time_in_stage`. But code inserts `event_type = 'status_change'` for auto-rejections. Will this insert fail in production?                                                 | High -- data loss on auto-rejection events                       | Verify D1 behavior with CHECK constraints. If strict, add `status_change` to allowed values via migration.                                                                                                                                               |
+| OQ-003 | The stats endpoint `last_scout_run` and `last_ingest` are both `null` (TODO). Without these, the operator cannot verify pipeline health from the dashboard. What is the timeline for implementation?                                                                        | Medium -- relates to Scout failure alerting (P1 gap)             | Implement as part of P1 scout failure alerting work.                                                                                                                                                                                                     |
+| OQ-004 | The `outcomes` table exists in schema but has no API endpoints or UI. ADR-003 recommends simple win/loss with final price for MVP. Is this sufficient to validate the success metric "Realized margin >= 25%"?                                                              | High -- cannot validate core success metric without outcome data | `final_price` on won deals is necessary but not sufficient. Need at minimum `sold_price` to calculate profit. Recommend adding a simple outcome entry for won deals in MVP.                                                                              |
+| OQ-005 | What happens when the operator's location changes? The `max_distance_miles` category config and `distance_miles` on opportunities are static. Does re-analysis update distance?                                                                                             | Low for MVP (single operator, fixed location)                    | Defer to Phase 1 when per-user location preferences are implemented.                                                                                                                                                                                     |
+| OQ-006 | The `attention` filter includes analysis_stale items (last_analyzed_at > 7 days ago). Should items that have NEVER been analyzed (`last_analyzed_at IS NULL`) also appear in the attention count? Currently `analysisStale` filter includes them, but `attention` does not. | Medium -- missed items in attention view                         | The `analysisStale` filter correctly includes NULL with `(last_analyzed_at IS NULL OR ...)` but the `attention` filter only checks `last_analyzed_at IS NOT NULL AND ...`. Recommend aligning the attention filter to also include never-analyzed items. |
+| OQ-007 | The bid entry UI uses `prompt()` (browser native dialog) for entering max bid amount and final price. This is functional but does not validate input format. What if the operator enters "$1,500" or "1500.50"?                                                             | Medium -- data integrity risk                                    | Replace `prompt()` with a proper form modal that validates numeric input, strips currency formatting, and enforces positive values before submission.                                                                                                    |
 
 ---
 
@@ -569,60 +569,60 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 ### User Stories to Features
 
-| User Story | Feature | API Endpoint(s) | DB Tables | UI Component(s) |
-|------------|---------|-----------------|-----------|-----------------|
-| US-001 | Inbox review, filtering, pagination | GET /api/opportunities, GET /api/opportunities/stats | opportunities | Opportunities list page, Dashboard |
-| US-002 | Opportunity detail view | GET /api/opportunities/:id | opportunities, analysis_runs, operator_actions, sources | Opportunity detail page |
-| US-003 | AI analysis on demand | POST /api/opportunities/:id/analyze | analysis_runs, opportunities | Analyze button, TabbedAnalysis, NextActionCard |
-| US-004 | Workflow state machine | PATCH /api/opportunities/:id, POST /api/opportunities/:id/actions | opportunities, operator_actions, mvc_events | Status action buttons (Qualify, Inspect, Bid, Won, Lost) |
-| US-005 | Watch system | PATCH /api/opportunities/:id (to watch) | opportunities, operator_actions | Watch modal |
-| US-006 | Structured rejection | PATCH /api/opportunities/:id (to rejected) | opportunities, operator_actions, tuning_events, mvc_events | Reject modal, ReasonCodeSelect |
-| US-007 | Batch operations | POST /api/opportunities/batch | opportunities, operator_actions, tuning_events | Batch action UI |
-| US-008 | Operator inputs / gate clearance | PATCH /api/opportunities/:id/inputs | opportunities, operator_actions | TitleInputs, GatesDisplay, KillSwitchBanner |
-| US-009 | Outcome tracking | PATCH /api/opportunities/:id (to won/lost) | opportunities, outcomes (future) | Won/Lost buttons |
-| US-010 | Pipeline health monitoring | GET /api/opportunities/stats | sources, scout_runs | Dashboard stats |
-| US-011 | Staleness detection | GET /api/opportunities (staleness filters), GET /api/opportunities/:id | opportunities, analysis_runs | StalenessBanner |
-| US-012 | Dashboard attention summary | GET /api/opportunities/stats | opportunities | Dashboard attention counts |
+| User Story | Feature                             | API Endpoint(s)                                                        | DB Tables                                                  | UI Component(s)                                          |
+| ---------- | ----------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------- |
+| US-001     | Inbox review, filtering, pagination | GET /api/opportunities, GET /api/opportunities/stats                   | opportunities                                              | Opportunities list page, Dashboard                       |
+| US-002     | Opportunity detail view             | GET /api/opportunities/:id                                             | opportunities, analysis_runs, operator_actions, sources    | Opportunity detail page                                  |
+| US-003     | AI analysis on demand               | POST /api/opportunities/:id/analyze                                    | analysis_runs, opportunities                               | Analyze button, TabbedAnalysis, NextActionCard           |
+| US-004     | Workflow state machine              | PATCH /api/opportunities/:id, POST /api/opportunities/:id/actions      | opportunities, operator_actions, mvc_events                | Status action buttons (Qualify, Inspect, Bid, Won, Lost) |
+| US-005     | Watch system                        | PATCH /api/opportunities/:id (to watch)                                | opportunities, operator_actions                            | Watch modal                                              |
+| US-006     | Structured rejection                | PATCH /api/opportunities/:id (to rejected)                             | opportunities, operator_actions, tuning_events, mvc_events | Reject modal, ReasonCodeSelect                           |
+| US-007     | Batch operations                    | POST /api/opportunities/batch                                          | opportunities, operator_actions, tuning_events             | Batch action UI                                          |
+| US-008     | Operator inputs / gate clearance    | PATCH /api/opportunities/:id/inputs                                    | opportunities, operator_actions                            | TitleInputs, GatesDisplay, KillSwitchBanner              |
+| US-009     | Outcome tracking                    | PATCH /api/opportunities/:id (to won/lost)                             | opportunities, outcomes (future)                           | Won/Lost buttons                                         |
+| US-010     | Pipeline health monitoring          | GET /api/opportunities/stats                                           | sources, scout_runs                                        | Dashboard stats                                          |
+| US-011     | Staleness detection                 | GET /api/opportunities (staleness filters), GET /api/opportunities/:id | opportunities, analysis_runs                               | StalenessBanner                                          |
+| US-012     | Dashboard attention summary         | GET /api/opportunities/stats                                           | opportunities                                              | Dashboard attention counts                               |
 
 ### User Stories to Success Metrics
 
-| User Story | Success Metric | Target | Measurement |
-|------------|---------------|--------|-------------|
-| US-001 | Opportunities surfaced per day | >= 15 qualified | Count of non-rejected/archived opportunities created today |
-| US-003, US-006 | Analysis accuracy (operator agreement) | >= 70% BID recs result in operator bid/watch | MVC events: decision_made where analyst_verdict=BID |
-| US-003, US-006 | False positive rate | <= 30% of score > 80 get rejected | Rejection rate of high-score opportunities |
-| US-004, US-012 | Operator response time | Median < 4 hours inbox to qualifying/rejected | status_changed_at delta |
-| US-010 | Scout uptime | >= 95% runs succeed | scout_runs success rate |
-| US-003 | Analysis latency | p95 < 45 seconds | listing.created_at to opportunity.last_analyzed_at |
-| US-009 | Won deals per month | >= 2 acquisitions | Opportunities with status=won |
-| US-009 | Realized margin | >= 25% average | outcomes table net_profit / acquisition_cost |
+| User Story     | Success Metric                         | Target                                        | Measurement                                                |
+| -------------- | -------------------------------------- | --------------------------------------------- | ---------------------------------------------------------- |
+| US-001         | Opportunities surfaced per day         | >= 15 qualified                               | Count of non-rejected/archived opportunities created today |
+| US-003, US-006 | Analysis accuracy (operator agreement) | >= 70% BID recs result in operator bid/watch  | MVC events: decision_made where analyst_verdict=BID        |
+| US-003, US-006 | False positive rate                    | <= 30% of score > 80 get rejected             | Rejection rate of high-score opportunities                 |
+| US-004, US-012 | Operator response time                 | Median < 4 hours inbox to qualifying/rejected | status_changed_at delta                                    |
+| US-010         | Scout uptime                           | >= 95% runs succeed                           | scout_runs success rate                                    |
+| US-003         | Analysis latency                       | p95 < 45 seconds                              | listing.created_at to opportunity.last_analyzed_at         |
+| US-009         | Won deals per month                    | >= 2 acquisitions                             | Opportunities with status=won                              |
+| US-009         | Realized margin                        | >= 25% average                                | outcomes table net_profit / acquisition_cost               |
 
 ### User Stories to Business Rules
 
-| User Story | Business Rules |
-|------------|---------------|
-| US-001 | BR-001, BR-002, BR-003 |
-| US-002 | BR-004, BR-005, BR-006 |
-| US-003 | BR-007, BR-008, BR-009, BR-010, BR-011, BR-047, BR-048, BR-049 |
-| US-004 | BR-012, BR-013, BR-014 |
-| US-005 | BR-015, BR-016, BR-017 |
-| US-006 | BR-018, BR-019, BR-020, BR-021 |
-| US-007 | BR-022, BR-023, BR-024, BR-025 |
-| US-008 | BR-026, BR-027, BR-028, BR-029 |
-| US-009 | BR-030, BR-031, BR-032, BR-033 |
-| US-010 | BR-034, BR-035, BR-036 |
-| US-011 | BR-037, BR-038, BR-039 |
-| US-012 | BR-040, BR-041, BR-042 |
+| User Story | Business Rules                                                 |
+| ---------- | -------------------------------------------------------------- |
+| US-001     | BR-001, BR-002, BR-003                                         |
+| US-002     | BR-004, BR-005, BR-006                                         |
+| US-003     | BR-007, BR-008, BR-009, BR-010, BR-011, BR-047, BR-048, BR-049 |
+| US-004     | BR-012, BR-013, BR-014                                         |
+| US-005     | BR-015, BR-016, BR-017                                         |
+| US-006     | BR-018, BR-019, BR-020, BR-021                                 |
+| US-007     | BR-022, BR-023, BR-024, BR-025                                 |
+| US-008     | BR-026, BR-027, BR-028, BR-029                                 |
+| US-009     | BR-030, BR-031, BR-032, BR-033                                 |
+| US-010     | BR-034, BR-035, BR-036                                         |
+| US-011     | BR-037, BR-038, BR-039                                         |
+| US-012     | BR-040, BR-041, BR-042                                         |
 
 ### User Stories to Kill Criteria
 
-| Kill Criterion | Related User Stories | Detection Method |
-|---------------|---------------------|-----------------|
-| Zero profitable acquisitions in 90 days | US-009 | Query: `SELECT COUNT(*) FROM opportunities WHERE status='won' AND created_at > datetime('now', '-90 days')` |
-| Sustained negative margins < 10% | US-009 | Requires outcomes data (P1 gap) |
-| Operator stops using the tool (< 3 logins/week for 4 weeks) | US-001, US-004 | Auth session tracking (currently hardcoded auth -- no tracking) |
-| Scout data staleness > 50% expired on first view | US-010 | Compare `auction_ends_at` to `status_changed_at` for first transition out of inbox |
-| Analysis disagreement > 60% over 60 days | US-003, US-006 | MVC events: `decision_made` where analyst_verdict=BID but operator decision=PASS |
+| Kill Criterion                                              | Related User Stories | Detection Method                                                                                            |
+| ----------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Zero profitable acquisitions in 90 days                     | US-009               | Query: `SELECT COUNT(*) FROM opportunities WHERE status='won' AND created_at > datetime('now', '-90 days')` |
+| Sustained negative margins < 10%                            | US-009               | Requires outcomes data (P1 gap)                                                                             |
+| Operator stops using the tool (< 3 logins/week for 4 weeks) | US-001, US-004       | Auth session tracking (currently hardcoded auth -- no tracking)                                             |
+| Scout data staleness > 50% expired on first view            | US-010               | Compare `auction_ends_at` to `status_changed_at` for first transition out of inbox                          |
+| Analysis disagreement > 60% over 60 days                    | US-003, US-006       | MVC events: `decision_made` where analyst_verdict=BID but operator decision=PASS                            |
 
 ---
 
@@ -630,13 +630,13 @@ All acceptance criteria above are designed to be binary pass/fail. Each criterio
 
 The following gaps were identified through codebase analysis. They represent areas where the system is functional but incomplete relative to full MVP expectations:
 
-| Gap | Priority | User Story | Impact |
-|-----|----------|-----------|--------|
-| Outcome tracking has no UI | P1 | US-009 | Cannot validate realized margin success metric |
-| `last_scout_run` returns null on stats | P1 | US-010 | Cannot monitor pipeline health from dashboard |
-| IronPlanet capture rate ~17% | P1 | US-010 | Missing ~83% of IronPlanet listings |
-| Scout failure alerting absent | P1 | US-010 | Operator discovers stale data by observation |
-| Bid entry uses browser `prompt()` | P2 | US-004 | No input validation, poor mobile UX |
-| `tuning_events` CHECK constraint may reject `status_change` event_type | P0 | US-008 | Auto-rejection events may silently fail |
-| No frontend tests | P2 | All UI stories | UI regressions undetected |
-| Auth is hardcoded | P0 (security) | N/A (pre-Phase 1 blocker) | No session tracking for kill criteria |
+| Gap                                                                    | Priority      | User Story                | Impact                                         |
+| ---------------------------------------------------------------------- | ------------- | ------------------------- | ---------------------------------------------- |
+| Outcome tracking has no UI                                             | P1            | US-009                    | Cannot validate realized margin success metric |
+| `last_scout_run` returns null on stats                                 | P1            | US-010                    | Cannot monitor pipeline health from dashboard  |
+| IronPlanet capture rate ~17%                                           | P1            | US-010                    | Missing ~83% of IronPlanet listings            |
+| Scout failure alerting absent                                          | P1            | US-010                    | Operator discovers stale data by observation   |
+| Bid entry uses browser `prompt()`                                      | P2            | US-004                    | No input validation, poor mobile UX            |
+| `tuning_events` CHECK constraint may reject `status_change` event_type | P0            | US-008                    | Auto-rejection events may silently fail        |
+| No frontend tests                                                      | P2            | All UI stories            | UI regressions undetected                      |
+| Auth is hardcoded                                                      | P0 (security) | N/A (pre-Phase 1 blocker) | No session tracking for kill criteria          |

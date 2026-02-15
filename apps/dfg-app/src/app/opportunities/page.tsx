@@ -1,96 +1,131 @@
-'use client';
+'use client'
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Filter, RefreshCw, ChevronDown, TrendingUp } from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
-import { OpportunityCard } from '@/components/OpportunityCard';
-import { Button } from '@/components/ui/Button';
-import { ActiveFilterChip, ToggleFilterChip } from '@/components/ui/FilterChip';
-import { listOpportunities, type ListOpportunitiesParams } from '@/lib/api';
-import { cn, STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils';
-import type { OpportunitySummary, OpportunityStatus } from '@/types';
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Filter, RefreshCw, ChevronDown, TrendingUp } from 'lucide-react'
+import { Navigation } from '@/components/Navigation'
+import { OpportunityCard } from '@/components/OpportunityCard'
+import { Button } from '@/components/ui/Button'
+import { ActiveFilterChip, ToggleFilterChip } from '@/components/ui/FilterChip'
+import { listOpportunities, type ListOpportunitiesParams } from '@/lib/api'
+import { cn, STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils'
+import type { OpportunitySummary, OpportunityStatus } from '@/types'
 
 function OpportunitiesContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const [opportunities, setOpportunities] = useState<OpportunitySummary[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
+  const [opportunities, setOpportunities] = useState<OpportunitySummary[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Filter state from URL
-  const status = searchParams.get('status') as OpportunityStatus | null;
-  const endingWithin = searchParams.get('ending_within') as '24h' | '48h' | '7d' | null;
-  const scoreBand = searchParams.get('score_band') as 'high' | 'medium' | 'low' | null;
+  const status = searchParams.get('status') as OpportunityStatus | null
+  const endingWithin = searchParams.get('ending_within') as '24h' | '48h' | '7d' | null
+  const scoreBand = searchParams.get('score_band') as 'high' | 'medium' | 'low' | null
   // Sprint N+1: Staleness filters
-  const stale = searchParams.get('stale') === 'true';
-  const analysisStale = searchParams.get('analysis_stale') === 'true';
-  const decisionStale = searchParams.get('decision_stale') === 'true';
-  const endingSoon = searchParams.get('ending_soon') === 'true';
-  const attention = searchParams.get('attention') === 'true';
+  const stale = searchParams.get('stale') === 'true'
+  const analysisStale = searchParams.get('analysis_stale') === 'true'
+  const decisionStale = searchParams.get('decision_stale') === 'true'
+  const endingSoon = searchParams.get('ending_soon') === 'true'
+  const attention = searchParams.get('attention') === 'true'
   // Sprint N+3: Strike Zone filter
-  const strikeZone = searchParams.get('strike_zone') === 'true';
+  const strikeZone = searchParams.get('strike_zone') === 'true'
   // Sprint N+3: Verification Needed filter
-  const verificationNeeded = searchParams.get('verification_needed') === 'true';
+  const verificationNeeded = searchParams.get('verification_needed') === 'true'
   // Sprint N+4: New today filter (#71)
-  const newToday = searchParams.get('new_today') === 'true';
+  const newToday = searchParams.get('new_today') === 'true'
 
   const fetchOpportunities = useCallback(async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const params: ListOpportunitiesParams = {
         limit: 50,
-      };
+      }
 
-      if (status) params.status = status;
-      if (endingWithin) params.ending_within = endingWithin;
-      if (scoreBand) params.score_band = scoreBand;
+      if (status) params.status = status
+      if (endingWithin) params.ending_within = endingWithin
+      if (scoreBand) params.score_band = scoreBand
       // Sprint N+1: Apply staleness filters
-      if (stale) params.stale = true;
-      if (analysisStale) params.analysis_stale = true;
-      if (decisionStale) params.decision_stale = true;
-      if (endingSoon) params.ending_soon = true;
-      if (attention) params.attention = true;
+      if (stale) params.stale = true
+      if (analysisStale) params.analysis_stale = true
+      if (decisionStale) params.decision_stale = true
+      if (endingSoon) params.ending_soon = true
+      if (attention) params.attention = true
       // Sprint N+3: Strike Zone filter
-      if (strikeZone) params.strike_zone = true;
+      if (strikeZone) params.strike_zone = true
       // Sprint N+3: Verification Needed filter
-      if (verificationNeeded) params.verification_needed = true;
+      if (verificationNeeded) params.verification_needed = true
       // Sprint N+4: New today filter
-      if (newToday) params.new_today = true;
+      if (newToday) params.new_today = true
 
-      const result = await listOpportunities(params);
-      setOpportunities(result.opportunities);
-      setTotal(result.total);
+      const result = await listOpportunities(params)
+      setOpportunities(result.opportunities)
+      setTotal(result.total)
     } catch (error) {
-      console.error('Failed to fetch opportunities:', error);
+      console.error('Failed to fetch opportunities:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday]);
+  }, [
+    status,
+    endingWithin,
+    scoreBand,
+    stale,
+    analysisStale,
+    decisionStale,
+    endingSoon,
+    attention,
+    strikeZone,
+    verificationNeeded,
+    newToday,
+  ])
 
   useEffect(() => {
-    fetchOpportunities();
-  }, [fetchOpportunities]);
+    fetchOpportunities()
+  }, [fetchOpportunities])
 
   const updateFilter = (key: string, value: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString())
     if (value) {
-      params.set(key, value);
+      params.set(key, value)
     } else {
-      params.delete(key);
+      params.delete(key)
     }
-    router.push(`/opportunities?${params.toString()}`);
-  };
+    router.push(`/opportunities?${params.toString()}`)
+  }
 
   const clearFilters = () => {
-    router.push('/opportunities');
-  };
+    router.push('/opportunities')
+  }
 
-  const hasActiveFilters = status || endingWithin || scoreBand || stale || analysisStale || decisionStale || endingSoon || attention || strikeZone || verificationNeeded || newToday;
-  const activeFilterCount = [status, endingWithin, scoreBand, stale, analysisStale, decisionStale, endingSoon, attention, strikeZone, verificationNeeded, newToday].filter(Boolean).length;
+  const hasActiveFilters =
+    status ||
+    endingWithin ||
+    scoreBand ||
+    stale ||
+    analysisStale ||
+    decisionStale ||
+    endingSoon ||
+    attention ||
+    strikeZone ||
+    verificationNeeded ||
+    newToday
+  const activeFilterCount = [
+    status,
+    endingWithin,
+    scoreBand,
+    stale,
+    analysisStale,
+    decisionStale,
+    endingSoon,
+    attention,
+    strikeZone,
+    verificationNeeded,
+    newToday,
+  ].filter(Boolean).length
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -108,12 +143,7 @@ function OpportunitiesContent() {
             </h1>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={fetchOpportunities}
-                disabled={loading}
-              >
+              <Button variant="ghost" size="sm" onClick={fetchOpportunities} disabled={loading}>
                 <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
               </Button>
               {/* Buy Box Quick Toggle (#70) */}
@@ -146,41 +176,83 @@ function OpportunitiesContent() {
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 border-t border-gray-200 dark:border-gray-700">
               {status && (
-                <ActiveFilterChip label={STATUS_LABELS[status]} color="blue" onDismiss={() => updateFilter('status', null)} />
+                <ActiveFilterChip
+                  label={STATUS_LABELS[status]}
+                  color="blue"
+                  onDismiss={() => updateFilter('status', null)}
+                />
               )}
               {endingWithin && (
-                <ActiveFilterChip label={endingWithin} color="orange" onDismiss={() => updateFilter('ending_within', null)} />
+                <ActiveFilterChip
+                  label={endingWithin}
+                  color="orange"
+                  onDismiss={() => updateFilter('ending_within', null)}
+                />
               )}
               {scoreBand && (
                 <ActiveFilterChip
-                  label={scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'}
+                  label={
+                    scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'
+                  }
                   color="green"
                   onDismiss={() => updateFilter('score_band', null)}
                 />
               )}
               {stale && (
-                <ActiveFilterChip label="Stale" color="amber" onDismiss={() => updateFilter('stale', null)} />
+                <ActiveFilterChip
+                  label="Stale"
+                  color="amber"
+                  onDismiss={() => updateFilter('stale', null)}
+                />
               )}
               {analysisStale && (
-                <ActiveFilterChip label="Re-analyze" color="blue" onDismiss={() => updateFilter('analysis_stale', null)} />
+                <ActiveFilterChip
+                  label="Re-analyze"
+                  color="blue"
+                  onDismiss={() => updateFilter('analysis_stale', null)}
+                />
               )}
               {decisionStale && (
-                <ActiveFilterChip label="Decision" color="red" onDismiss={() => updateFilter('decision_stale', null)} />
+                <ActiveFilterChip
+                  label="Decision"
+                  color="red"
+                  onDismiss={() => updateFilter('decision_stale', null)}
+                />
               )}
               {endingSoon && (
-                <ActiveFilterChip label="Ending Soon" color="orange" onDismiss={() => updateFilter('ending_soon', null)} />
+                <ActiveFilterChip
+                  label="Ending Soon"
+                  color="orange"
+                  onDismiss={() => updateFilter('ending_soon', null)}
+                />
               )}
               {attention && (
-                <ActiveFilterChip label="Attention" color="amber" onDismiss={() => updateFilter('attention', null)} />
+                <ActiveFilterChip
+                  label="Attention"
+                  color="amber"
+                  onDismiss={() => updateFilter('attention', null)}
+                />
               )}
               {strikeZone && (
-                <ActiveFilterChip label="Strike Zone" color="orange" onDismiss={() => updateFilter('strike_zone', null)} />
+                <ActiveFilterChip
+                  label="Strike Zone"
+                  color="orange"
+                  onDismiss={() => updateFilter('strike_zone', null)}
+                />
               )}
               {verificationNeeded && (
-                <ActiveFilterChip label="Verification" color="purple" onDismiss={() => updateFilter('verification_needed', null)} />
+                <ActiveFilterChip
+                  label="Verification"
+                  color="purple"
+                  onDismiss={() => updateFilter('verification_needed', null)}
+                />
               )}
               {newToday && (
-                <ActiveFilterChip label="New Today" color="blue" onDismiss={() => updateFilter('new_today', null)} />
+                <ActiveFilterChip
+                  label="New Today"
+                  color="blue"
+                  onDismiss={() => updateFilter('new_today', null)}
+                />
               )}
               {/* Only show "Clear all" when multiple filters are active (#111) */}
               {activeFilterCount > 1 && (
@@ -201,12 +273,7 @@ function OpportunitiesContent() {
             {total > 0 ? `${total} results` : 'Loading...'}
           </span>
           <div className="flex items-center gap-1.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={fetchOpportunities}
-              disabled={loading}
-            >
+            <Button variant="ghost" size="sm" onClick={fetchOpportunities} disabled={loading}>
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
             </Button>
             <Button
@@ -219,10 +286,10 @@ function OpportunitiesContent() {
             <Link
               href={`/opportunities/filters?${searchParams.toString()}`}
               className={cn(
-                "inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors px-3 py-1.5",
+                'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors px-3 py-1.5',
                 hasActiveFilters
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               )}
             >
               <Filter className="h-4 w-4 mr-1" />
@@ -240,23 +307,41 @@ function OpportunitiesContent() {
         {hasActiveFilters && (
           <div className="md:hidden flex flex-wrap items-center gap-1.5 px-3 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             {status && (
-              <ActiveFilterChip label={STATUS_LABELS[status]} color="blue" onDismiss={() => updateFilter('status', null)} />
+              <ActiveFilterChip
+                label={STATUS_LABELS[status]}
+                color="blue"
+                onDismiss={() => updateFilter('status', null)}
+              />
             )}
             {scoreBand && (
               <ActiveFilterChip
-                label={scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'}
+                label={
+                  scoreBand === 'high' ? 'High Score' : scoreBand === 'medium' ? 'Medium' : 'Low'
+                }
                 color="green"
                 onDismiss={() => updateFilter('score_band', null)}
               />
             )}
             {stale && (
-              <ActiveFilterChip label="Stale" color="amber" onDismiss={() => updateFilter('stale', null)} />
+              <ActiveFilterChip
+                label="Stale"
+                color="amber"
+                onDismiss={() => updateFilter('stale', null)}
+              />
             )}
             {analysisStale && (
-              <ActiveFilterChip label="Re-analyze" color="blue" onDismiss={() => updateFilter('analysis_stale', null)} />
+              <ActiveFilterChip
+                label="Re-analyze"
+                color="blue"
+                onDismiss={() => updateFilter('analysis_stale', null)}
+              />
             )}
             {verificationNeeded && (
-              <ActiveFilterChip label="Verification" color="purple" onDismiss={() => updateFilter('verification_needed', null)} />
+              <ActiveFilterChip
+                label="Verification"
+                color="purple"
+                onDismiss={() => updateFilter('verification_needed', null)}
+              />
             )}
             {activeFilterCount > 1 && (
               <button
@@ -272,61 +357,100 @@ function OpportunitiesContent() {
         {/* Filter Panel - Desktop only: inline dropdown (#108, #113) */}
         {showFilters && (
           <div className="hidden md:block px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex flex-wrap gap-2 items-center">
-                {/* Status filter */}
-                <div className="relative">
-                  <select
-                    value={status || ''}
-                    onChange={(e) => updateFilter('status', e.target.value || null)}
-                    className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">All Statuses</option>
-                    {ACTIVE_STATUSES.map((s) => (
-                      <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
-                {/* Score filter */}
-                <div className="relative">
-                  <select
-                    value={scoreBand || ''}
-                    onChange={(e) => updateFilter('score_band', e.target.value || null)}
-                    className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Any Score</option>
-                    <option value="high">High (70+)</option>
-                    <option value="medium">Medium (40-69)</option>
-                    <option value="low">Low (&lt;40)</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
-                {/* Ending filter */}
-                <div className="relative">
-                  <select
-                    value={endingWithin || ''}
-                    onChange={(e) => updateFilter('ending_within', e.target.value || null)}
-                    className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Any Time</option>
-                    <option value="24h">Ending in 24h</option>
-                    <option value="48h">Ending in 48h</option>
-                    <option value="7d">Ending in 7 days</option>
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
-                {/* Divider */}
-                <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
-                {/* Toggle buttons (#103) */}
-                <ToggleFilterChip label="Stale" color="amber" active={stale} onToggle={() => updateFilter('stale', stale ? null : 'true')} />
-                <ToggleFilterChip label="Re-analyze" color="blue" active={analysisStale} onToggle={() => updateFilter('analysis_stale', analysisStale ? null : 'true')} />
-                <ToggleFilterChip label="Verification" color="purple" active={verificationNeeded} onToggle={() => updateFilter('verification_needed', verificationNeeded ? null : 'true')} />
-                <ToggleFilterChip label="Ending Soon" color="orange" active={endingSoon} onToggle={() => updateFilter('ending_soon', endingSoon ? null : 'true')} />
-                <ToggleFilterChip label="Attention" color="amber" active={attention} onToggle={() => updateFilter('attention', attention ? null : 'true')} />
-                <ToggleFilterChip label="Strike Zone" color="orange" active={strikeZone} onToggle={() => updateFilter('strike_zone', strikeZone ? null : 'true')} />
-                <ToggleFilterChip label="New Today" color="blue" active={newToday} onToggle={() => updateFilter('new_today', newToday ? null : 'true')} />
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* Status filter */}
+              <div className="relative">
+                <select
+                  value={status || ''}
+                  onChange={(e) => updateFilter('status', e.target.value || null)}
+                  className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Statuses</option>
+                  {ACTIVE_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
               </div>
+              {/* Score filter */}
+              <div className="relative">
+                <select
+                  value={scoreBand || ''}
+                  onChange={(e) => updateFilter('score_band', e.target.value || null)}
+                  className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Any Score</option>
+                  <option value="high">High (70+)</option>
+                  <option value="medium">Medium (40-69)</option>
+                  <option value="low">Low (&lt;40)</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
+              {/* Ending filter */}
+              <div className="relative">
+                <select
+                  value={endingWithin || ''}
+                  onChange={(e) => updateFilter('ending_within', e.target.value || null)}
+                  className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Any Time</option>
+                  <option value="24h">Ending in 24h</option>
+                  <option value="48h">Ending in 48h</option>
+                  <option value="7d">Ending in 7 days</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
+              {/* Divider */}
+              <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+              {/* Toggle buttons (#103) */}
+              <ToggleFilterChip
+                label="Stale"
+                color="amber"
+                active={stale}
+                onToggle={() => updateFilter('stale', stale ? null : 'true')}
+              />
+              <ToggleFilterChip
+                label="Re-analyze"
+                color="blue"
+                active={analysisStale}
+                onToggle={() => updateFilter('analysis_stale', analysisStale ? null : 'true')}
+              />
+              <ToggleFilterChip
+                label="Verification"
+                color="purple"
+                active={verificationNeeded}
+                onToggle={() =>
+                  updateFilter('verification_needed', verificationNeeded ? null : 'true')
+                }
+              />
+              <ToggleFilterChip
+                label="Ending Soon"
+                color="orange"
+                active={endingSoon}
+                onToggle={() => updateFilter('ending_soon', endingSoon ? null : 'true')}
+              />
+              <ToggleFilterChip
+                label="Attention"
+                color="amber"
+                active={attention}
+                onToggle={() => updateFilter('attention', attention ? null : 'true')}
+              />
+              <ToggleFilterChip
+                label="Strike Zone"
+                color="orange"
+                active={strikeZone}
+                onToggle={() => updateFilter('strike_zone', strikeZone ? null : 'true')}
+              />
+              <ToggleFilterChip
+                label="New Today"
+                color="blue"
+                active={newToday}
+                onToggle={() => updateFilter('new_today', newToday ? null : 'true')}
+              />
             </div>
+          </div>
         )}
 
         {/* Content */}
@@ -354,13 +478,19 @@ function OpportunitiesContent() {
         </div>
       </main>
     </div>
-  );
+  )
 }
 
 export default function OpportunitiesPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><RefreshCw className="h-6 w-6 animate-spin text-gray-400" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+        </div>
+      }
+    >
       <OpportunitiesContent />
     </Suspense>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import {
   Inbox,
   Eye,
@@ -12,35 +12,35 @@ import {
   RefreshCw,
   Target,
   ShieldQuestion,
-} from 'lucide-react';
-import { Navigation } from '@/components/Navigation';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { AttentionRequiredList } from '@/components/features/attention-required-list';
-import { EndingSoonList } from '@/components/features/ending-soon-list';
-import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
-import { getStats } from '@/lib/api';
-import type { DashboardStats, OpportunityStatus } from '@dfg/types';
+} from 'lucide-react'
+import { Navigation } from '@/components/Navigation'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { AttentionRequiredList } from '@/components/features/attention-required-list'
+import { EndingSoonList } from '@/components/features/ending-soon-list'
+import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
+import { getStats } from '@/lib/api'
+import type { DashboardStats, OpportunityStatus } from '@dfg/types'
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    fetchStats()
+  }, [])
 
   const fetchStats = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const data = await getStats();
-      setStats(data);
+      const data = await getStats()
+      setStats(data)
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      console.error('Failed to fetch stats:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -50,14 +50,14 @@ export default function DashboardPage() {
           <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
         </main>
       </div>
-    );
+    )
   }
 
-  const activeStatuses: OpportunityStatus[] = ['inbox', 'qualifying', 'watch', 'inspect', 'bid'];
+  const activeStatuses: OpportunityStatus[] = ['inbox', 'qualifying', 'watch', 'inspect', 'bid']
   const totalActive = activeStatuses.reduce(
     (sum, status) => sum + (stats?.by_status[status] || 0),
     0
-  );
+  )
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full max-w-[100vw] overflow-x-hidden">
@@ -84,7 +84,14 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-3">
             {/* Inbox: New opportunities to triage (#71) */}
             <Link href="/opportunities?status=inbox">
-              <Card hover className={stats?.by_status.inbox && stats.by_status.inbox > 0 ? 'border-blue-300 dark:border-blue-600' : ''}>
+              <Card
+                hover
+                className={
+                  stats?.by_status.inbox && stats.by_status.inbox > 0
+                    ? 'border-blue-300 dark:border-blue-600'
+                    : ''
+                }
+              >
                 <CardContent className="text-center">
                   <div className="flex justify-center mb-2">
                     <Inbox className="h-6 w-6 text-blue-500" />
@@ -99,7 +106,14 @@ export default function DashboardPage() {
 
             {/* Strike Zone: High-value opportunities ready for action */}
             <Link href="/opportunities?strike_zone=true">
-              <Card hover className={stats?.strike_zone && stats.strike_zone > 0 ? 'border-orange-300 dark:border-orange-600' : ''}>
+              <Card
+                hover
+                className={
+                  stats?.strike_zone && stats.strike_zone > 0
+                    ? 'border-orange-300 dark:border-orange-600'
+                    : ''
+                }
+              >
                 <CardContent className="text-center">
                   <div className="flex justify-center mb-2">
                     <Target className="h-6 w-6 text-orange-500" />
@@ -114,7 +128,14 @@ export default function DashboardPage() {
 
             {/* Verification Needed: Opportunities with open critical gates */}
             <Link href="/opportunities?verification_needed=true">
-              <Card hover className={stats?.verification_needed && stats.verification_needed > 0 ? 'border-purple-300 dark:border-purple-600' : ''}>
+              <Card
+                hover
+                className={
+                  stats?.verification_needed && stats.verification_needed > 0
+                    ? 'border-purple-300 dark:border-purple-600'
+                    : ''
+                }
+              >
                 <CardContent className="text-center">
                   <div className="flex justify-center mb-2">
                     <ShieldQuestion className="h-6 w-6 text-purple-500" />
@@ -250,5 +271,5 @@ export default function DashboardPage() {
         </footer>
       </main>
     </div>
-  );
+  )
 }

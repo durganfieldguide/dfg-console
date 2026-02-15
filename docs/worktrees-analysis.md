@@ -18,20 +18,20 @@ Git worktrees can enable parallel Claude Code sessions for DFG development, but 
 
 ### Components
 
-| Component | Lines | Purpose | Dependencies |
-|-----------|-------|---------|--------------|
-| `dfg-app` | ~10.6K | Next.js operator console | None (@dfg packages unused) |
-| `dfg-analyst` | ~15K | AI analysis engine | `@dfg/money-math` |
-| `dfg-api` | ~5.5K | REST API, CRUD operations | `@sentry/cloudflare` |
-| `dfg-scout` | ~3.7K | Auction scraping pipeline | None |
-| `dfg-relay` | ~500 | GitHub issue integration | None |
+| Component     | Lines  | Purpose                   | Dependencies                |
+| ------------- | ------ | ------------------------- | --------------------------- |
+| `dfg-app`     | ~10.6K | Next.js operator console  | None (@dfg packages unused) |
+| `dfg-analyst` | ~15K   | AI analysis engine        | `@dfg/money-math`           |
+| `dfg-api`     | ~5.5K  | REST API, CRUD operations | `@sentry/cloudflare`        |
+| `dfg-scout`   | ~3.7K  | Auction scraping pipeline | None                        |
+| `dfg-relay`   | ~500   | GitHub issue integration  | None                        |
 
 ### Shared Packages
 
-| Package | Purpose | Used By | Status |
-|---------|---------|---------|--------|
-| `@dfg/types` | Shared TypeScript types | **NONE** | ❌ Exists but unused |
-| `@dfg/money-math` | Canonical financial calculations | `dfg-analyst` | ✅ Used correctly |
+| Package           | Purpose                          | Used By       | Status               |
+| ----------------- | -------------------------------- | ------------- | -------------------- |
+| `@dfg/types`      | Shared TypeScript types          | **NONE**      | ❌ Exists but unused |
+| `@dfg/money-math` | Canonical financial calculations | `dfg-analyst` | ✅ Used correctly    |
 
 ---
 
@@ -52,6 +52,7 @@ workers/dfg-scout/src/core/types.ts     ← Scout-specific types
 ### Duplicated Types
 
 **Shared across app + API worker:**
+
 - `OpportunityStatus` (9 states: inbox → qualifying → watch → inspect → bid → won/lost/rejected/archived)
 - `RejectionReason` (7+ values, different sets!)
 - `WatchTrigger`, `AlertType`, `AlertSeverity`
@@ -59,6 +60,7 @@ workers/dfg-scout/src/core/types.ts     ← Scout-specific types
 - `WatchThreshold`, `Alert`, `Source`
 
 **Risk Example:**
+
 - Session A (Analysis stream): Updates `RejectionReason` in `dfg-api/src/core/types.ts`
 - Session B (UI stream): Updates `RejectionReason` in `dfg-app/src/types/index.ts`
 - Session C (Main): Updates `RejectionReason` in `@dfg/types`
@@ -67,6 +69,7 @@ workers/dfg-scout/src/core/types.ts     ← Scout-specific types
 ### Why This Happened
 
 The `@dfg/types` package exists but:
+
 1. App doesn't import from it (has local copy)
 2. API worker doesn't import from it (has local copy)
 3. No build-time enforcement
@@ -78,11 +81,13 @@ The `@dfg/types` package exists but:
 ### Stream 1: Analysis + UI (Sprint N+8)
 
 **Files:**
+
 - `workers/dfg-analyst/src/**` (analysis engine, prompts, category config)
 - `apps/dfg-app/src/app/opportunities/[id]/**` (opportunity detail pages)
 - `apps/dfg-app/src/components/features/**` (analysis display components)
 
 **Work Examples:**
+
 - #145: Core Risk vs Optional Value-Add Tagging
 - #146: Buyer Impact Context on Every Defect
 - #152: Single Source of Truth for Exit Pricing
@@ -96,11 +101,13 @@ The `@dfg/types` package exists but:
 ### Stream 2: Sources (New Adapters)
 
 **Files:**
+
 - `workers/dfg-scout/src/sources/**` (adapter implementations)
 - `workers/dfg-scout/src/categories/router.ts` (category classifier)
 - `workers/dfg-scout/src/core/registry.ts` (adapter registration)
 
 **Work Examples:**
+
 - Add GovPlanet adapter
 - Add Ritchie Bros adapter
 - Expand category taxonomy
@@ -112,11 +119,13 @@ The `@dfg/types` package exists but:
 ### Stream 3: App UI (General)
 
 **Files:**
+
 - `apps/dfg-app/src/components/**` (shared UI components)
 - `apps/dfg-app/src/app/**` (pages, layouts, routing)
 - `apps/dfg-app/src/lib/**` (utilities, hooks)
 
 **Work Examples:**
+
 - Navigation improvements
 - Dashboard enhancements
 - Filter system updates
@@ -132,6 +141,7 @@ The `@dfg/types` package exists but:
 ### Analysis + UI Stream
 
 **Can Modify:**
+
 - `workers/dfg-analyst/**` (except `worker.ts` entry point)
 - `apps/dfg-app/src/app/opportunities/[id]/**`
 - `apps/dfg-app/src/components/features/analysis-*.tsx`
@@ -140,6 +150,7 @@ The `@dfg/types` package exists but:
 - `apps/dfg-app/src/components/features/risk-*.tsx`
 
 **Should NOT Modify:**
+
 - `workers/dfg-api/**` (API contracts)
 - `workers/dfg-scout/**` (scraping pipeline)
 - `apps/dfg-app/src/app/layout.tsx` (root layout)
@@ -148,12 +159,14 @@ The `@dfg/types` package exists but:
 ### Sources Stream
 
 **Can Modify:**
+
 - `workers/dfg-scout/src/sources/**`
 - `workers/dfg-scout/src/categories/**`
 - `workers/dfg-scout/src/core/registry.ts`
 - `workers/dfg-scout/src/core/types.ts` (scout-specific types)
 
 **Should NOT Modify:**
+
 - `workers/dfg-analyst/**`
 - `workers/dfg-api/**`
 - `apps/dfg-app/**`
@@ -161,12 +174,14 @@ The `@dfg/types` package exists but:
 ### App UI Stream
 
 **Can Modify:**
+
 - `apps/dfg-app/src/components/**` (except features owned by Analysis stream)
 - `apps/dfg-app/src/app/**` (except `/opportunities/[id]/**`)
 - `apps/dfg-app/src/lib/**`
 - `apps/dfg-app/src/hooks/**`
 
 **Should NOT Modify:**
+
 - `workers/**` (any worker)
 - `apps/dfg-app/src/app/opportunities/[id]/**` (owned by Analysis stream)
 
@@ -176,30 +191,30 @@ The `@dfg/types` package exists but:
 
 ### High Risk (Avoid Parallel Changes)
 
-| File | Why |
-|------|-----|
-| `packages/dfg-types/src/index.ts` | Shared types - coordinate changes |
-| `packages/dfg-money-math/src/**` | Canonical calculations - single source of truth |
-| `apps/dfg-app/src/lib/utils.ts` | Shared utilities |
-| `apps/dfg-app/src/components/ui/**` | Primitive components |
+| File                                | Why                                             |
+| ----------------------------------- | ----------------------------------------------- |
+| `packages/dfg-types/src/index.ts`   | Shared types - coordinate changes               |
+| `packages/dfg-money-math/src/**`    | Canonical calculations - single source of truth |
+| `apps/dfg-app/src/lib/utils.ts`     | Shared utilities                                |
+| `apps/dfg-app/src/components/ui/**` | Primitive components                            |
 
 ### Medium Risk (Coordinate if Possible)
 
-| File | Why |
-|------|-----|
+| File                                          | Why                  |
+| --------------------------------------------- | -------------------- |
 | `workers/dfg-api/src/routes/opportunities.ts` | API contract changes |
-| `apps/dfg-app/src/app/layout.tsx` | Root layout |
-| `apps/dfg-app/CLAUDE.md` | Shared guidance |
-| `CLAUDE.md` (root) | Shared guidance |
+| `apps/dfg-app/src/app/layout.tsx`             | Root layout          |
+| `apps/dfg-app/CLAUDE.md`                      | Shared guidance      |
+| `CLAUDE.md` (root)                            | Shared guidance      |
 
 ### Low Risk (Safe for Parallel)
 
-| Path | Why |
-|------|-----|
-| `workers/dfg-scout/src/sources/**` | Isolated adapters |
-| `workers/dfg-analyst/src/prompts*.ts` | Category-specific prompts |
-| `apps/dfg-app/src/app/opportunities/[id]/**` | Feature-isolated pages |
-| `apps/dfg-app/src/components/features/**` | Feature components |
+| Path                                         | Why                       |
+| -------------------------------------------- | ------------------------- |
+| `workers/dfg-scout/src/sources/**`           | Isolated adapters         |
+| `workers/dfg-analyst/src/prompts*.ts`        | Category-specific prompts |
+| `apps/dfg-app/src/app/opportunities/[id]/**` | Feature-isolated pages    |
+| `apps/dfg-app/src/components/features/**`    | Feature components        |
 
 ---
 
@@ -220,30 +235,35 @@ The `@dfg/types` package exists but:
   - Add any missing types from app/worker implementations
 
 - [ ] **Step 3:** Update imports in `dfg-app`
+
   ```typescript
   // Before
-  import type { OpportunityStatus } from '@/types';
+  import type { OpportunityStatus } from '@/types'
 
   // After
-  import type { OpportunityStatus } from '@dfg/types';
+  import type { OpportunityStatus } from '@dfg/types'
   ```
+
   - Update `apps/dfg-app/package.json` to depend on `@dfg/types`
   - Update all imports in `apps/dfg-app/src/**`
   - Delete `apps/dfg-app/src/types/index.ts`
 
 - [ ] **Step 4:** Update imports in `dfg-api`
+
   ```typescript
   // Before
-  import type { OpportunityStatus } from '../core/types';
+  import type { OpportunityStatus } from '../core/types'
 
   // After (for shared types)
-  import type { OpportunityStatus } from '@dfg/types';
+  import type { OpportunityStatus } from '@dfg/types'
   ```
+
   - Update `workers/dfg-api/package.json` to depend on `@dfg/types`
   - Update imports for shared types
   - Keep API-specific types in `src/core/types.ts` (like `OpportunityRow`)
 
 - [ ] **Step 5:** Verify builds
+
   ```bash
   cd packages/dfg-types && npm run build
   cd ../../apps/dfg-app && npm run type-check
@@ -297,11 +317,13 @@ git worktree add ../dfg-sources main
 If you want to skip preparation and learn by doing:
 
 **Pros:**
+
 - Start parallel work immediately
 - Discover real conflict patterns organically
 - Less upfront planning
 
 **Cons:**
+
 - Guaranteed type conflicts on first merge
 - Wasted time resolving conflicts
 - Risk of introducing type mismatches
@@ -384,29 +406,29 @@ canTransition()
 
 ```typescript
 // From dfg-api (API-specific)
-OpportunityRow         // D1 database row
-OpportunityProjection  // API response shape
-OperatorAction         // Action history
+OpportunityRow // D1 database row
+OpportunityProjection // API response shape
+OperatorAction // Action history
 
 // From dfg-app (UI-specific)
-OpportunitySummary     // List view shape
-OpportunityDetail      // Detail view shape
+OpportunitySummary // List view shape
+OpportunityDetail // Detail view shape
 ```
 
 ### Worker-Specific (Keep Local)
 
 ```typescript
 // dfg-analyst
-ListingData            // Analyst ingress contract
-ConditionAssessment    // AI output
-BuyerPerceptionLens    // AI output
-AnalystVerdict         // AI output
+ListingData // Analyst ingress contract
+ConditionAssessment // AI output
+BuyerPerceptionLens // AI output
+AnalystVerdict // AI output
 
 // dfg-scout
-NormalizedLot          // Scout output contract
-PriceKind              // Price classification
-LotStatus              // Auction lifecycle
-RouterInput            // Category router input
+NormalizedLot // Scout output contract
+PriceKind // Price classification
+LotStatus // Auction lifecycle
+RouterInput // Category router input
 ```
 
 ---

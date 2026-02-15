@@ -1,6 +1,6 @@
-import type { DealAnalysis, AcquisitionInput, ProceedsInput } from './types';
-import { calculateAcquisitionCost } from './acquisition';
-import { calculateNetProceeds } from './proceeds';
+import type { DealAnalysis, AcquisitionInput, ProceedsInput } from './types'
+import { calculateAcquisitionCost } from './acquisition'
+import { calculateNetProceeds } from './proceeds'
 
 /**
  * Calculate profit from a deal.
@@ -12,8 +12,8 @@ import { calculateNetProceeds } from './proceeds';
  * @returns Profit in dollars (can be negative)
  */
 export function calculateProfit(netProceeds: number, acquisitionCost: number): number {
-  const profit = netProceeds - acquisitionCost;
-  return Math.round(profit * 100) / 100;
+  const profit = netProceeds - acquisitionCost
+  return Math.round(profit * 100) / 100
 }
 
 /**
@@ -30,13 +30,13 @@ export function calculateProfit(netProceeds: number, acquisitionCost: number): n
  */
 export function calculateMarginPercent(profit: number, acquisitionCost: number): number {
   if (acquisitionCost <= 0) {
-    throw new Error('Acquisition cost must be positive');
+    throw new Error('Acquisition cost must be positive')
   }
 
-  const margin = (profit / acquisitionCost) * 100;
+  const margin = (profit / acquisitionCost) * 100
 
   // Round to 2 decimal places
-  return Math.round(margin * 100) / 100;
+  return Math.round(margin * 100) / 100
 }
 
 /**
@@ -46,19 +46,16 @@ export function calculateMarginPercent(profit: number, acquisitionCost: number):
  * @param proceeds - Sale proceeds inputs
  * @returns Complete deal analysis with all metrics
  */
-export function analyzeDeal(
-  acquisition: AcquisitionInput,
-  proceeds: ProceedsInput
-): DealAnalysis {
-  const acquisitionCost = calculateAcquisitionCost(acquisition);
-  const netProceeds = calculateNetProceeds(proceeds);
-  const profit = calculateProfit(netProceeds, acquisitionCost);
-  const marginPercent = calculateMarginPercent(profit, acquisitionCost);
+export function analyzeDeal(acquisition: AcquisitionInput, proceeds: ProceedsInput): DealAnalysis {
+  const acquisitionCost = calculateAcquisitionCost(acquisition)
+  const netProceeds = calculateNetProceeds(proceeds)
+  const profit = calculateProfit(netProceeds, acquisitionCost)
+  const marginPercent = calculateMarginPercent(profit, acquisitionCost)
 
   return {
     acquisitionCost,
     netProceeds,
     profit,
     marginPercent,
-  };
+  }
 }

@@ -17,27 +17,16 @@ export type {
   AcquisitionInput,
   ProceedsInput,
   DealAnalysis,
-} from './types';
+} from './types'
 
 // Acquisition calculations
-export {
-  calculateBuyerPremium,
-  calculateAcquisitionCost,
-} from './acquisition';
+export { calculateBuyerPremium, calculateAcquisitionCost } from './acquisition'
 
 // Proceeds calculations
-export {
-  calculateNetProceeds,
-  calculateListingFee,
-  calculateProcessingFee,
-} from './proceeds';
+export { calculateNetProceeds, calculateListingFee, calculateProcessingFee } from './proceeds'
 
 // Profit and margin calculations
-export {
-  calculateProfit,
-  calculateMarginPercent,
-  analyzeDeal,
-} from './profit';
+export { calculateProfit, calculateMarginPercent, analyzeDeal } from './profit'
 
 // Fee schedules
-export { SIERRA_FEE_SCHEDULE } from './fees/sierra';
+export { SIERRA_FEE_SCHEDULE } from './fees/sierra'

@@ -1,34 +1,27 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { cn, formatCurrency } from '@/lib/utils';
-import { formatPercent } from '@/lib/utils/format';
-import {
-  Banknote,
-  Wrench,
-  ReceiptText,
-  Calculator,
-  TrendingDown,
-  Info,
-} from 'lucide-react';
+import * as React from 'react'
+import { cn, formatCurrency } from '@/lib/utils'
+import { formatPercent } from '@/lib/utils/format'
+import { Banknote, Wrench, ReceiptText, Calculator, TrendingDown, Info } from 'lucide-react'
 
 interface CostItem {
-  label: string;
-  amount: number;
-  icon: React.ReactNode;
-  description?: string;
-  isOptional?: boolean;
+  label: string
+  amount: number
+  icon: React.ReactNode
+  description?: string
+  isOptional?: boolean
 }
 
 interface InvestmentBreakdownProps {
-  currentBid: number | null;
-  maxBid?: number;
-  buyerPremium?: number; // percentage, e.g., 0.15
-  salesTax?: number; // percentage, e.g., 0.086
-  estimatedRepairs?: number;
-  transportCost?: number;
-  otherFees?: number;
-  className?: string;
+  currentBid: number | null
+  maxBid?: number
+  buyerPremium?: number // percentage, e.g., 0.15
+  salesTax?: number // percentage, e.g., 0.086
+  estimatedRepairs?: number
+  transportCost?: number
+  otherFees?: number
+  className?: string
 }
 
 export function InvestmentBreakdown({
@@ -42,16 +35,16 @@ export function InvestmentBreakdown({
   className,
 }: InvestmentBreakdownProps) {
   // Use max bid if available, otherwise use current bid for calculations
-  const bidBasis = maxBid || currentBid || 0;
+  const bidBasis = maxBid || currentBid || 0
 
   // Calculate fees
-  const buyerPremiumAmount = bidBasis * buyerPremium;
-  const taxableAmount = bidBasis + buyerPremiumAmount;
-  const salesTaxAmount = taxableAmount * salesTax;
+  const buyerPremiumAmount = bidBasis * buyerPremium
+  const taxableAmount = bidBasis + buyerPremiumAmount
+  const salesTaxAmount = taxableAmount * salesTax
 
   // Total all-in cost
-  const subtotal = bidBasis + buyerPremiumAmount + salesTaxAmount;
-  const totalInvestment = subtotal + estimatedRepairs + transportCost + otherFees;
+  const subtotal = bidBasis + buyerPremiumAmount + salesTaxAmount
+  const totalInvestment = subtotal + estimatedRepairs + transportCost + otherFees
 
   // Build cost items
   const costItems: CostItem[] = [
@@ -75,7 +68,7 @@ export function InvestmentBreakdown({
       icon: <ReceiptText className="h-5 w-5" />,
       description: 'State/local tax on the purchase',
     },
-  ];
+  ]
 
   if (estimatedRepairs > 0) {
     costItems.push({
@@ -83,7 +76,7 @@ export function InvestmentBreakdown({
       amount: estimatedRepairs,
       icon: <Wrench className="h-5 w-5" />,
       description: 'Projected cost to bring the vehicle to sellable condition',
-    });
+    })
   }
 
   if (transportCost > 0) {
@@ -93,7 +86,7 @@ export function InvestmentBreakdown({
       icon: <TrendingDown className="h-5 w-5" />,
       description: 'Cost to move the vehicle from auction to your location',
       isOptional: true,
-    });
+    })
   }
 
   if (otherFees > 0) {
@@ -103,7 +96,7 @@ export function InvestmentBreakdown({
       icon: <Calculator className="h-5 w-5" />,
       description: 'Additional costs (title transfer, registration, etc.)',
       isOptional: true,
-    });
+    })
   }
 
   return (
@@ -113,7 +106,8 @@ export function InvestmentBreakdown({
         className="p-4 rounded-lg border-2"
         style={{
           borderColor: 'var(--primary)',
-          background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.05) 0%, rgba(107, 114, 128, 0.1) 100%)',
+          background:
+            'linear-gradient(135deg, rgba(107, 114, 128, 0.05) 0%, rgba(107, 114, 128, 0.1) 100%)',
         }}
       >
         <div className="flex items-center justify-between">
@@ -121,9 +115,7 @@ export function InvestmentBreakdown({
             <p className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
               Total Investment
             </p>
-            <p className="text-3xl font-bold font-mono">
-              {formatCurrency(totalInvestment)}
-            </p>
+            <p className="text-3xl font-bold font-mono">{formatCurrency(totalInvestment)}</p>
           </div>
           <div
             className="h-12 w-12 rounded-full flex items-center justify-center"
@@ -134,7 +126,8 @@ export function InvestmentBreakdown({
         </div>
         {maxBid && currentBid !== null && currentBid < maxBid && (
           <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
-            Based on max bid of {formatCurrency(maxBid)}. Current bid is {formatCurrency(currentBid)}.
+            Based on max bid of {formatCurrency(maxBid)}. Current bid is{' '}
+            {formatCurrency(currentBid)}.
           </p>
         )}
       </div>
@@ -171,9 +164,7 @@ export function InvestmentBreakdown({
                 </p>
               )}
             </div>
-            <span className="font-mono font-medium text-sm">
-              {formatCurrency(item.amount)}
-            </span>
+            <span className="font-mono font-medium text-sm">{formatCurrency(item.amount)}</span>
           </div>
         ))}
       </div>
@@ -186,9 +177,7 @@ export function InvestmentBreakdown({
         <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
           Auction Subtotal (before repairs)
         </span>
-        <span className="font-mono font-medium">
-          {formatCurrency(subtotal)}
-        </span>
+        <span className="font-mono font-medium">{formatCurrency(subtotal)}</span>
       </div>
 
       {/* Educational Note */}
@@ -196,16 +185,19 @@ export function InvestmentBreakdown({
         className="flex items-start gap-3 p-3 rounded-lg"
         style={{ backgroundColor: 'var(--muted)' }}
       >
-        <Info className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--muted-foreground)' }} />
+        <Info
+          className="h-5 w-5 flex-shrink-0 mt-0.5"
+          style={{ color: 'var(--muted-foreground)' }}
+        />
         <div>
           <p className="text-sm font-medium">Understanding Your Investment</p>
           <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
-            The total investment is what you&apos;ll actually spend before selling.
-            This includes auction fees that can add 15-25% to your winning bid.
-            Always factor in repairs to avoid surprise costs.
+            The total investment is what you&apos;ll actually spend before selling. This includes
+            auction fees that can add 15-25% to your winning bid. Always factor in repairs to avoid
+            surprise costs.
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

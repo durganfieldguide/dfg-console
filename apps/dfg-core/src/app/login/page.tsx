@@ -1,41 +1,41 @@
-'use client';
+'use client'
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { Terminal, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { useState, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import { Terminal, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
-      });
+      })
 
       if (response.ok) {
-        router.push('/');
-        router.refresh();
+        router.push('/')
+        router.refresh()
       } else {
-        const data = await response.json();
-        setError(data.error || 'Invalid password');
+        const data = await response.json()
+        setError(data.error || 'Invalid password')
       }
     } catch (err) {
-      setError('Failed to authenticate');
+      setError('Failed to authenticate')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
@@ -49,9 +49,7 @@ export default function LoginPage() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
               DFG Command Center
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Internal Development Tooling
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Internal Development Tooling</p>
           </div>
 
           {/* Form */}
@@ -82,13 +80,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              loading={loading}
-              className="w-full"
-            >
+            <Button type="submit" variant="primary" size="md" loading={loading} className="w-full">
               Sign In
             </Button>
           </form>
@@ -100,5 +92,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

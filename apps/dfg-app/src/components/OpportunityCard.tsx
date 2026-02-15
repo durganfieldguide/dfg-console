@@ -1,16 +1,30 @@
-'use client';
+'use client'
 
-import { useRouter } from 'next/navigation';
-import { Clock, MapPin, AlertCircle, ExternalLink, AlertTriangle, FlaskConical, Zap } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
-import { StatusBadge, ScoreBadge } from '@/components/ui/Badge';
-import { cn, formatCurrency, formatRelativeTime, isEndingSoon, formatSourceLabel } from '@/lib/utils';
-import type { OpportunitySummary } from '@/types';
+import { useRouter } from 'next/navigation'
+import {
+  Clock,
+  MapPin,
+  AlertCircle,
+  ExternalLink,
+  AlertTriangle,
+  FlaskConical,
+  Zap,
+} from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/Card'
+import { StatusBadge, ScoreBadge } from '@/components/ui/Badge'
+import {
+  cn,
+  formatCurrency,
+  formatRelativeTime,
+  isEndingSoon,
+  formatSourceLabel,
+} from '@/lib/utils'
+import type { OpportunitySummary } from '@/types'
 
 interface OpportunityCardProps {
-  opportunity: OpportunitySummary;
-  selected?: boolean;
-  onSelect?: (id: string) => void;
+  opportunity: OpportunitySummary
+  selected?: boolean
+  onSelect?: (id: string) => void
 }
 
 /**
@@ -18,35 +32,35 @@ interface OpportunityCardProps {
  * Layout prioritizes: Score > Urgency Signals > Time > Price > Details
  */
 export function OpportunityCard({ opportunity, selected, onSelect }: OpportunityCardProps) {
-  const router = useRouter();
-  const endingSoon = isEndingSoon(opportunity.auction_ends_at, 24);
-  const hasAlert = opportunity.has_active_alert || opportunity.watch_fired_at !== null;
-  const isHighScore = opportunity.buy_box_score >= 70;
-  const hasUrgentSignals = opportunity.is_decision_stale || endingSoon || hasAlert;
+  const router = useRouter()
+  const endingSoon = isEndingSoon(opportunity.auction_ends_at, 24)
+  const hasAlert = opportunity.has_active_alert || opportunity.watch_fired_at !== null
+  const isHighScore = opportunity.buy_box_score >= 70
+  const hasUrgentSignals = opportunity.is_decision_stale || endingSoon || hasAlert
 
   const handleClick = () => {
     if (onSelect) {
-      onSelect(opportunity.id);
+      onSelect(opportunity.id)
     } else {
-      router.push(`/opportunities/${opportunity.id}`);
+      router.push(`/opportunities/${opportunity.id}`)
     }
-  };
+  }
 
   const handleExternalLinkClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation()
     if (opportunity.source_url) {
-      window.open(opportunity.source_url, '_blank', 'noopener,noreferrer');
+      window.open(opportunity.source_url, '_blank', 'noopener,noreferrer')
     } else {
-      console.warn(`[OpportunityCard] source_url missing for opportunity ${opportunity.id}`);
+      console.warn(`[OpportunityCard] source_url missing for opportunity ${opportunity.id}`)
     }
-  };
+  }
 
   // Compute background tint based on score (subtle but distinguishable)
   const scoreTint = isHighScore
     ? 'bg-green-50/50 dark:bg-green-900/10'
     : opportunity.buy_box_score < 40
       ? 'bg-gray-50/50 dark:bg-gray-800/50'
-      : '';
+      : ''
 
   return (
     <Card
@@ -168,5 +182,5 @@ export function OpportunityCard({ opportunity, selected, onSelect }: Opportunity
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

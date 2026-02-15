@@ -30,84 +30,90 @@ npm run test             # Run tests (if available)
 ## Code Patterns
 
 ### Router Setup (Hono)
+
 ```typescript
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<{ Bindings: Env }>();
 
-app.use('/*', cors())
-app.get('/health', (c) => c.json({ status: 'ok' }))
+app.use('/*', cors());
+app.get('/health', (c) => c.json({ status: 'ok' }));
 
-export default app
+export default app;
 ```
 
 ### Database Queries (D1)
+
 Always use `.bind()` for parameterization:
+
 ```typescript
 // ✅ CORRECT
-const result = await env.DB.prepare(
-  'SELECT * FROM opportunities WHERE id = ?'
-).bind(opportunityId).first()
+const result = await env.DB.prepare('SELECT * FROM opportunities WHERE id = ?').bind(opportunityId).first();
 
 // ❌ WRONG - SQL injection risk
-const result = await env.DB.prepare(
-  `SELECT * FROM opportunities WHERE id = ${opportunityId}`
-).first()
+const result = await env.DB.prepare(`SELECT * FROM opportunities WHERE id = ${opportunityId}`).first();
 ```
 
 ### R2 Storage
+
 ```typescript
 // Put object
 await env.R2_BUCKET.put('key', data, {
-  httpMetadata: { contentType: 'application/json' }
-})
+	httpMetadata: { contentType: 'application/json' },
+});
 
 // Get object
-const object = await env.R2_BUCKET.get('key')
-const data = await object?.json()
+const object = await env.R2_BUCKET.get('key');
+const data = await object?.json();
 ```
 
 ### Error Handling
+
 ```typescript
 try {
-  // Worker logic
+	// Worker logic
 } catch (error) {
-  console.error('Worker error:', error)
-  return c.json({ error: 'Internal server error' }, 500)
+	console.error('Worker error:', error);
+	return c.json({ error: 'Internal server error' }, 500);
 }
 ```
 
 ## Money Math (Non-negotiable)
 
 Use these exact definitions everywhere:
+
 - **Acquisition Cost** = Bid + Buyer Premium + Transport + Immediate Repairs
 - **Net Proceeds** = Sale Price − Listing Fees − Payment Processing
 - **Profit** = Net Proceeds − Acquisition Cost
-- **Margin %** = (Profit / Acquisition Cost) * 100
+- **Margin %** = (Profit / Acquisition Cost) \* 100
 
 **CRITICAL**: Listing fees are SELLING COSTS ONLY. Never include in acquisition cost.
 
 For shared calculations, use `@dfg/money-math` package:
+
 ```typescript
-import { calculateProfit, calculateMargin } from '@dfg/money-math'
+import { calculateProfit, calculateMargin } from '@dfg/money-math';
 ```
 
 ## Worker-Specific Notes
 
 ### dfg-api
+
 - Primary CRUD operations for opportunities and listings
 - D1 database migrations: `npm run db:migrate` (remote) or `npm run db:migrate:local`
 - Vitest tests: `npm run test`
 - Authentication: Validates session tokens from dfg-app
 
 ### dfg-scout
+
 - Scheduled trigger: Runs scraping pipeline on cron
 - Dev server includes `--test-scheduled` flag
 - Scrapes auction sites → stores in D1 listings table
 - Triggers dfg-analyst for new listings
 
 ### dfg-analyst
+
 - AI-powered analysis using Claude API (Anthropic)
 - Category-specific prompts and market data:
   - Power Tools: `prompts-power-tools.ts`, `analysis-power-tools.ts`
@@ -117,24 +123,27 @@ import { calculateProfit, calculateMargin } from '@dfg/money-math'
 - Uses R2 for photo storage and snapshot immutability
 
 ### dfg-relay
+
 - GitHub issue creation for opportunity notifications
 - Integrates with dfg-api webhook events
 
 ## Testing
 
 ### Vitest
+
 ```typescript
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest';
 
 describe('calculateProfit', () => {
-  it('should calculate profit correctly', () => {
-    const profit = calculateProfit(1000, 800)
-    expect(profit).toBe(200)
-  })
-})
+	it('should calculate profit correctly', () => {
+		const profit = calculateProfit(1000, 800);
+		expect(profit).toBe(200);
+	});
+});
 ```
 
 ### Local Development
+
 ```bash
 # Start local dev server with D1 local database
 npx wrangler dev
@@ -149,6 +158,7 @@ npx wrangler tail
 ## Environment Variables
 
 Defined in `wrangler.toml`:
+
 ```toml
 [vars]
 ENVIRONMENT = "production"
@@ -164,6 +174,7 @@ bucket_name = "dfg-storage"
 ```
 
 Secrets (not in source control):
+
 ```bash
 npx wrangler secret put CLAUDE_API_KEY
 npx wrangler secret put GITHUB_TOKEN

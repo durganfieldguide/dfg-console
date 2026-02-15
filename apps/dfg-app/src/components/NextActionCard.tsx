@@ -1,71 +1,71 @@
-'use client';
+'use client'
 
-import { AlertTriangle } from 'lucide-react';
-import { cn, formatCurrency } from '@/lib/utils';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import type { AnalysisResult } from '@/lib/api';
+import { AlertTriangle } from 'lucide-react'
+import { cn, formatCurrency } from '@/lib/utils'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import type { AnalysisResult } from '@/lib/api'
 
 interface NextActionCardProps {
-  analysis: AnalysisResult | null;
-  analysisTimestamp?: string | null;
-  className?: string;
+  analysis: AnalysisResult | null
+  analysisTimestamp?: string | null
+  className?: string
 }
 
 // Derive next action from verdict
 function deriveNextAction(verdict?: string): 'Bid' | 'Inspect' | 'Pass' {
-  if (!verdict) return 'Inspect';
+  if (!verdict) return 'Inspect'
 
-  const v = verdict.toUpperCase();
+  const v = verdict.toUpperCase()
 
-  if (v === 'BUY' || v === 'STRONG_BUY') return 'Bid';
-  if (v === 'MARGINAL' || v === 'WATCH') return 'Inspect';
-  return 'Pass';
+  if (v === 'BUY' || v === 'STRONG_BUY') return 'Bid'
+  if (v === 'MARGINAL' || v === 'WATCH') return 'Inspect'
+  return 'Pass'
 }
 
 // Calculate staleness (> 7 days)
 function isAnalysisStale(timestamp?: string | null): boolean {
-  if (!timestamp) return false;
+  if (!timestamp) return false
 
-  const analysisDate = new Date(timestamp);
-  const now = new Date();
-  const daysDiff = (now.getTime() - analysisDate.getTime()) / (1000 * 60 * 60 * 24);
+  const analysisDate = new Date(timestamp)
+  const now = new Date()
+  const daysDiff = (now.getTime() - analysisDate.getTime()) / (1000 * 60 * 60 * 24)
 
-  return daysDiff > 7;
+  return daysDiff > 7
 }
 
 // Format staleness message
 function getStalenessMessage(timestamp?: string | null): string {
-  if (!timestamp) return '';
+  if (!timestamp) return ''
 
-  const analysisDate = new Date(timestamp);
-  const now = new Date();
-  const daysDiff = Math.floor((now.getTime() - analysisDate.getTime()) / (1000 * 60 * 60 * 24));
+  const analysisDate = new Date(timestamp)
+  const now = new Date()
+  const daysDiff = Math.floor((now.getTime() - analysisDate.getTime()) / (1000 * 60 * 60 * 24))
 
-  return `Analysis stale (${daysDiff} days)`;
+  return `Analysis stale (${daysDiff} days)`
 }
 
 // Parse reasoning into bullet points
 function parseReasoning(reasoning?: string): string[] {
-  if (!reasoning) return [];
+  if (!reasoning) return []
 
   // Split by newlines, bullets, or numbered lists
   const lines = reasoning
     .split(/\n/)
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    .map(line => line.replace(/^[-•*]\s*/, '').replace(/^\d+\.\s*/, ''));
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => line.replace(/^[-•*]\s*/, '').replace(/^\d+\.\s*/, ''))
 
   // If we got only one line and it's long, try to split by sentence
   if (lines.length === 1 && lines[0].length > 80) {
     const sentences = lines[0]
       .split(/[.!?]+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-    return sentences.slice(0, 3);
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+    return sentences.slice(0, 3)
   }
 
   // Return up to 3 reasons
-  return lines.slice(0, 3);
+  return lines.slice(0, 3)
 }
 
 export function NextActionCard({ analysis, analysisTimestamp, className }: NextActionCardProps) {
@@ -74,38 +74,38 @@ export function NextActionCard({ analysis, analysisTimestamp, className }: NextA
     return (
       <Card className={cn('border-2 border-dashed', className)}>
         <CardContent className="py-8 text-center">
-          <p className="text-gray-500 dark:text-gray-400">
-            No analysis yet — Request Analysis
-          </p>
+          <p className="text-gray-500 dark:text-gray-400">No analysis yet — Request Analysis</p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  const verdict = analysis.investor_lens?.verdict || analysis.report_fields?.verdict || 'PASS';
-  const nextAction = deriveNextAction(verdict);
+  const verdict = analysis.investor_lens?.verdict || analysis.report_fields?.verdict || 'PASS'
+  const nextAction = deriveNextAction(verdict)
 
   // Prefer verdict_reasons array if available, otherwise parse verdict_reasoning
-  const verdictReasons = analysis.investor_lens?.verdict_reasons || [];
-  const reasoning = analysis.investor_lens?.verdict_reasoning || '';
-  const reasons = verdictReasons.length > 0 ? verdictReasons.slice(0, 3) : parseReasoning(reasoning);
-  const inspectionPriorities = analysis.investor_lens?.inspection_priorities || [];
-  const maxBid = analysis.investor_lens?.max_bid;
-  const stale = isAnalysisStale(analysisTimestamp);
-  const stalenessMsg = getStalenessMessage(analysisTimestamp);
+  const verdictReasons = analysis.investor_lens?.verdict_reasons || []
+  const reasoning = analysis.investor_lens?.verdict_reasoning || ''
+  const reasons = verdictReasons.length > 0 ? verdictReasons.slice(0, 3) : parseReasoning(reasoning)
+  const inspectionPriorities = analysis.investor_lens?.inspection_priorities || []
+  const maxBid = analysis.investor_lens?.max_bid
+  const stale = isAnalysisStale(analysisTimestamp)
+  const stalenessMsg = getStalenessMessage(analysisTimestamp)
 
   // Top 3 walk triggers
-  const walkTriggers = inspectionPriorities.slice(0, 3);
+  const walkTriggers = inspectionPriorities.slice(0, 3)
 
   // Action color coding
   const actionColors = {
     Bid: 'text-green-700 dark:text-green-400',
     Inspect: 'text-yellow-700 dark:text-yellow-400',
     Pass: 'text-red-700 dark:text-red-400',
-  };
+  }
 
   return (
-    <Card className={cn('border-2', stale && 'border-orange-400 dark:border-orange-600', className)}>
+    <Card
+      className={cn('border-2', stale && 'border-orange-400 dark:border-orange-600', className)}
+    >
       <CardHeader className="pb-3">
         <h2 className="text-xl font-bold">
           NEXT ACTION: <span className={actionColors[nextAction]}>{nextAction}</span>
@@ -165,5 +165,5 @@ export function NextActionCard({ analysis, analysisTimestamp, className }: NextA
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

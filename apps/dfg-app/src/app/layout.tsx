@@ -1,9 +1,9 @@
-import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
-import { Providers } from '@/components/Providers';
-import './globals.css';
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
+import { Providers } from '@/components/Providers'
+import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'DFG Operator Console',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-touch-icon.png',
   },
-};
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -27,13 +27,9 @@ export const viewport: Viewport = {
   themeColor: '#1f2937',
   // iOS Safari: viewport-fit=cover allows content to extend into safe areas (#78)
   viewportFit: 'cover',
-};
+}
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="overflow-x-hidden">
       <body className={`${inter.className} overflow-x-hidden w-full max-w-[100vw]`}>
@@ -44,5 +40,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  );
+  )
 }

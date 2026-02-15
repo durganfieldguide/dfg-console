@@ -1,28 +1,28 @@
-'use client';
+'use client'
 
-import { CheckCircle, XCircle, AlertCircle, HelpCircle, Shield } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { cn } from '@/lib/utils';
+import { CheckCircle, XCircle, AlertCircle, HelpCircle, Shield } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { cn } from '@/lib/utils'
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type GateStatus = 'passed' | 'failed' | 'unknown' | 'not_applicable';
+export type GateStatus = 'passed' | 'failed' | 'unknown' | 'not_applicable'
 
 export interface Gate {
-  name: string;
-  status: GateStatus;
-  reason?: string;
-  isCritical: boolean;
+  name: string
+  status: GateStatus
+  reason?: string
+  isCritical: boolean
 }
 
 export interface ComputedGates {
-  gates: Gate[];
-  allCriticalPassed: boolean;
-  passedCount: number;
-  totalCount: number;
-  summary: string;
+  gates: Gate[]
+  allCriticalPassed: boolean
+  passedCount: number
+  totalCount: number
+  summary: string
 }
 
 // =============================================================================
@@ -32,13 +32,13 @@ export interface ComputedGates {
 function GateStatusIcon({ status }: { status: GateStatus }) {
   switch (status) {
     case 'passed':
-      return <CheckCircle className="h-5 w-5 text-green-500" />;
+      return <CheckCircle className="h-5 w-5 text-green-500" />
     case 'failed':
-      return <XCircle className="h-5 w-5 text-red-500" />;
+      return <XCircle className="h-5 w-5 text-red-500" />
     case 'unknown':
-      return <HelpCircle className="h-5 w-5 text-yellow-500" />;
+      return <HelpCircle className="h-5 w-5 text-yellow-500" />
     case 'not_applicable':
-      return <AlertCircle className="h-5 w-5 text-gray-400" />;
+      return <AlertCircle className="h-5 w-5 text-gray-400" />
   }
 }
 
@@ -52,15 +52,15 @@ const gateLabels: Record<string, string> = {
   lien_status: 'Lien Status',
   mileage: 'Mileage Verified',
   vin: 'VIN Confirmed',
-};
+}
 
 // =============================================================================
 // Main Component
 // =============================================================================
 
 interface GatesDisplayProps {
-  gates?: ComputedGates | null;
-  className?: string;
+  gates?: ComputedGates | null
+  className?: string
 }
 
 export function GatesDisplay({ gates, className }: GatesDisplayProps) {
@@ -81,11 +81,11 @@ export function GatesDisplay({ gates, className }: GatesDisplayProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  const criticalGates = gates.gates.filter((g) => g.isCritical);
-  const confidenceGates = gates.gates.filter((g) => !g.isCritical);
+  const criticalGates = gates.gates.filter((g) => g.isCritical)
+  const confidenceGates = gates.gates.filter((g) => !g.isCritical)
 
   return (
     <Card className={className}>
@@ -138,9 +138,7 @@ export function GatesDisplay({ gates, className }: GatesDisplayProps) {
                   </span>
                 </div>
                 {gate.reason && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {gate.reason}
-                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{gate.reason}</span>
                 )}
               </div>
             ))}
@@ -166,9 +164,7 @@ export function GatesDisplay({ gates, className }: GatesDisplayProps) {
                     </span>
                   </div>
                   {gate.reason && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {gate.reason}
-                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{gate.reason}</span>
                   )}
                 </div>
               ))}
@@ -177,5 +173,5 @@ export function GatesDisplay({ gates, className }: GatesDisplayProps) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -16,6 +16,7 @@ Verify that shipped features work correctly and meet acceptance criteria. Protec
 **App URL:** https://app.durganfieldguide.com/
 
 **What's testable:**
+
 - Dashboard with opportunity counts
 - Opportunity list with filters (status, source, ending soon, attention required)
 - Opportunity detail view with analysis display
@@ -24,6 +25,7 @@ Verify that shipped features work correctly and meet acceptance criteria. Protec
 - Photo display from R2
 
 **Known limitations:**
+
 - No push notifications (must refresh to see alerts)
 - Sources page linked but doesn't exist yet (404 expected)
 - Auth is hardcoded (credentials provided by Captain)
@@ -52,12 +54,14 @@ Verify that shipped features work correctly and meet acceptance criteria. Protec
 ## What Works
 
 **Testing approach:**
+
 - Fresh browser session for each test (avoid cached state)
 - Mobile viewport testing (hamburger menu, filter bar scroll)
 - Check numbers match across views (data credibility)
 - Screenshot each AC verification
 
 **Bug filing:**
+
 - Use GitHub issue with Bug template
 - Include: steps to reproduce, expected vs actual, screenshot
 - Link to parent story if applicable
@@ -78,6 +82,7 @@ Verify that shipped features work correctly and meet acceptance criteria. Protec
 ## Report Back
 
 When session ends, report to Captain:
+
 - Issues tested (pass/fail for each)
 - Bugs filed (issue numbers)
 - Blockers encountered
@@ -90,15 +95,18 @@ PM will capture this in the next handoff.
 ## Quick Reference
 
 **GitHub search for QA work:**
+
 ```
 is:open label:"status:qa" label:"needs:qa"
 ```
 
 **Bug template labels:**
+
 ```
 type:bug, status:triage, prio:P1, needs:pm
 ```
 
 **Relay (if needed):**
+
 - URL: `https://dfg-relay.automation-ab6.workers.dev/directive`
 - Token: `056b6f9859f5f315c704e9cebfd1bc88f3e1c0a74b904460a2de96ec9bceac2f`

@@ -1,78 +1,70 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import {
-  LayoutDashboard,
-  Search,
-  Settings,
-  Menu,
-  X,
-  ArrowLeft,
-  Database,
-} from 'lucide-react';
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { LayoutDashboard, Search, Settings, Menu, X, ArrowLeft, Database } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Opportunities', href: '/opportunities', icon: Search },
   { name: 'Sources', href: '/sources', icon: Database },
   { name: 'Settings', href: '/settings', icon: Settings },
-];
+]
 
 interface NavigationProps {
   /** Show back button instead of hamburger (for detail pages) */
-  showBack?: boolean;
+  showBack?: boolean
   /** Custom back URL (defaults to history.back()) */
-  backUrl?: string;
+  backUrl?: string
   /** Page title to show in header */
-  title?: string;
+  title?: string
 }
 
 export function Navigation({ showBack, backUrl, title }: NavigationProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname()
+  const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   // Close menu on route change
   useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+    setMenuOpen(false)
+  }, [pathname])
 
   // Close menu on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, []);
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [])
 
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (menuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = ''
     }
     return () => {
-      document.body.style.overflow = '';
-    };
-  }, [menuOpen]);
+      document.body.style.overflow = ''
+    }
+  }, [menuOpen])
 
   const handleBack = () => {
     if (backUrl) {
-      router.push(backUrl);
+      router.push(backUrl)
     } else {
-      router.back();
+      router.back()
     }
-  };
+  }
 
   // Determine if we're on a detail page (has ID in path)
-  const isDetailPage = /\/opportunities\/[^/]+$/.test(pathname);
-  const shouldShowBack = showBack ?? isDetailPage;
+  const isDetailPage = /\/opportunities\/[^/]+$/.test(pathname)
+  const shouldShowBack = showBack ?? isDetailPage
 
   return (
     <>
@@ -128,22 +120,13 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
       {menuOpen && (
         <div className="fixed inset-0 z-[60] md:hidden">
           {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setMenuOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMenuOpen(false)} />
 
           {/* Menu Panel - slides in from left, overlays content */}
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-xl">
             {/* Menu Header */}
             <div className="flex items-center justify-between h-14 px-4 border-b border-gray-200 dark:border-gray-700">
-              <Image
-                src="/logo.svg"
-                alt="DFG"
-                width={50}
-                height={40}
-                className="h-8 w-auto"
-              />
+              <Image src="/logo.svg" alt="DFG" width={50} height={40} className="h-8 w-auto" />
               <button
                 onClick={() => setMenuOpen(false)}
                 className="p-2 -mr-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
@@ -158,8 +141,8 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
               {navigation.map((item) => {
                 const isActive =
                   (item.href === '/' && pathname === '/') ||
-                  (item.href !== '/' && pathname.startsWith(item.href.split('?')[0]));
-                const Icon = item.icon;
+                  (item.href !== '/' && pathname.startsWith(item.href.split('?')[0]))
+                const Icon = item.icon
 
                 return (
                   <Link
@@ -176,15 +159,13 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
                     <Icon className="h-5 w-5 mr-3" />
                     {item.name}
                   </Link>
-                );
+                )
               })}
             </nav>
 
             {/* Menu Footer */}
             <div className="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 dark:border-gray-700 pb-safe">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Durgan Field Guide v0.1
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Durgan Field Guide v0.1</p>
             </div>
           </div>
         </div>
@@ -195,13 +176,7 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
         {/* Logo */}
         <div className="flex items-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/logo.svg"
-              alt="DFG"
-              width={60}
-              height={48}
-              className="h-10 w-auto"
-            />
+            <Image src="/logo.svg" alt="DFG" width={60} height={48} className="h-10 w-auto" />
           </Link>
         </div>
 
@@ -210,8 +185,8 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
           {navigation.map((item) => {
             const isActive =
               (item.href === '/' && pathname === '/') ||
-              (item.href !== '/' && pathname.startsWith(item.href.split('?')[0]));
-            const Icon = item.icon;
+              (item.href !== '/' && pathname.startsWith(item.href.split('?')[0]))
+            const Icon = item.icon
 
             return (
               <Link
@@ -227,17 +202,15 @@ export function Navigation({ showBack, backUrl, title }: NavigationProps) {
                 <Icon className="h-5 w-5 mr-3" />
                 {item.name}
               </Link>
-            );
+            )
           })}
         </div>
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Durgan Field Guide v0.1
-          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Durgan Field Guide v0.1</p>
         </div>
       </nav>
     </>
-  );
+  )
 }

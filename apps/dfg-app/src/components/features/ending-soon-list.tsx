@@ -1,65 +1,60 @@
-'use client';
+'use client'
 
-import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
-import {
-  Clock,
-  RefreshCw,
-  ChevronRight,
-  CheckCircle,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
-import { listOpportunities } from '@/lib/api';
-import type { OpportunitySummary, OpportunityStatus } from '@/types';
+import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
+import { Clock, RefreshCw, ChevronRight, CheckCircle } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { cn, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
+import { listOpportunities } from '@/lib/api'
+import type { OpportunitySummary, OpportunityStatus } from '@/types'
 
 /**
  * Calculate time remaining and urgency level.
  */
 function getTimeRemaining(endDateStr: string): {
-  text: string;
-  urgency: 'critical' | 'high' | 'medium' | 'low';
-  hoursRemaining: number;
+  text: string
+  urgency: 'critical' | 'high' | 'medium' | 'low'
+  hoursRemaining: number
 } {
-  const now = new Date();
-  const endDate = new Date(endDateStr);
-  const diffMs = endDate.getTime() - now.getTime();
+  const now = new Date()
+  const endDate = new Date(endDateStr)
+  const diffMs = endDate.getTime() - now.getTime()
 
   // Already ended
   if (diffMs <= 0) {
-    return { text: 'Ended', urgency: 'critical', hoursRemaining: 0 };
+    return { text: 'Ended', urgency: 'critical', hoursRemaining: 0 }
   }
 
-  const diffHours = diffMs / (1000 * 60 * 60);
-  const diffDays = diffHours / 24;
+  const diffHours = diffMs / (1000 * 60 * 60)
+  const diffDays = diffHours / 24
 
   // Format the time remaining
-  let text: string;
+  let text: string
   if (diffHours < 1) {
-    const mins = Math.floor(diffMs / (1000 * 60));
-    text = `${mins}m`;
+    const mins = Math.floor(diffMs / (1000 * 60))
+    text = `${mins}m`
   } else if (diffHours < 24) {
-    const hrs = Math.floor(diffHours);
-    const mins = Math.floor((diffHours - hrs) * 60);
-    text = mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+    const hrs = Math.floor(diffHours)
+    const mins = Math.floor((diffHours - hrs) * 60)
+    text = mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`
   } else {
-    const days = Math.floor(diffDays);
-    const hrs = Math.floor((diffDays - days) * 24);
-    text = hrs > 0 ? `${days}d ${hrs}h` : `${days}d`;
+    const days = Math.floor(diffDays)
+    const hrs = Math.floor((diffDays - days) * 24)
+    text = hrs > 0 ? `${days}d ${hrs}h` : `${days}d`
   }
 
   // Determine urgency level
-  let urgency: 'critical' | 'high' | 'medium' | 'low';
+  let urgency: 'critical' | 'high' | 'medium' | 'low'
   if (diffHours < 24) {
-    urgency = 'critical'; // Red - less than 24 hours
+    urgency = 'critical' // Red - less than 24 hours
   } else if (diffDays <= 3) {
-    urgency = 'high'; // Orange - 1-3 days
+    urgency = 'high' // Orange - 1-3 days
   } else {
-    urgency = 'medium'; // Yellow - 4-7 days
+    urgency = 'medium' // Yellow - 4-7 days
   }
 
-  return { text, urgency, hoursRemaining: diffHours };
+  return { text, urgency, hoursRemaining: diffHours }
 }
 
 /**
@@ -68,24 +63,22 @@ function getTimeRemaining(endDateStr: string): {
 function getUrgencyColors(urgency: 'critical' | 'high' | 'medium' | 'low'): string {
   switch (urgency) {
     case 'critical':
-      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
     case 'high':
-      return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+      return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
     case 'medium':
-      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
     default:
-      return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
+      return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
   }
 }
 
 interface EndingSoonItemProps {
-  item: OpportunitySummary;
+  item: OpportunitySummary
 }
 
 function EndingSoonItem({ item }: EndingSoonItemProps) {
-  const timeInfo = item.auction_ends_at
-    ? getTimeRemaining(item.auction_ends_at)
-    : null;
+  const timeInfo = item.auction_ends_at ? getTimeRemaining(item.auction_ends_at) : null
 
   return (
     <Link
@@ -109,9 +102,7 @@ function EndingSoonItem({ item }: EndingSoonItemProps) {
             >
               {STATUS_LABELS[item.status as OpportunityStatus]}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
-              {item.source}
-            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">{item.source}</span>
             {item.current_bid !== null && (
               <span className="text-xs font-medium text-gray-700 dark:text-gray-300 shrink-0">
                 ${item.current_bid.toLocaleString()}
@@ -137,28 +128,24 @@ function EndingSoonItem({ item }: EndingSoonItemProps) {
         </div>
       </div>
     </Link>
-  );
+  )
 }
 
 interface EndingSoonListProps {
-  limit?: number;
-  showHeader?: boolean;
-  className?: string;
+  limit?: number
+  showHeader?: boolean
+  className?: string
 }
 
-export function EndingSoonList({
-  limit = 10,
-  showHeader = true,
-  className,
-}: EndingSoonListProps) {
-  const [items, setItems] = useState<OpportunitySummary[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function EndingSoonList({ limit = 10, showHeader = true, className }: EndingSoonListProps) {
+  const [items, setItems] = useState<OpportunitySummary[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
       // Fetch opportunities ending soon, sorted by auction_ends_at ascending
       const data = await listOpportunities({
@@ -166,30 +153,30 @@ export function EndingSoonList({
         limit,
         sort: 'auction_ends_at',
         order: 'asc',
-      });
-      setItems(data.opportunities);
-      setTotalCount(data.total);
+      })
+      setItems(data.opportunities)
+      setTotalCount(data.total)
     } catch (err) {
-      console.error('Failed to fetch ending soon items:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load');
+      console.error('Failed to fetch ending soon items:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [limit]);
+  }, [limit])
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData()
+  }, [fetchData])
 
   // Auto-refresh every minute to keep countdowns accurate
   useEffect(() => {
     const interval = setInterval(() => {
       // Force re-render to update countdown displays
-      setItems((prev) => [...prev]);
-    }, 60000); // Every minute
+      setItems((prev) => [...prev])
+    }, 60000) // Every minute
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
 
   if (loading) {
     return (
@@ -208,7 +195,7 @@ export function EndingSoonList({
           <RefreshCw className="h-5 w-5 animate-spin text-gray-400" />
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (error) {
@@ -231,7 +218,7 @@ export function EndingSoonList({
           </Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (items.length === 0) {
@@ -253,7 +240,7 @@ export function EndingSoonList({
           </p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -297,7 +284,7 @@ export function EndingSoonList({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
-export default EndingSoonList;
+export default EndingSoonList

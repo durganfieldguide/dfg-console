@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import * as React from 'react';
+import * as React from 'react'
 import {
   AlertTriangle,
   AlertCircle,
@@ -10,87 +10,105 @@ import {
   ShieldAlert,
   Eye,
   Search,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+} from 'lucide-react'
+import { Badge } from '@/components/ui/Badge'
 
 // Evidence status types - V2.7: observed/unverified/info_gap
-export type EvidenceStatus = 'observed' | 'unverified' | 'info_gap';
+export type EvidenceStatus = 'observed' | 'unverified' | 'info_gap'
 
 export interface RiskItem {
-  id: string;
-  severity: 'deal_breaker' | 'major_concern' | 'minor_issue' | 'info_gap';
-  evidence: EvidenceStatus;
-  title: string;
-  description: string;
-  action: string;
-  clearable: boolean;
+  id: string
+  severity: 'deal_breaker' | 'major_concern' | 'minor_issue' | 'info_gap'
+  evidence: EvidenceStatus
+  title: string
+  description: string
+  action: string
+  clearable: boolean
 }
 
 export interface TwoAxisVerdict {
-  economics: 'BUY' | 'PASS';
-  readiness: 'CLEARED' | 'GATED';
-  display: string;
-  gates: string[];
-  explanation: string;
+  economics: 'BUY' | 'PASS'
+  readiness: 'CLEARED' | 'GATED'
+  display: string
+  gates: string[]
+  explanation: string
 }
 
 export interface RiskBanner {
-  headline: string;
-  subtext: string;
-  severity: 'critical' | 'warning' | 'info' | 'success';
+  headline: string
+  subtext: string
+  severity: 'critical' | 'warning' | 'info' | 'success'
 }
 
 // V2.7 format with observed/unverified/info_gap
 export interface RiskAssessmentData {
-  observed_issues: RiskItem[];
-  unverified_risks: RiskItem[];
-  info_gaps: RiskItem[];
-  verdict: TwoAxisVerdict;
+  observed_issues: RiskItem[]
+  unverified_risks: RiskItem[]
+  info_gaps: RiskItem[]
+  verdict: TwoAxisVerdict
   summary: {
-    observed_count: number;
-    unverified_count: number;
-    info_gap_count: number;
-    has_deal_breakers: boolean;
-    observed_deal_breakers: number;
-    observed_major_concerns: number;
-    observed_minor_issues: number;
-    gates_blocking: string[];
-  };
+    observed_count: number
+    unverified_count: number
+    info_gap_count: number
+    has_deal_breakers: boolean
+    observed_deal_breakers: number
+    observed_major_concerns: number
+    observed_minor_issues: number
+    gates_blocking: string[]
+  }
 }
 
 // Legacy V2.6 format (confirmed/suspected)
 export interface LegacyV26Data {
-  confirmed_issues: RiskItem[];
-  suspected_issues: RiskItem[];
-  info_gaps: RiskItem[];
-  verdict: TwoAxisVerdict;
+  confirmed_issues: RiskItem[]
+  suspected_issues: RiskItem[]
+  info_gaps: RiskItem[]
+  verdict: TwoAxisVerdict
   summary: {
-    confirmed_count: number;
-    suspected_count: number;
-    info_gap_count: number;
-    has_deal_breakers: boolean;
-    gates_blocking: string[];
-  };
+    confirmed_count: number
+    suspected_count: number
+    info_gap_count: number
+    has_deal_breakers: boolean
+    gates_blocking: string[]
+  }
 }
 
 // Even older legacy format
 export interface LegacyRiskAssessmentData {
-  deal_breakers: Array<{ id: string; severity: string; title: string; description: string; clearable: boolean }>;
-  major_risks: Array<{ id: string; severity: string; title: string; description: string; clearable: boolean }>;
-  minor_issues: Array<{ id: string; severity: string; title: string; description: string; clearable: boolean }>;
+  deal_breakers: Array<{
+    id: string
+    severity: string
+    title: string
+    description: string
+    clearable: boolean
+  }>
+  major_risks: Array<{
+    id: string
+    severity: string
+    title: string
+    description: string
+    clearable: boolean
+  }>
+  minor_issues: Array<{
+    id: string
+    severity: string
+    title: string
+    description: string
+    clearable: boolean
+  }>
   summary: {
-    deal_breaker_count: number;
-    major_risk_count: number;
-    minor_issue_count: number;
-    blocks_bidding: boolean;
-    requires_verification: string[];
-  };
+    deal_breaker_count: number
+    major_risk_count: number
+    minor_issue_count: number
+    blocks_bidding: boolean
+    requires_verification: string[]
+  }
 }
 
 interface RiskAssessmentProps {
-  data: RiskAssessmentData | LegacyV26Data | LegacyRiskAssessmentData;
-  banner?: RiskBanner;
-  className?: string;
+  data: RiskAssessmentData | LegacyV26Data | LegacyRiskAssessmentData
+  banner?: RiskBanner
+  className?: string
 }
 
 // Evidence badge component - V2.7 style
@@ -131,47 +149,63 @@ function EvidenceBadge({ status }: { status: EvidenceStatus }) {
     label: 'Unknown',
     icon: HelpCircle,
     className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  };
+  }
 
-  const Icon = config.icon;
+  const Icon = config.icon
 
   return (
     <Badge variant="outline" className={`text-xs gap-1 ${config.className}`}>
       <Icon className="h-3 w-3" />
       {config.label}
     </Badge>
-  );
+  )
 }
 
-function RiskItemDisplay({ item, showEvidence = true }: { item: RiskItem; showEvidence?: boolean }) {
-  const [isHighlighted, setIsHighlighted] = React.useState(false);
-  const itemRef = React.useRef<HTMLDivElement>(null);
+function RiskItemDisplay({
+  item,
+  showEvidence = true,
+}: {
+  item: RiskItem
+  showEvidence?: boolean
+}) {
+  const [isHighlighted, setIsHighlighted] = React.useState(false)
+  const itemRef = React.useRef<HTMLDivElement>(null)
 
   // Listen for highlight events
   React.useEffect(() => {
     const handleHighlight = (e: CustomEvent<{ category: string }>) => {
-      const category = e.detail.category?.toLowerCase();
-      const titleLower = item.title.toLowerCase();
-      const descLower = item.description.toLowerCase();
+      const category = e.detail.category?.toLowerCase()
+      const titleLower = item.title.toLowerCase()
+      const descLower = item.description.toLowerCase()
 
       // Match category to item content
       const matches =
-        (category === 'price' && (titleLower.includes('price') || titleLower.includes('value') || descLower.includes('price'))) ||
+        (category === 'price' &&
+          (titleLower.includes('price') ||
+            titleLower.includes('value') ||
+            descLower.includes('price'))) ||
         (category === 'title' && (titleLower.includes('title') || descLower.includes('title'))) ||
-        (category === 'condition' && (titleLower.includes('condition') || titleLower.includes('damage') || titleLower.includes('rust') || titleLower.includes('wear'))) ||
-        (category === 'timing' && (titleLower.includes('time') || titleLower.includes('end') || titleLower.includes('auction')));
+        (category === 'condition' &&
+          (titleLower.includes('condition') ||
+            titleLower.includes('damage') ||
+            titleLower.includes('rust') ||
+            titleLower.includes('wear'))) ||
+        (category === 'timing' &&
+          (titleLower.includes('time') ||
+            titleLower.includes('end') ||
+            titleLower.includes('auction')))
 
       if (matches) {
-        setIsHighlighted(true);
-        itemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setIsHighlighted(true)
+        itemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         // Remove highlight after animation
-        setTimeout(() => setIsHighlighted(false), 2000);
+        setTimeout(() => setIsHighlighted(false), 2000)
       }
-    };
+    }
 
-    window.addEventListener('highlight-risk-item', handleHighlight as EventListener);
-    return () => window.removeEventListener('highlight-risk-item', handleHighlight as EventListener);
-  }, [item.title, item.description]);
+    window.addEventListener('highlight-risk-item', handleHighlight as EventListener)
+    return () => window.removeEventListener('highlight-risk-item', handleHighlight as EventListener)
+  }, [item.title, item.description])
 
   const severityConfig = {
     deal_breaker: {
@@ -198,9 +232,9 @@ function RiskItemDisplay({ item, showEvidence = true }: { item: RiskItem; showEv
       borderColor: 'rgba(107, 114, 128, 0.3)',
       textColor: 'text-gray-600 dark:text-gray-400',
     },
-  }[item.severity];
+  }[item.severity]
 
-  const Icon = severityConfig.icon;
+  const Icon = severityConfig.icon
 
   return (
     <div
@@ -217,12 +251,8 @@ function RiskItemDisplay({ item, showEvidence = true }: { item: RiskItem; showEv
       <Icon className={`h-5 w-5 flex-shrink-0 mt-0.5 ${severityConfig.textColor}`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`font-medium text-sm ${severityConfig.textColor}`}>
-            {item.title}
-          </span>
-          {showEvidence && item.evidence && (
-            <EvidenceBadge status={item.evidence} />
-          )}
+          <span className={`font-medium text-sm ${severityConfig.textColor}`}>{item.title}</span>
+          {showEvidence && item.evidence && <EvidenceBadge status={item.evidence} />}
         </div>
         <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
           {item.description}
@@ -234,23 +264,24 @@ function RiskItemDisplay({ item, showEvidence = true }: { item: RiskItem; showEv
         )}
       </div>
     </div>
-  );
+  )
 }
 
 // Check format type
 function isV27Format(data: any): data is RiskAssessmentData {
-  return 'observed_issues' in data;
+  return 'observed_issues' in data
 }
 
 function isV26Format(data: any): data is LegacyV26Data {
-  return 'confirmed_issues' in data;
+  return 'confirmed_issues' in data
 }
 
 export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentProps) {
   // Handle V2.7 format (observed/unverified/info_gap)
   if (isV27Format(data)) {
-    const { observed_issues, unverified_risks, info_gaps, verdict, summary } = data;
-    const hasAnyIssues = observed_issues.length > 0 || unverified_risks.length > 0 || info_gaps.length > 0;
+    const { observed_issues, unverified_risks, info_gaps, verdict, summary } = data
+    const hasAnyIssues =
+      observed_issues.length > 0 || unverified_risks.length > 0 || info_gaps.length > 0
 
     if (!hasAnyIssues) {
       return (
@@ -264,16 +295,14 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           <div className="flex items-center gap-3">
             <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
             <div>
-              <p className="font-medium text-green-600 dark:text-green-400">
-                No Issues Detected
-              </p>
+              <p className="font-medium text-green-600 dark:text-green-400">No Issues Detected</p>
               <p className="text-sm mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
                 Analysis found no significant concerns.
               </p>
             </div>
           </div>
         </div>
-      );
+      )
     }
 
     return (
@@ -283,34 +312,38 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           <div
             className="p-4 rounded-lg border-2"
             style={{
-              borderColor: banner.severity === 'critical'
-                ? 'rgba(239, 68, 68, 0.5)'
-                : banner.severity === 'warning'
-                  ? 'rgba(245, 158, 11, 0.5)'
-                  : banner.severity === 'success'
-                    ? 'rgba(34, 197, 94, 0.5)'
-                    : 'rgba(107, 114, 128, 0.3)',
-              backgroundColor: banner.severity === 'critical'
-                ? 'rgba(239, 68, 68, 0.05)'
-                : banner.severity === 'warning'
-                  ? 'rgba(245, 158, 11, 0.05)'
-                  : banner.severity === 'success'
-                    ? 'rgba(34, 197, 94, 0.05)'
-                    : 'rgba(107, 114, 128, 0.05)',
+              borderColor:
+                banner.severity === 'critical'
+                  ? 'rgba(239, 68, 68, 0.5)'
+                  : banner.severity === 'warning'
+                    ? 'rgba(245, 158, 11, 0.5)'
+                    : banner.severity === 'success'
+                      ? 'rgba(34, 197, 94, 0.5)'
+                      : 'rgba(107, 114, 128, 0.3)',
+              backgroundColor:
+                banner.severity === 'critical'
+                  ? 'rgba(239, 68, 68, 0.05)'
+                  : banner.severity === 'warning'
+                    ? 'rgba(245, 158, 11, 0.05)'
+                    : banner.severity === 'success'
+                      ? 'rgba(34, 197, 94, 0.05)'
+                      : 'rgba(107, 114, 128, 0.05)',
             }}
           >
             <div className="flex items-center gap-2">
-              {banner.severity === 'critical' && (
-                <ShieldAlert className="h-5 w-5 text-red-600" />
-              )}
+              {banner.severity === 'critical' && <ShieldAlert className="h-5 w-5 text-red-600" />}
               {banner.severity === 'warning' && (
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
               )}
-              <span className={`font-bold ${
-                banner.severity === 'critical' ? 'text-red-600' :
-                banner.severity === 'warning' ? 'text-yellow-600' :
-                'text-gray-600'
-              }`}>
+              <span
+                className={`font-bold ${
+                  banner.severity === 'critical'
+                    ? 'text-red-600'
+                    : banner.severity === 'warning'
+                      ? 'text-yellow-600'
+                      : 'text-gray-600'
+                }`}
+              >
                 {banner.headline}
               </span>
             </div>
@@ -325,16 +358,18 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           <div
             className="p-4 rounded-lg border-2"
             style={{
-              borderColor: verdict.economics === 'BUY'
-                ? verdict.readiness === 'CLEARED'
-                  ? 'rgba(34, 197, 94, 0.5)'
-                  : 'rgba(245, 158, 11, 0.5)'
-                : 'rgba(239, 68, 68, 0.5)',
-              backgroundColor: verdict.economics === 'BUY'
-                ? verdict.readiness === 'CLEARED'
-                  ? 'rgba(34, 197, 94, 0.05)'
-                  : 'rgba(245, 158, 11, 0.05)'
-                : 'rgba(239, 68, 68, 0.05)',
+              borderColor:
+                verdict.economics === 'BUY'
+                  ? verdict.readiness === 'CLEARED'
+                    ? 'rgba(34, 197, 94, 0.5)'
+                    : 'rgba(245, 158, 11, 0.5)'
+                  : 'rgba(239, 68, 68, 0.5)',
+              backgroundColor:
+                verdict.economics === 'BUY'
+                  ? verdict.readiness === 'CLEARED'
+                    ? 'rgba(34, 197, 94, 0.05)'
+                    : 'rgba(245, 158, 11, 0.05)'
+                  : 'rgba(239, 68, 68, 0.05)',
             }}
           >
             <div className="flex items-center gap-3">
@@ -442,13 +477,14 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           </div>
         )}
       </div>
-    );
+    )
   }
 
   // Handle V2.6 format (confirmed/suspected)
   if (isV26Format(data)) {
-    const { confirmed_issues, suspected_issues, info_gaps, verdict, summary } = data;
-    const hasAnyIssues = confirmed_issues.length > 0 || suspected_issues.length > 0 || info_gaps.length > 0;
+    const { confirmed_issues, suspected_issues, info_gaps, verdict, summary } = data
+    const hasAnyIssues =
+      confirmed_issues.length > 0 || suspected_issues.length > 0 || info_gaps.length > 0
 
     if (!hasAnyIssues) {
       return (
@@ -462,13 +498,11 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           <div className="flex items-center gap-3">
             <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
             <div>
-              <p className="font-medium text-green-600 dark:text-green-400">
-                No Issues Identified
-              </p>
+              <p className="font-medium text-green-600 dark:text-green-400">No Issues Identified</p>
             </div>
           </div>
         </div>
-      );
+      )
     }
 
     return (
@@ -478,16 +512,18 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           <div
             className="p-4 rounded-lg border-2"
             style={{
-              borderColor: verdict.economics === 'BUY'
-                ? verdict.readiness === 'CLEARED'
-                  ? 'rgba(34, 197, 94, 0.5)'
-                  : 'rgba(245, 158, 11, 0.5)'
-                : 'rgba(239, 68, 68, 0.5)',
-              backgroundColor: verdict.economics === 'BUY'
-                ? verdict.readiness === 'CLEARED'
-                  ? 'rgba(34, 197, 94, 0.05)'
-                  : 'rgba(245, 158, 11, 0.05)'
-                : 'rgba(239, 68, 68, 0.05)',
+              borderColor:
+                verdict.economics === 'BUY'
+                  ? verdict.readiness === 'CLEARED'
+                    ? 'rgba(34, 197, 94, 0.5)'
+                    : 'rgba(245, 158, 11, 0.5)'
+                  : 'rgba(239, 68, 68, 0.5)',
+              backgroundColor:
+                verdict.economics === 'BUY'
+                  ? verdict.readiness === 'CLEARED'
+                    ? 'rgba(34, 197, 94, 0.05)'
+                    : 'rgba(245, 158, 11, 0.05)'
+                  : 'rgba(239, 68, 68, 0.05)',
             }}
           >
             <div className="flex items-center gap-3">
@@ -583,12 +619,12 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           </div>
         )}
       </div>
-    );
+    )
   }
 
   // Handle oldest legacy format
-  const { deal_breakers, major_risks, minor_issues, summary } = data as LegacyRiskAssessmentData;
-  const hasAnyRisks = deal_breakers.length > 0 || major_risks.length > 0 || minor_issues.length > 0;
+  const { deal_breakers, major_risks, minor_issues, summary } = data as LegacyRiskAssessmentData
+  const hasAnyRisks = deal_breakers.length > 0 || major_risks.length > 0 || minor_issues.length > 0
 
   if (!hasAnyRisks) {
     return (
@@ -608,17 +644,17 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Convert legacy items to new format for display
   const convertLegacy = (items: typeof deal_breakers, severity: RiskItem['severity']): RiskItem[] =>
-    items.map(item => ({
+    items.map((item) => ({
       ...item,
       severity,
       evidence: 'info_gap' as EvidenceStatus,
       action: '',
-    }));
+    }))
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -667,5 +703,5 @@ export function RiskAssessment({ data, banner, className = '' }: RiskAssessmentP
         </div>
       )}
     </div>
-  );
+  )
 }

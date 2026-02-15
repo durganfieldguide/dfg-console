@@ -4,13 +4,13 @@
  * Sprint 1.5 domain functions for gates, required exit, and staleness detection.
  */
 
-export { computeGates, getBlockingGates, formatBlockedMessage } from './gates';
+export { computeGates, getBlockingGates, formatBlockedMessage } from './gates'
 export {
   computeRequiredExitPrice,
   formatRequiredExitMessage,
   type RequiredExitParams,
   type RequiredExitResult,
-} from './requiredExit';
+} from './requiredExit'
 export {
   checkStaleness,
   computeListingSnapshotHash,
@@ -18,4 +18,4 @@ export {
   formatStalenessBanner,
   type Assumptions,
   type AnalysisRunSnapshot,
-} from './staleness';
+} from './staleness'

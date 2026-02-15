@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { forwardRef } from 'react';
-import { cn } from '@/lib/utils';
+import { forwardRef } from 'react'
+import { cn } from '@/lib/utils'
 
 export interface SelectOption {
-  value: string;
-  label: string;
+  value: string
+  label: string
 }
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  options: SelectOption[];
+  options: SelectOption[]
 }
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
@@ -29,10 +29,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </option>
         ))}
       </select>
-    );
+    )
   }
-);
+)
 
-Select.displayName = 'Select';
+Select.displayName = 'Select'
 
-export { Select };
+export { Select }

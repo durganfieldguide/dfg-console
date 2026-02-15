@@ -12,23 +12,28 @@ Run migration: $ARGUMENTS
    - Identify dependencies and ordering constraints
 
 2. **Create checklist file**
+
    ```bash
    touch MIGRATION_PROGRESS.md
    ```
-   
+
    Write all items to migrate as a checkbox list:
+
    ```markdown
    # Migration: $ARGUMENTS
-   
+
    ## Progress
+
    - [ ] item1.ts
    - [ ] item2.ts
    - [ ] item3.ts
-   
+
    ## Blocked Items
+
    (move items here if blocked, with reason)
-   
+
    ## Notes
+
    (capture decisions and edge cases)
    ```
 
@@ -48,11 +53,13 @@ Run migration: $ARGUMENTS
    - Return to blocked items at end
 
 5. **Final verification**
+
    ```bash
    npm run typecheck
    npm run test
    npm run build
    ```
+
    - Review all changes holistically
    - Check for missed items
 

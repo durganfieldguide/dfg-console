@@ -9,25 +9,25 @@
 
 ## Changes from Round 1
 
-1. **Elevated Swoopa Dealers threat level from MEDIUM to MEDIUM-HIGH.** Updated research reveals Swoopa launched a dedicated "Swoopa Dealers" app (iOS, latest version 1.24.1 released January 29, 2026) with instant valuations, comps, and margin clarity -- significantly closer to DFG's value proposition than the consumer Swoopa app. This directly addresses the differentiation gap. *(Triggered by: own updated research, validated by Target Customer's concern about whether the analysis advantage is durable)*
+1. **Elevated Swoopa Dealers threat level from MEDIUM to MEDIUM-HIGH.** Updated research reveals Swoopa launched a dedicated "Swoopa Dealers" app (iOS, latest version 1.24.1 released January 29, 2026) with instant valuations, comps, and margin clarity -- significantly closer to DFG's value proposition than the consumer Swoopa app. This directly addresses the differentiation gap. _(Triggered by: own updated research, validated by Target Customer's concern about whether the analysis advantage is durable)_
 
-2. **Reframed "solo operator market is tiny" uncomfortable truth with nuance from Business Analyst and Target Customer.** The Business Analyst's ROI math (one good deal covers four months of subscription at $600 min profit) and Target Customer's willingness to pay up to $300/month for a reliable tool reframe the market size issue. The market may be small in headcount but high in per-user value. Adjusted the uncomfortable truth to reflect this more accurately. *(Triggered by: Business Analyst's financial modeling, Target Customer's willingness-to-pay data)*
+2. **Reframed "solo operator market is tiny" uncomfortable truth with nuance from Business Analyst and Target Customer.** The Business Analyst's ROI math (one good deal covers four months of subscription at $600 min profit) and Target Customer's willingness to pay up to $300/month for a reliable tool reframe the market size issue. The market may be small in headcount but high in per-user value. Adjusted the uncomfortable truth to reflect this more accurately. _(Triggered by: Business Analyst's financial modeling, Target Customer's willingness-to-pay data)_
 
-3. **Added Flipify pricing update.** Round 1 listed Flipify Premium as "not public." Updated research confirms Premium Watchlists are $10/month (1-minute scan intervals). This sharpens the pricing gap analysis. *(Triggered by: own updated research)*
+3. **Added Flipify pricing update.** Round 1 listed Flipify Premium as "not public." Updated research confirms Premium Watchlists are $10/month (1-minute scan intervals). This sharpens the pricing gap analysis. _(Triggered by: own updated research)_
 
-4. **Revised platform risk assessment based on Technical Lead's architecture review.** The Technical Lead confirmed the IronPlanet capture rate is approximately 17% and identified the scraping dependency as a shared D1 database with no official API fallback. The Technical Lead's ADR on analyst auth and service bindings also confirms there is no redundancy path if a platform blocks access. Elevated scraping risk language accordingly. *(Triggered by: Technical Lead's risk R6, R7 and shared D1 schema coupling analysis)*
+4. **Revised platform risk assessment based on Technical Lead's architecture review.** The Technical Lead confirmed the IronPlanet capture rate is approximately 17% and identified the scraping dependency as a shared D1 database with no official API fallback. The Technical Lead's ADR on analyst auth and service bindings also confirms there is no redundancy path if a platform blocks access. Elevated scraping risk language accordingly. _(Triggered by: Technical Lead's risk R6, R7 and shared D1 schema coupling analysis)_
 
-5. **Incorporated Target Customer's feedback on what does and does not matter.** Scott explicitly said he would NOT stop using DFG because of only two auction sources, basic auth, or missing outcome tracking. He WOULD stop if the scout fails silently, the AI gives bad BID recommendations, or the app gets slow on iOS. Revised competitive positioning to focus on the dimensions that actually determine user retention, not the ones that look important on a feature matrix. *(Triggered by: Target Customer's make-or-break concerns)*
+5. **Incorporated Target Customer's feedback on what does and does not matter.** Scott explicitly said he would NOT stop using DFG because of only two auction sources, basic auth, or missing outcome tracking. He WOULD stop if the scout fails silently, the AI gives bad BID recommendations, or the app gets slow on iOS. Revised competitive positioning to focus on the dimensions that actually determine user retention, not the ones that look important on a feature matrix. _(Triggered by: Target Customer's make-or-break concerns)_
 
-6. **Added "Swoopa Dealers convergence" as a new uncomfortable truth.** Swoopa Dealers now offers estimated values, comps, and margin clarity for vehicle dealers -- moving from alert-only to analysis-assisted sourcing. This narrows DFG's analysis moat faster than predicted in Round 1. *(Triggered by: own updated research, UX Lead's concern about notification gap)*
+6. **Added "Swoopa Dealers convergence" as a new uncomfortable truth.** Swoopa Dealers now offers estimated values, comps, and margin clarity for vehicle dealers -- moving from alert-only to analysis-assisted sourcing. This narrows DFG's analysis moat faster than predicted in Round 1. _(Triggered by: own updated research, UX Lead's concern about notification gap)_
 
-7. **Refined the notification gap competitive comparison based on UX Lead analysis.** The UX Lead identified the notification gap as "the single largest UX gap in the MVP." Cross-referenced with competitor capabilities to quantify how far behind DFG is on alert delivery. Every direct competitor has push notifications; DFG has in-app only. *(Triggered by: UX Lead's Concern 3)*
+7. **Refined the notification gap competitive comparison based on UX Lead analysis.** The UX Lead identified the notification gap as "the single largest UX gap in the MVP." Cross-referenced with competitor capabilities to quantify how far behind DFG is on alert delivery. Every direct competitor has push notifications; DFG has in-app only. _(Triggered by: UX Lead's Concern 3)_
 
-8. **Added nuance to "native app advantage" based on Product Manager's principles.** The PM explicitly states DFG is "Not an iOS native app (it is a Next.js web app accessed via iOS Safari)" and Principle #4 is "Mobile-first, iOS Safari always." The competitive gap on native vs. web is a deliberate architectural choice, not an oversight. Adjusted the uncomfortable truth to acknowledge the trade-off explicitly. *(Triggered by: Product Manager's product identity and Principle #4)*
+8. **Added nuance to "native app advantage" based on Product Manager's principles.** The PM explicitly states DFG is "Not an iOS native app (it is a Next.js web app accessed via iOS Safari)" and Principle #4 is "Mobile-first, iOS Safari always." The competitive gap on native vs. web is a deliberate architectural choice, not an oversight. Adjusted the uncomfortable truth to acknowledge the trade-off explicitly. _(Triggered by: Product Manager's product identity and Principle #4)_
 
-9. **Added Amazon/eBay arbitrage tool ecosystem as a new competitive segment.** The Business Analyst's traceability matrix and user stories revealed DFG's workflow (find, evaluate, decide, track) mirrors the pattern of Amazon arbitrage tools (Tactical Arbitrage, SellerAmp, Sellerbility) at $50-100/month. These are not direct competitors but validate the model and set a pricing anchor in the broader arbitrage tooling market. *(Triggered by: Business Analyst's user story structure, own research)*
+9. **Added Amazon/eBay arbitrage tool ecosystem as a new competitive segment.** The Business Analyst's traceability matrix and user stories revealed DFG's workflow (find, evaluate, decide, track) mirrors the pattern of Amazon arbitrage tools (Tactical Arbitrage, SellerAmp, Sellerbility) at $50-100/month. These are not direct competitors but validate the model and set a pricing anchor in the broader arbitrage tooling market. _(Triggered by: Business Analyst's user story structure, own research)_
 
-10. **Removed GovDeals "built-in buyer tools" as a separate deep dive.** Round 1 gave GovDeals a full section, but GovDeals is not a competitor -- it is a data source. Folded the platform risk analysis into the scraping risk section instead. *(Triggered by: Product Manager's classification of auction platforms as data sources, not competitors)*
+10. **Removed GovDeals "built-in buyer tools" as a separate deep dive.** Round 1 gave GovDeals a full section, but GovDeals is not a competitor -- it is a data source. Folded the platform risk analysis into the scraping risk section instead. _(Triggered by: Product Manager's classification of auction platforms as data sources, not competitors)_
 
 ---
 
@@ -44,15 +44,15 @@ No existing product combines cross-platform auction scraping of government/surpl
 
 ### Market Map
 
-| Segment | Players | Relevance to DFG |
-|---------|---------|-------------------|
-| Government/surplus auction platforms | GovDeals, PublicSurplus, Municibid, GovPlanet | Data sources with built-in buyer tools (alerts, notifications) that partially overlap. Platform risk if they block scraping. |
-| Equipment auction platforms | IronPlanet/Ritchie Bros, Proxibid, BidSpotter, AuctionZip | Same -- data sources with some buyer tooling. IronPlanet/RB Global owns the data DFG scrapes. |
-| Consumer marketplace deal-finders | Swoopa (consumer), Flipify, DealScout | Direct competitors for the "find undervalued items fast" value prop. Different asset classes (consumer goods, not equipment) but identical model. |
-| Dealer/professional sourcing tools | Swoopa Dealers | **Closest competitor.** Vehicle-focused, but provides valuations, comps, and margin analysis. Enterprise tier for professional buyers. |
-| Reseller inventory/profit tools | Flippd, ResellGenius | Overlap on profit calculation. Focused on eBay/Poshmark, not auctions. |
-| Equipment valuation services | Rouse Analytics (RB Global), Ritchie Bros Price Results | Indirect competitor -- provides the pricing intelligence DFG generates via AI. Institutional focus. |
-| Online arbitrage software | Tactical Arbitrage, SellerAmp, Sellerbility | Not direct competitors, but validate the "find, analyze, decide" SaaS model for arbitrage. Pricing ($50-100/mo) anchors the market. |
+| Segment                              | Players                                                   | Relevance to DFG                                                                                                                                  |
+| ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Government/surplus auction platforms | GovDeals, PublicSurplus, Municibid, GovPlanet             | Data sources with built-in buyer tools (alerts, notifications) that partially overlap. Platform risk if they block scraping.                      |
+| Equipment auction platforms          | IronPlanet/Ritchie Bros, Proxibid, BidSpotter, AuctionZip | Same -- data sources with some buyer tooling. IronPlanet/RB Global owns the data DFG scrapes.                                                     |
+| Consumer marketplace deal-finders    | Swoopa (consumer), Flipify, DealScout                     | Direct competitors for the "find undervalued items fast" value prop. Different asset classes (consumer goods, not equipment) but identical model. |
+| Dealer/professional sourcing tools   | Swoopa Dealers                                            | **Closest competitor.** Vehicle-focused, but provides valuations, comps, and margin analysis. Enterprise tier for professional buyers.            |
+| Reseller inventory/profit tools      | Flippd, ResellGenius                                      | Overlap on profit calculation. Focused on eBay/Poshmark, not auctions.                                                                            |
+| Equipment valuation services         | Rouse Analytics (RB Global), Ritchie Bros Price Results   | Indirect competitor -- provides the pricing intelligence DFG generates via AI. Institutional focus.                                               |
+| Online arbitrage software            | Tactical Arbitrage, SellerAmp, Sellerbility               | Not direct competitors, but validate the "find, analyze, decide" SaaS model for arbitrage. Pricing ($50-100/mo) anchors the market.               |
 
 ---
 
@@ -65,11 +65,13 @@ No existing product combines cross-platform auction scraping of government/surpl
 **Target user:** Resellers and flippers of consumer goods (furniture, electronics, vehicles).
 
 **Pricing:**
+
 - Starts at $47/month
 - Premium tiers up to $352/month (enterprise)
 - Free 48-hour trial; 7-day free trial on enterprise plan
 
 **Strengths:**
+
 - Multi-platform scanning (7+ marketplaces including Facebook, Craigslist, OfferUp, Nextdoor, eBay)
 - AI price filter that compares asking prices to estimated resale values
 - Sub-minute alert speed on premium plans
@@ -79,6 +81,7 @@ No existing product combines cross-platform auction scraping of government/surpl
 - Market validated: 4.2+ star App Store rating
 
 **Weaknesses:**
+
 - Focused on consumer marketplaces, not government/surplus auctions
 - No structured profit analysis with acquisition cost modeling (buyer premium, transport, repairs)
 - No workflow system (inbox to qualifying to bid to won)
@@ -97,11 +100,13 @@ No existing product combines cross-platform auction scraping of government/surpl
 **Target user:** Used car dealers, professional vehicle buyers, fleet sourcing teams.
 
 **Pricing:**
+
 - Free download with in-app purchases ($47 to $144.99/month for premium tiers)
 - 4.2 stars, 29 ratings on App Store
 - Latest version 1.24.1 (January 29, 2026)
 
 **Strengths:**
+
 - Private-seller listings aggregated from multiple marketplaces in one feed
 - **Instant valuations with comps and margin clarity** -- this is new and directly overlaps with DFG's value proposition
 - Price change tracking and seller behavior monitoring
@@ -111,6 +116,7 @@ No existing product combines cross-platform auction scraping of government/surpl
 - Purpose-built for professional buyers (not consumer bargain hunters)
 
 **Weaknesses:**
+
 - Vehicle-only (no trailers, power tools, or general equipment)
 - Marketplace-only (Facebook, Craigslist, OfferUp, etc.) -- no government/surplus auction platforms
 - Valuation appears to be market-comp based, not AI-powered conservative financial modeling
@@ -132,11 +138,13 @@ No existing product combines cross-platform auction scraping of government/surpl
 **Target user:** Professional resellers, side hustlers, flippers.
 
 **Pricing (updated):**
+
 - Basic Watchlist: $5/month (10-minute scan interval)
 - Premium Watchlist: $10/month (1-minute scan interval)
 - Free 5-day trial (1 basic + 1 premium watchlist, no credit card required)
 
 **Strengths:**
+
 - Affordable entry point ($5-10/mo per watchlist)
 - AI-powered spam/duplicate filtering
 - Zero-delay alerts with push notifications within seconds
@@ -144,6 +152,7 @@ No existing product combines cross-platform auction scraping of government/surpl
 - Available on iOS and Android
 
 **Weaknesses:**
+
 - Only Facebook Marketplace and Craigslist (additional platforms "coming soon")
 - No auction platform support
 - No financial analysis or profit modeling
@@ -161,12 +170,14 @@ No existing product combines cross-platform auction scraping of government/surpl
 **Target user:** Equipment dealers, fleet managers, construction companies, rental companies, institutional buyers.
 
 **Pricing:**
+
 - Price Results Tool: free (basic historical auction data lookup)
 - Rouse Values Lookup: subscription (reportedly $200-500+/mo for enterprise)
 - Rouse Fleet Manager: enterprise SaaS (pricing not public)
 - Rouse Analytics: monthly market benchmarks for rental companies
 
 **Strengths:**
+
 - Massive historical transaction database (millions of actual invoiced transactions)
 - Covers 75,000+ equipment makes and models
 - AI and machine learning for valuation accuracy (adjusted for meter hours, configuration, options, region)
@@ -177,6 +188,7 @@ No existing product combines cross-platform auction scraping of government/surpl
 - Rouse Fleet Manager includes AI-powered upload capabilities
 
 **Weaknesses:**
+
 - Focused on heavy equipment and construction, not trailers/light equipment at DFG's price points ($2K-6K)
 - Valuation tools are for institutional buyers with large fleets, not individual arbitrage operators
 - No "find undervalued items" feature -- it is a valuation reference, not a deal-finding engine
@@ -196,11 +208,13 @@ No existing product combines cross-platform auction scraping of government/surpl
 **Target user:** eBay/Poshmark resellers managing inventory across platforms.
 
 **Pricing:**
+
 - Free: up to 20 inventory items
 - Pro: $9.99/month or $99.99/year
 - Unlimited inventory, cross-platform fee calculation, QR label generation
 
 **Strengths:**
+
 - Accurate fee calculation across 15+ platforms
 - Inventory tracking with photos
 - Cross-platform profit tracking
@@ -208,6 +222,7 @@ No existing product combines cross-platform auction scraping of government/surpl
 - Simple, well-reviewed app
 
 **Weaknesses:**
+
 - Post-acquisition tool only (tracks items you already own)
 - No deal-finding or auction monitoring
 - No pre-purchase analysis or valuation
@@ -225,6 +240,7 @@ No existing product combines cross-platform auction scraping of government/surpl
 **Pricing range:** $50-100/month (Tactical Arbitrage ~$65-95/mo, SellerAmp ~$17-20/mo, Seller 365 bundle ~$69/mo)
 
 **Relevance to DFG:**
+
 - These tools validate the "find undervalued items, calculate profit, make a sourcing decision" workflow at scale
 - They serve a similar persona (arbitrage-minded operators who need speed, accuracy, and volume)
 - Their pricing ($50-100/mo) provides a market anchor for arbitrage tooling
@@ -236,24 +252,24 @@ No existing product combines cross-platform auction scraping of government/surpl
 
 ## Feature Comparison Matrix
 
-| Feature | DFG (MVP) | Swoopa Dealers | Swoopa (Consumer) | Flipify | Rouse/RB Global | Flippd |
-|---------|-----------|----------------|-------------------|---------|-----------------|--------|
-| Cross-platform auction scraping | Yes (2 sources) | No (marketplaces) | No (marketplaces) | No (2 marketplaces) | No (own platforms) | No |
-| Government surplus coverage | Planned | No | No | No | Partial (own platforms) | No |
-| AI-powered profit analysis | Yes (Claude, dual-lens) | Basic (comps + margin) | Basic (price compare) | No | Yes (ML, institutional) | No |
-| Conservative financial modeling | Yes (canonical money math) | No | No | No | No (reference values) | Basic fee calc |
-| Category-specific intelligence | Yes (3 tiers) | Vehicles only | No | No | Yes (75K+ models) | No |
-| Opportunity scoring (0-100) | Yes (4 dimensions) | No | No | No | No | No |
-| Operator workflow (lifecycle) | Yes (7 stages) | No | No | No | No | Inventory only |
-| Instant valuations with comps | Via AI analysis | Yes (upfront) | No | No | Yes (historical) | No |
-| Push notifications | No (in-app only) | Yes (native) | Yes (native) | Yes (native) | No | No |
-| Alert speed | 15-min cron | Near-instant | Sub-minute | Seconds to minutes | N/A | N/A |
-| Mobile-first design | Yes (iOS Safari web) | Yes (native iOS) | Yes (native iOS/Android) | Yes (native iOS/Android) | No (web, enterprise) | Yes (native) |
-| Outcome tracking / P&L | Planned | No | No | No | Yes (fleet level) | Yes |
-| Decision audit trail | Yes (MVC events) | No | No | No | No | No |
-| Gate system (bid readiness) | Yes (critical + confidence) | No | No | No | No | No |
-| Multi-user support | No (founder only) | Yes | Yes | Yes | Yes (enterprise) | Yes |
-| Price per month | $149 target | $47-145 | $47-352 | $5-10/watchlist | $200-500+ (est.) | $0-10 |
+| Feature                         | DFG (MVP)                   | Swoopa Dealers         | Swoopa (Consumer)        | Flipify                  | Rouse/RB Global         | Flippd         |
+| ------------------------------- | --------------------------- | ---------------------- | ------------------------ | ------------------------ | ----------------------- | -------------- |
+| Cross-platform auction scraping | Yes (2 sources)             | No (marketplaces)      | No (marketplaces)        | No (2 marketplaces)      | No (own platforms)      | No             |
+| Government surplus coverage     | Planned                     | No                     | No                       | No                       | Partial (own platforms) | No             |
+| AI-powered profit analysis      | Yes (Claude, dual-lens)     | Basic (comps + margin) | Basic (price compare)    | No                       | Yes (ML, institutional) | No             |
+| Conservative financial modeling | Yes (canonical money math)  | No                     | No                       | No                       | No (reference values)   | Basic fee calc |
+| Category-specific intelligence  | Yes (3 tiers)               | Vehicles only          | No                       | No                       | Yes (75K+ models)       | No             |
+| Opportunity scoring (0-100)     | Yes (4 dimensions)          | No                     | No                       | No                       | No                      | No             |
+| Operator workflow (lifecycle)   | Yes (7 stages)              | No                     | No                       | No                       | No                      | Inventory only |
+| Instant valuations with comps   | Via AI analysis             | Yes (upfront)          | No                       | No                       | Yes (historical)        | No             |
+| Push notifications              | No (in-app only)            | Yes (native)           | Yes (native)             | Yes (native)             | No                      | No             |
+| Alert speed                     | 15-min cron                 | Near-instant           | Sub-minute               | Seconds to minutes       | N/A                     | N/A            |
+| Mobile-first design             | Yes (iOS Safari web)        | Yes (native iOS)       | Yes (native iOS/Android) | Yes (native iOS/Android) | No (web, enterprise)    | Yes (native)   |
+| Outcome tracking / P&L          | Planned                     | No                     | No                       | No                       | Yes (fleet level)       | Yes            |
+| Decision audit trail            | Yes (MVC events)            | No                     | No                       | No                       | No                      | No             |
+| Gate system (bid readiness)     | Yes (critical + confidence) | No                     | No                       | No                       | No                      | No             |
+| Multi-user support              | No (founder only)           | Yes                    | Yes                      | Yes                      | Yes (enterprise)        | Yes            |
+| Price per month                 | $149 target                 | $47-145                | $47-352                  | $5-10/watchlist          | $200-500+ (est.)        | $0-10          |
 
 ---
 
@@ -285,16 +301,16 @@ No existing product combines cross-platform auction scraping of government/surpl
 
 ## Pricing & Business Model Benchmarks
 
-| Competitor | Model | Entry Price | Mid Tier | High Tier | Free Option |
-|------------|-------|-------------|----------|-----------|-------------|
-| Swoopa (Consumer) | Monthly subscription | $47/mo | ~$150/mo (est.) | $352/mo (enterprise) | 48-hour trial |
-| Swoopa Dealers | Freemium + IAP | $47/mo | ~$95/mo (est.) | $144.99/mo | Free download |
-| Flipify | Per-watchlist subscription | $5/mo (basic) | $10/mo (premium) | Multiple watchlists | 5-day trial |
-| DealScout | Tiered subscription | Free (1hr alerts) | Paid (5min alerts) | Pro Scout (10 terms) | Free tier |
-| Flippd | Freemium + subscription | Free (20 items) | $9.99/mo | $99.99/yr | Yes (limited) |
-| Rouse Analytics | Enterprise subscription | ~$200/mo (est.) | ~$500/mo (est.) | Enterprise (custom) | Free basic lookup |
-| Tactical Arbitrage | Monthly subscription | $65/mo | $79/mo | $95/mo | 7-day trial |
-| **DFG (planned)** | **Monthly subscription** | **$149/mo** | **--** | **--** | **No** |
+| Competitor         | Model                      | Entry Price       | Mid Tier           | High Tier            | Free Option       |
+| ------------------ | -------------------------- | ----------------- | ------------------ | -------------------- | ----------------- |
+| Swoopa (Consumer)  | Monthly subscription       | $47/mo            | ~$150/mo (est.)    | $352/mo (enterprise) | 48-hour trial     |
+| Swoopa Dealers     | Freemium + IAP             | $47/mo            | ~$95/mo (est.)     | $144.99/mo           | Free download     |
+| Flipify            | Per-watchlist subscription | $5/mo (basic)     | $10/mo (premium)   | Multiple watchlists  | 5-day trial       |
+| DealScout          | Tiered subscription        | Free (1hr alerts) | Paid (5min alerts) | Pro Scout (10 terms) | Free tier         |
+| Flippd             | Freemium + subscription    | Free (20 items)   | $9.99/mo           | $99.99/yr            | Yes (limited)     |
+| Rouse Analytics    | Enterprise subscription    | ~$200/mo (est.)   | ~$500/mo (est.)    | Enterprise (custom)  | Free basic lookup |
+| Tactical Arbitrage | Monthly subscription       | $65/mo            | $79/mo             | $95/mo               | 7-day trial       |
+| **DFG (planned)**  | **Monthly subscription**   | **$149/mo**       | **--**             | **--**               | **No**            |
 
 ### Pricing Analysis
 

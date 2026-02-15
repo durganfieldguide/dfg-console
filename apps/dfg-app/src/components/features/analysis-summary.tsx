@@ -1,31 +1,36 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { cn } from '@/lib/utils';
-import {
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Info,
-} from 'lucide-react';
-import { RiskAssessment, type RiskAssessmentData } from './risk-assessment';
-import { PreBidChecklist, type ChecklistItem } from './pre-bid-checklist';
-import { PhotoPipelineMetrics, type PhotoMetrics } from './photo-pipeline-metrics';
-import { GatesDisplay, type ComputedGates } from './gates-display';
-import type { AnalysisResult } from '@/lib/api';
+import * as React from 'react'
+import { cn } from '@/lib/utils'
+import { CheckCircle, AlertTriangle, XCircle, Info } from 'lucide-react'
+import { RiskAssessment, type RiskAssessmentData } from './risk-assessment'
+import { PreBidChecklist, type ChecklistItem } from './pre-bid-checklist'
+import { PhotoPipelineMetrics, type PhotoMetrics } from './photo-pipeline-metrics'
+import { GatesDisplay, type ComputedGates } from './gates-display'
+import type { AnalysisResult } from '@/lib/api'
 
-type Verdict = 'BUY' | 'WATCH' | 'PASS';
+type Verdict = 'BUY' | 'WATCH' | 'PASS'
 
 interface AnalysisSummaryProps {
-  analysis: AnalysisResult;
-  className?: string;
+  analysis: AnalysisResult
+  className?: string
 }
 
 // Hard definitions (do not soften):
 // BUY = bid up to max bid if gates clear. This is a real number.
 // WATCH = needs more info or price drop. Do not bid yet.
 // PASS = do not spend time. Not "maybe later."
-const verdictConfig: Record<Verdict, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; headline: string; tooltip: string }> = {
+const verdictConfig: Record<
+  Verdict,
+  {
+    icon: React.ElementType
+    color: string
+    bgColor: string
+    borderColor: string
+    headline: string
+    tooltip: string
+  }
+> = {
   BUY: {
     icon: CheckCircle,
     color: 'text-green-600 dark:text-green-400',
@@ -50,107 +55,120 @@ const verdictConfig: Record<Verdict, { icon: React.ElementType; color: string; b
     headline: 'Do not bid — do not spend more time',
     tooltip: 'Do not bid. Do not spend more time on this deal.',
   },
-};
+}
 
 // Extract the first meaningful paragraph from markdown
 function extractSummaryText(markdown: string): string {
-  if (!markdown) return '';
+  if (!markdown) return ''
 
   // Split by double newlines and find first non-heading paragraph
-  const paragraphs = markdown.split('\n\n');
+  const paragraphs = markdown.split('\n\n')
   for (const p of paragraphs) {
-    const trimmed = p.trim();
+    const trimmed = p.trim()
     // Skip headings and tables
     if (trimmed.startsWith('#') || trimmed.startsWith('|') || trimmed.startsWith('---')) {
-      continue;
+      continue
     }
     // Return first meaningful paragraph
     if (trimmed.length > 50) {
-      return trimmed;
+      return trimmed
     }
   }
-  return '';
+  return ''
 }
 
 export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
-  const fields = analysis.report_fields || {};
+  const fields = analysis.report_fields || {}
   // Normalize verdict to uppercase and map legacy terms to canonical BUY/WATCH/PASS
-  const rawVerdict = String(fields.verdict || 'PASS').toUpperCase();
-  const normalizedVerdict = rawVerdict === 'MARGINAL' ? 'WATCH'
-    : rawVerdict === 'STRONG_BUY' ? 'BUY'
-    : rawVerdict;
-  const verdict: Verdict = (normalizedVerdict === 'BUY' || normalizedVerdict === 'WATCH' || normalizedVerdict === 'PASS')
-    ? normalizedVerdict as Verdict
-    : 'PASS';
-  const config = verdictConfig[verdict];
-  const VerdictIcon = config.icon;
+  const rawVerdict = String(fields.verdict || 'PASS').toUpperCase()
+  const normalizedVerdict =
+    rawVerdict === 'MARGINAL' ? 'WATCH' : rawVerdict === 'STRONG_BUY' ? 'BUY' : rawVerdict
+  const verdict: Verdict =
+    normalizedVerdict === 'BUY' || normalizedVerdict === 'WATCH' || normalizedVerdict === 'PASS'
+      ? (normalizedVerdict as Verdict)
+      : 'PASS'
+  const config = verdictConfig[verdict]
+  const VerdictIcon = config.icon
 
-  const summaryText = extractSummaryText(analysis.report_markdown || '');
+  const summaryText = extractSummaryText(analysis.report_markdown || '')
 
   // Extract new risk assessment data if available (V2.7 format)
-  const riskAssessment = (analysis as any).risk_assessment as RiskAssessmentData | undefined;
-  const riskBanner = (analysis as any).risk_banner as { headline: string; subtext: string; severity: 'critical' | 'warning' | 'info' | 'success' } | undefined;
-  const bidReadiness = (analysis as any).bid_readiness as { status: string; reason: string; blockers: string[] } | undefined;
-  const preBidChecklist = (analysis as any).pre_bid_checklist as ChecklistItem[] | undefined;
+  const riskAssessment = (analysis as any).risk_assessment as RiskAssessmentData | undefined
+  const riskBanner = (analysis as any).risk_banner as
+    | { headline: string; subtext: string; severity: 'critical' | 'warning' | 'info' | 'success' }
+    | undefined
+  const bidReadiness = (analysis as any).bid_readiness as
+    | { status: string; reason: string; blockers: string[] }
+    | undefined
+  const preBidChecklist = (analysis as any).pre_bid_checklist as ChecklistItem[] | undefined
 
   // Photo pipeline metrics from condition assessment
-  const photoMetrics = (analysis as any).condition?.photo_metrics as PhotoMetrics | undefined;
+  const photoMetrics = (analysis as any).condition?.photo_metrics as PhotoMetrics | undefined
 
   // Extract market demand assessment (#147) - liquidity narrative
-  const marketDemand = (analysis as any).market_demand as {
-    level: 'high' | 'moderate' | 'low' | 'niche';
-    confidence: 'high' | 'medium' | 'low';
-    is_heuristic: boolean;
-    implications: {
-      expected_days_to_sell: string;
-      pricing_advice: string;
-      risk_note: string | null;
-    };
-    summary: string;
-  } | undefined;
+  const marketDemand = (analysis as any).market_demand as
+    | {
+        level: 'high' | 'moderate' | 'low' | 'niche'
+        confidence: 'high' | 'medium' | 'low'
+        is_heuristic: boolean
+        implications: {
+          expected_days_to_sell: string
+          pricing_advice: string
+          risk_note: string | null
+        }
+        summary: string
+      }
+    | undefined
 
   // Extract verdict gates (#148) - structured gate display
-  const verdictGates = (analysis as any)?.investor_lens?.verdict_gates as Array<{
-    id: string;
-    type: 'blocking' | 'downgrade';
-    status: 'failed' | 'passed';
-    category: 'critical' | 'confidence';
-    title: string;
-    description: string;
-    condition: string;
-    impact: string;
-  }> | undefined;
+  const verdictGates = (analysis as any)?.investor_lens?.verdict_gates as
+    | Array<{
+        id: string
+        type: 'blocking' | 'downgrade'
+        status: 'failed' | 'passed'
+        category: 'critical' | 'confidence'
+        title: string
+        description: string
+        condition: string
+        impact: string
+      }>
+    | undefined
 
-  const gatesSummary = (analysis as any)?.investor_lens?.gates_summary as {
-    allCriticalPassed: boolean;
-    passedCount: number;
-    totalCount: number;
-  } | undefined;
+  const gatesSummary = (analysis as any)?.investor_lens?.gates_summary as
+    | {
+        allCriticalPassed: boolean
+        passedCount: number
+        totalCount: number
+      }
+    | undefined
 
   // Map VerdictGate objects to ComputedGates interface for GatesDisplay
-  const computedGates: ComputedGates | null = verdictGates && verdictGates.length > 0 ? {
-    gates: verdictGates.map(g => ({
-      name: g.id,
-      status: g.status as 'passed' | 'failed',
-      reason: g.description,
-      isCritical: g.category === 'critical'
-    })),
-    allCriticalPassed: gatesSummary?.allCriticalPassed ?? false,
-    passedCount: gatesSummary?.passedCount ?? 0,
-    totalCount: gatesSummary?.totalCount ?? verdictGates.length,
-    summary: gatesSummary?.allCriticalPassed
-      ? "All critical gates cleared"
-      : `${verdictGates.filter(g => g.category === 'critical' && g.status === 'failed').length} critical gate(s) blocking`
-  } : null;
+  const computedGates: ComputedGates | null =
+    verdictGates && verdictGates.length > 0
+      ? {
+          gates: verdictGates.map((g) => ({
+            name: g.id,
+            status: g.status as 'passed' | 'failed',
+            reason: g.description,
+            isCritical: g.category === 'critical',
+          })),
+          allCriticalPassed: gatesSummary?.allCriticalPassed ?? false,
+          passedCount: gatesSummary?.passedCount ?? 0,
+          totalCount: gatesSummary?.totalCount ?? verdictGates.length,
+          summary: gatesSummary?.allCriticalPassed
+            ? 'All critical gates cleared'
+            : `${verdictGates.filter((g) => g.category === 'critical' && g.status === 'failed').length} critical gate(s) blocking`,
+        }
+      : null
 
   // Check for V2.7 format (observed_issues) or V2.6 format (confirmed_issues)
-  const hasRiskData = riskAssessment && (
-    (riskAssessment as any).observed_issues?.length > 0 ||
-    (riskAssessment as any).unverified_risks?.length > 0 ||
-    (riskAssessment as any).confirmed_issues?.length > 0 ||
-    (riskAssessment as any).suspected_issues?.length > 0 ||
-    riskAssessment.info_gaps?.length > 0
-  );
+  const hasRiskData =
+    riskAssessment &&
+    ((riskAssessment as any).observed_issues?.length > 0 ||
+      (riskAssessment as any).unverified_risks?.length > 0 ||
+      (riskAssessment as any).confirmed_issues?.length > 0 ||
+      (riskAssessment as any).suspected_issues?.length > 0 ||
+      riskAssessment.info_gaps?.length > 0)
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -159,16 +177,18 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
         <div
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
           style={{
-            backgroundColor: bidReadiness.status === 'BID_READY'
-              ? 'rgba(34, 197, 94, 0.15)'
-              : bidReadiness.status === 'NOT_BID_READY'
-                ? 'rgba(245, 158, 11, 0.15)'
-                : 'rgba(239, 68, 68, 0.15)',
-            color: bidReadiness.status === 'BID_READY'
-              ? 'rgb(22, 163, 74)'
-              : bidReadiness.status === 'NOT_BID_READY'
-                ? 'rgb(217, 119, 6)'
-                : 'rgb(220, 38, 38)',
+            backgroundColor:
+              bidReadiness.status === 'BID_READY'
+                ? 'rgba(34, 197, 94, 0.15)'
+                : bidReadiness.status === 'NOT_BID_READY'
+                  ? 'rgba(245, 158, 11, 0.15)'
+                  : 'rgba(239, 68, 68, 0.15)',
+            color:
+              bidReadiness.status === 'BID_READY'
+                ? 'rgb(22, 163, 74)'
+                : bidReadiness.status === 'NOT_BID_READY'
+                  ? 'rgb(217, 119, 6)'
+                  : 'rgb(220, 38, 38)',
             border: `2px solid ${
               bidReadiness.status === 'BID_READY'
                 ? 'rgba(34, 197, 94, 0.5)'
@@ -218,11 +238,7 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
             <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
               {config.headline}
             </p>
-            {summaryText && (
-              <p className="mt-3 text-sm leading-relaxed">
-                {summaryText}
-              </p>
-            )}
+            {summaryText && <p className="mt-3 text-sm leading-relaxed">{summaryText}</p>}
           </div>
         </div>
       </div>
@@ -240,7 +256,10 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
             </p>
             <ul className="space-y-1">
               {(analysis as any).investor_lens.verdict_reasons.map((reason: string, i: number) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <li
+                  key={i}
+                  className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
+                >
                   <span className="shrink-0 mt-0.5">•</span>
                   <span>{reason}</span>
                 </li>
@@ -271,13 +290,19 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
 
           {/* Demand level badge */}
           <div className="flex items-center gap-2 mb-3">
-            <span className={cn(
-              "px-2 py-1 rounded text-xs font-medium",
-              marketDemand.level === 'high' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-              marketDemand.level === 'moderate' && "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
-              marketDemand.level === 'low' && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-              marketDemand.level === 'niche' && "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-            )}>
+            <span
+              className={cn(
+                'px-2 py-1 rounded text-xs font-medium',
+                marketDemand.level === 'high' &&
+                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                marketDemand.level === 'moderate' &&
+                  'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
+                marketDemand.level === 'low' &&
+                  'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                marketDemand.level === 'niche' &&
+                  'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+              )}
+            >
               {marketDemand.level.toUpperCase()} demand
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -306,9 +331,7 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
       {/* Photo Pipeline Metrics - answers two key questions:
           1. Did the seller provide enough photos?
           2. Did DFG successfully analyze them? */}
-      {photoMetrics && (
-        <PhotoPipelineMetrics metrics={photoMetrics} />
-      )}
+      {photoMetrics && <PhotoPipelineMetrics metrics={photoMetrics} />}
 
       {/* Risk Assessment (gates + blockers) */}
       {hasRiskData && riskAssessment && (
@@ -334,11 +357,11 @@ export function AnalysisSummary({ analysis, className }: AnalysisSummaryProps) {
             {verdict === 'BUY'
               ? 'Review the Condition and Investor Lens tabs for inspection priorities, then proceed to bid.'
               : verdict === 'WATCH'
-              ? 'Check the Condition tab carefully. Only proceed if you can verify key concerns.'
-              : 'This deal is not recommended. Consider other opportunities.'}
+                ? 'Check the Condition tab carefully. Only proceed if you can verify key concerns.'
+                : 'This deal is not recommended. Consider other opportunities.'}
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

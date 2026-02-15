@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react'
 import {
   Terminal,
   CheckCircle,
@@ -8,123 +8,106 @@ import {
   Layers,
   GitPullRequest,
   PlayCircle,
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { WorkQueueSection } from '@/components/features/work-queue-section';
-import { fetchAllQueues, refreshQueue } from '@/lib/github-api';
-import {
-  QA_PROMPT,
-  PM_PROMPT,
-  AGENT_BRIEF_PROMPT,
-  MERGE_PROMPT,
-} from '@/lib/prompt-templates';
-import type {
-  AllQueues,
-  WorkQueueCard,
-  PromptType,
-  QueueType,
-} from '@/types/github';
+} from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { WorkQueueSection } from '@/components/features/work-queue-section'
+import { fetchAllQueues, refreshQueue } from '@/lib/github-api'
+import { QA_PROMPT, PM_PROMPT, AGENT_BRIEF_PROMPT, MERGE_PROMPT } from '@/lib/prompt-templates'
+import type { AllQueues, WorkQueueCard, PromptType, QueueType } from '@/types/github'
 
 export default function CommandPage() {
-  const [queues, setQueues] = useState<AllQueues | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState<Set<QueueType>>(new Set());
-  const [error, setError] = useState<string | null>(null);
+  const [queues, setQueues] = useState<AllQueues | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState<Set<QueueType>>(new Set())
+  const [error, setError] = useState<string | null>(null)
 
   // Initial load
   useEffect(() => {
-    loadAllQueues();
-  }, []);
+    loadAllQueues()
+  }, [])
 
   // Auto-refresh every 60s
   useEffect(() => {
-    const interval = setInterval(
-      () => {
-        loadAllQueues(true); // Silent refresh
-      },
-      60000
-    ); // 60 seconds
-    return () => clearInterval(interval);
-  }, []);
+    const interval = setInterval(() => {
+      loadAllQueues(true) // Silent refresh
+    }, 60000) // 60 seconds
+    return () => clearInterval(interval)
+  }, [])
 
   const loadAllQueues = async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
+    if (!silent) setLoading(true)
+    setError(null)
 
     try {
-      const data = await fetchAllQueues();
-      setQueues(data);
+      const data = await fetchAllQueues()
+      setQueues(data)
     } catch (err) {
-      console.error('Failed to load queues:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load queues');
+      console.error('Failed to load queues:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load queues')
     } finally {
-      if (!silent) setLoading(false);
+      if (!silent) setLoading(false)
     }
-  };
+  }
 
   const handleRefreshQueue = useCallback(
     async (queueType: QueueType, queueKey: keyof AllQueues) => {
-      setRefreshing((prev) => new Set(prev).add(queueType));
+      setRefreshing((prev) => new Set(prev).add(queueType))
 
       try {
-        const cards = await refreshQueue(queueType);
-        setQueues((prev) => (prev ? { ...prev, [queueKey]: cards } : null));
+        const cards = await refreshQueue(queueType)
+        setQueues((prev) => (prev ? { ...prev, [queueKey]: cards } : null))
       } catch (err) {
-        console.error(`Failed to refresh ${queueType}:`, err);
+        console.error(`Failed to refresh ${queueType}:`, err)
       } finally {
         setRefreshing((prev) => {
-          const next = new Set(prev);
-          next.delete(queueType);
-          return next;
-        });
+          const next = new Set(prev)
+          next.delete(queueType)
+          return next
+        })
       }
     },
     []
-  );
+  )
 
-  const handleCopyPrompt = useCallback(
-    async (card: WorkQueueCard, type: PromptType) => {
-      const context = {
-        number: card.number,
-        title: card.title,
-        url: card.url,
-        body: card.body,
-        labels: card.labels,
-        previewUrl: card.previewUrl,
-        type: card.type,
-      };
+  const handleCopyPrompt = useCallback(async (card: WorkQueueCard, type: PromptType) => {
+    const context = {
+      number: card.number,
+      title: card.title,
+      url: card.url,
+      body: card.body,
+      labels: card.labels,
+      previewUrl: card.previewUrl,
+      type: card.type,
+    }
 
-      let prompt: string | null = null;
+    let prompt: string | null = null
 
-      switch (type) {
-        case 'qa':
-          prompt = QA_PROMPT(context);
-          break;
-        case 'pm':
-          prompt = PM_PROMPT(context);
-          break;
-        case 'agent-brief':
-          prompt = AGENT_BRIEF_PROMPT(context);
-          break;
-        case 'merge':
-          prompt = MERGE_PROMPT(context);
-          break;
-      }
+    switch (type) {
+      case 'qa':
+        prompt = QA_PROMPT(context)
+        break
+      case 'pm':
+        prompt = PM_PROMPT(context)
+        break
+      case 'agent-brief':
+        prompt = AGENT_BRIEF_PROMPT(context)
+        break
+      case 'merge':
+        prompt = MERGE_PROMPT(context)
+        break
+    }
 
-      if (!prompt) {
-        console.error(`Prompt type ${type} not available for this card`);
-        return;
-      }
+    if (!prompt) {
+      console.error(`Prompt type ${type} not available for this card`)
+      return
+    }
 
-      await copyToClipboard(prompt);
-    },
-    []
-  );
+    await copyToClipboard(prompt)
+  }, [])
 
   return (
     <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-900">
       <main className="container mx-auto max-w-7xl">
-
         {/* Header */}
         <header className="sticky top-0 z-40 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between px-4 py-4">
@@ -160,9 +143,7 @@ export default function CommandPage() {
                   <p className="text-sm font-medium text-red-800 dark:text-red-200">
                     Failed to load queues
                   </p>
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                    {error}
-                  </p>
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>
                 </div>
                 <Button
                   variant="secondary"
@@ -214,9 +195,7 @@ export default function CommandPage() {
                 icon={GitPullRequest}
                 cards={queues.readyToMerge}
                 loading={refreshing.has('ready-to-merge')}
-                onRefresh={() =>
-                  handleRefreshQueue('ready-to-merge', 'readyToMerge')
-                }
+                onRefresh={() => handleRefreshQueue('ready-to-merge', 'readyToMerge')}
                 onCopyPrompt={handleCopyPrompt}
               />
 
@@ -236,16 +215,14 @@ export default function CommandPage() {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Terminal className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-4 animate-pulse" />
-                <p className="text-gray-600 dark:text-gray-400">
-                  Loading work queues...
-                </p>
+                <p className="text-gray-600 dark:text-gray-400">Loading work queues...</p>
               </div>
             </div>
           )}
         </div>
       </main>
     </div>
-  );
+  )
 }
 
 /**
@@ -253,19 +230,19 @@ export default function CommandPage() {
  */
 async function copyToClipboard(text: string): Promise<void> {
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(text)
     // TODO: Add toast notification in Phase 2
-    console.log('Copied to clipboard');
+    console.log('Copied to clipboard')
   } catch (err) {
     // Fallback for older browsers
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    console.log('Copied to clipboard (fallback)');
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    console.log('Copied to clipboard (fallback)')
   }
 }

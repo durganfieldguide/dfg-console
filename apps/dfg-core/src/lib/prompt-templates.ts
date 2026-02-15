@@ -5,7 +5,7 @@
  * These are copied to clipboard for manual execution.
  */
 
-import type { PromptContext, GitHubLabel } from '@/types/github';
+import type { PromptContext, GitHubLabel } from '@/types/github'
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -17,13 +17,13 @@ import type { PromptContext, GitHubLabel } from '@/types/github';
  * Looks for "## Agent Brief" heading and extracts content until next heading.
  */
 export function extractAgentBrief(body: string): string | null {
-  const briefMatch = body.match(/##\s*Agent Brief\s*\n([\s\S]*?)(?=\n##|$)/i);
-  if (!briefMatch) return null;
+  const briefMatch = body.match(/##\s*Agent Brief\s*\n([\s\S]*?)(?=\n##|$)/i)
+  if (!briefMatch) return null
 
-  const brief = briefMatch[1].trim();
-  if (brief.length < 10) return null;
+  const brief = briefMatch[1].trim()
+  if (brief.length < 10) return null
 
-  return brief;
+  return brief
 }
 
 /**
@@ -32,10 +32,8 @@ export function extractAgentBrief(body: string): string | null {
  * Looks for "## Acceptance Criteria" heading and extracts checklist items.
  */
 export function extractAcceptanceCriteria(body: string): string[] {
-  const acSection = body.match(
-    /##\s*Acceptance Criteria\s*\n([\s\S]*?)(?=\n##|$)/i
-  );
-  if (!acSection) return [];
+  const acSection = body.match(/##\s*Acceptance Criteria\s*\n([\s\S]*?)(?=\n##|$)/i)
+  if (!acSection) return []
 
   const criteria = acSection[1]
     .split('\n')
@@ -45,32 +43,32 @@ export function extractAcceptanceCriteria(body: string): string[] {
         .replace(/^-\s*\[.\]\s*/, '')
         .replace(/^\*\*AC\d+:\*\*\s*/i, '')
         .trim()
-    );
+    )
 
-  return criteria;
+  return criteria
 }
 
 /**
  * Format labels as comma-separated string.
  */
 export function formatLabels(labels: GitHubLabel[]): string {
-  return labels.map((l) => l.name).join(', ');
+  return labels.map((l) => l.name).join(', ')
 }
 
 /**
  * Get priority label from labels array.
  */
 export function getPriorityLabel(labels: GitHubLabel[]): string | undefined {
-  const priorityLabel = labels.find((l) => l.name.startsWith('prio:'));
-  return priorityLabel?.name;
+  const priorityLabel = labels.find((l) => l.name.startsWith('prio:'))
+  return priorityLabel?.name
 }
 
 /**
  * Get status label from labels array.
  */
 export function getStatusLabel(labels: GitHubLabel[]): string | undefined {
-  const statusLabel = labels.find((l) => l.name.startsWith('status:'));
-  return statusLabel?.name;
+  const statusLabel = labels.find((l) => l.name.startsWith('status:'))
+  return statusLabel?.name
 }
 
 // ============================================================================
@@ -78,8 +76,8 @@ export function getStatusLabel(labels: GitHubLabel[]): string | undefined {
 // ============================================================================
 
 export function QA_PROMPT(ctx: PromptContext): string {
-  const criteria = extractAcceptanceCriteria(ctx.body);
-  const itemType = ctx.type === 'pr' ? 'PR' : 'Issue';
+  const criteria = extractAcceptanceCriteria(ctx.body)
+  const itemType = ctx.type === 'pr' ? 'PR' : 'Issue'
 
   return `# QA Review: ${itemType} #${ctx.number}
 
@@ -123,7 +121,7 @@ qa-grade: [pass|fail|pass-unverified]
 - Any issues found
 - Screenshots/recordings if applicable
 - Recommendations]
-`;
+`
 }
 
 // ============================================================================
@@ -131,9 +129,9 @@ qa-grade: [pass|fail|pass-unverified]
 // ============================================================================
 
 export function PM_PROMPT(ctx: PromptContext): string {
-  const currentPriority = getPriorityLabel(ctx.labels) || 'Not set';
-  const currentStatus = getStatusLabel(ctx.labels) || 'Not set';
-  const itemType = ctx.type === 'pr' ? 'PR' : 'Issue';
+  const currentPriority = getPriorityLabel(ctx.labels) || 'Not set'
+  const currentStatus = getStatusLabel(ctx.labels) || 'Not set'
+  const itemType = ctx.type === 'pr' ? 'PR' : 'Issue'
 
   return `# PM Triage: ${itemType} #${ctx.number}
 
@@ -195,7 +193,7 @@ ${ctx.body}
 ## Notes
 
 [Add triage notes, decisions, and rationale here]
-`;
+`
 }
 
 // ============================================================================
@@ -203,10 +201,10 @@ ${ctx.body}
 // ============================================================================
 
 export function AGENT_BRIEF_PROMPT(ctx: PromptContext): string | null {
-  const brief = extractAgentBrief(ctx.body);
-  if (!brief) return null;
+  const brief = extractAgentBrief(ctx.body)
+  if (!brief) return null
 
-  const itemType = ctx.type === 'pr' ? 'PR' : 'Issue';
+  const itemType = ctx.type === 'pr' ? 'PR' : 'Issue'
 
   return `# Agent Brief: ${itemType} #${ctx.number}
 
@@ -230,7 +228,7 @@ ${brief}
 ## Notes
 
 [Add your notes, observations, or questions here]
-`;
+`
 }
 
 // ============================================================================
@@ -238,8 +236,8 @@ ${brief}
 // ============================================================================
 
 export function MERGE_PROMPT(ctx: PromptContext): string {
-  const qaGrade = ctx.labels.find((l) => l.name.startsWith('qa-grade:'))?.name;
-  const status = getStatusLabel(ctx.labels);
+  const qaGrade = ctx.labels.find((l) => l.name.startsWith('qa-grade:'))?.name
+  const status = getStatusLabel(ctx.labels)
 
   return `# Merge Checklist: PR #${ctx.number}
 
@@ -284,5 +282,5 @@ gh pr merge ${ctx.number} --squash --delete-branch
 ## Notes
 
 [Add merge notes, deployment instructions, or follow-up tasks here]
-`;
+`
 }

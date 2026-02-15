@@ -1,69 +1,71 @@
-'use client';
+'use client'
 
-import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils';
-import type { OpportunityStatus } from '@dfg/types';
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowLeft, ChevronDown, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { STATUS_LABELS, ACTIVE_STATUSES } from '@/lib/utils'
+import type { OpportunityStatus } from '@dfg/types'
 
 function FiltersContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Local state for building filters before applying
-  const [status, setStatus] = useState<string>(searchParams.get('status') || '');
-  const [scoreBand, setScoreBand] = useState<string>(searchParams.get('score_band') || '');
-  const [endingWithin, setEndingWithin] = useState<string>(searchParams.get('ending_within') || '');
-  const [stale, setStale] = useState(searchParams.get('stale') === 'true');
-  const [analysisStale, setAnalysisStale] = useState(searchParams.get('analysis_stale') === 'true');
-  const [verificationNeeded, setVerificationNeeded] = useState(searchParams.get('verification_needed') === 'true');
+  const [status, setStatus] = useState<string>(searchParams.get('status') || '')
+  const [scoreBand, setScoreBand] = useState<string>(searchParams.get('score_band') || '')
+  const [endingWithin, setEndingWithin] = useState<string>(searchParams.get('ending_within') || '')
+  const [stale, setStale] = useState(searchParams.get('stale') === 'true')
+  const [analysisStale, setAnalysisStale] = useState(searchParams.get('analysis_stale') === 'true')
+  const [verificationNeeded, setVerificationNeeded] = useState(
+    searchParams.get('verification_needed') === 'true'
+  )
   // Quick filters matching desktop chips (#117)
-  const [endingSoon, setEndingSoon] = useState(searchParams.get('ending_soon') === 'true');
-  const [attention, setAttention] = useState(searchParams.get('attention') === 'true');
-  const [strikeZone, setStrikeZone] = useState(searchParams.get('strike_zone') === 'true');
-  const [newToday, setNewToday] = useState(searchParams.get('new_today') === 'true');
+  const [endingSoon, setEndingSoon] = useState(searchParams.get('ending_soon') === 'true')
+  const [attention, setAttention] = useState(searchParams.get('attention') === 'true')
+  const [strikeZone, setStrikeZone] = useState(searchParams.get('strike_zone') === 'true')
+  const [newToday, setNewToday] = useState(searchParams.get('new_today') === 'true')
 
   // Build URL with current filter state
   const buildUrl = () => {
-    const params = new URLSearchParams();
-    if (status) params.set('status', status);
-    if (scoreBand) params.set('score_band', scoreBand);
-    if (endingWithin) params.set('ending_within', endingWithin);
-    if (stale) params.set('stale', 'true');
-    if (analysisStale) params.set('analysis_stale', 'true');
-    if (verificationNeeded) params.set('verification_needed', 'true');
-    if (endingSoon) params.set('ending_soon', 'true');
-    if (attention) params.set('attention', 'true');
-    if (strikeZone) params.set('strike_zone', 'true');
-    if (newToday) params.set('new_today', 'true');
-    const queryString = params.toString();
-    return `/opportunities${queryString ? `?${queryString}` : ''}`;
-  };
+    const params = new URLSearchParams()
+    if (status) params.set('status', status)
+    if (scoreBand) params.set('score_band', scoreBand)
+    if (endingWithin) params.set('ending_within', endingWithin)
+    if (stale) params.set('stale', 'true')
+    if (analysisStale) params.set('analysis_stale', 'true')
+    if (verificationNeeded) params.set('verification_needed', 'true')
+    if (endingSoon) params.set('ending_soon', 'true')
+    if (attention) params.set('attention', 'true')
+    if (strikeZone) params.set('strike_zone', 'true')
+    if (newToday) params.set('new_today', 'true')
+    const queryString = params.toString()
+    return `/opportunities${queryString ? `?${queryString}` : ''}`
+  }
 
   // Apply filters and navigate back
   const applyFilters = () => {
-    router.push(buildUrl());
-  };
+    router.push(buildUrl())
+  }
 
   // Clear all filters
   const clearAll = () => {
-    setStatus('');
-    setScoreBand('');
-    setEndingWithin('');
-    setStale(false);
-    setAnalysisStale(false);
-    setVerificationNeeded(false);
-    setEndingSoon(false);
-    setAttention(false);
-    setStrikeZone(false);
-    setNewToday(false);
-  };
+    setStatus('')
+    setScoreBand('')
+    setEndingWithin('')
+    setStale(false)
+    setAnalysisStale(false)
+    setVerificationNeeded(false)
+    setEndingSoon(false)
+    setAttention(false)
+    setStrikeZone(false)
+    setNewToday(false)
+  }
 
   // Go back without changes
   const goBack = () => {
-    router.back();
-  };
+    router.back()
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
@@ -77,9 +79,7 @@ function FiltersContent() {
           >
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-base font-semibold text-gray-900 dark:text-white">
-            Filters
-          </h1>
+          <h1 className="text-base font-semibold text-gray-900 dark:text-white">Filters</h1>
           <button
             onClick={clearAll}
             className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
@@ -95,9 +95,7 @@ function FiltersContent() {
         <div className="space-y-3">
           {/* Status */}
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Status
-            </label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
             <div className="relative">
               <select
                 value={status}
@@ -106,7 +104,9 @@ function FiltersContent() {
               >
                 <option value="">All Statuses</option>
                 {ACTIVE_STATUSES.map((s) => (
-                  <option key={s} value={s}>{STATUS_LABELS[s as OpportunityStatus]}</option>
+                  <option key={s} value={s}>
+                    {STATUS_LABELS[s as OpportunityStatus]}
+                  </option>
                 ))}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
@@ -115,9 +115,7 @@ function FiltersContent() {
 
           {/* Score */}
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Score
-            </label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Score</label>
             <div className="relative">
               <select
                 value={scoreBand}
@@ -135,9 +133,7 @@ function FiltersContent() {
 
           {/* Ending */}
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Ending
-            </label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Ending</label>
             <div className="relative">
               <select
                 value={endingWithin}
@@ -234,22 +230,24 @@ function FiltersContent() {
 
       {/* Fixed bottom button */}
       <div className="sticky bottom-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 pb-safe">
-        <Button
-          variant="primary"
-          className="w-full"
-          onClick={applyFilters}
-        >
+        <Button variant="primary" className="w-full" onClick={applyFilters}>
           Apply Filters
         </Button>
       </div>
     </div>
-  );
+  )
 }
 
 export default function FiltersPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><RefreshCw className="h-6 w-6 animate-spin text-gray-400" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+        </div>
+      }
+    >
       <FiltersContent />
     </Suspense>
-  );
+  )
 }

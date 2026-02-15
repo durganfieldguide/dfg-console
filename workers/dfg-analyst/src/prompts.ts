@@ -60,7 +60,7 @@ BUYER IMPACT:
   "red_flags": [{"category": "structural|mechanical|documentation|fraud", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_inspection": boolean, "riskCategory": "core_risk|optional", "buyerImpact": "1-2 sentence buyer perspective"}],
   "inspection_required": ["brief items"],
   "extraction_notes": ["brief notes"]
-}`;
+}`
 
 export const BUYER_LENS_PROMPT = `Analyze this trailer from a CONSERVATIVE BUYER's perspective.
 
@@ -81,7 +81,7 @@ export const BUYER_LENS_PROMPT = `Analyze this trailer from a CONSERVATIVE BUYER
 }
 
 Use retail pricing: tires $150-200 each, brake job $300/axle, generator repair $1000+.
-Keep all string values SHORT. Max 3-5 items per array.`;
+Keep all string values SHORT. Max 3-5 items per array.`
 
 export const INVESTOR_LENS_PROMPT = `You are a Phoenix-based trailer flipper evaluating an acquisition.
 
@@ -132,18 +132,21 @@ Acquisition: {{ACQUISITION_JSON}}
 - Reference the threshold that was met or missed for the returned verdict (e.g., BUY threshold $600 / 40%).
 - Title language must reflect title_status: "clean title", "title on file (verify transfer)", or "title risk".
 - If quick_sale margin < 0.15, include a downside warning about thin quick-sale safety.
-- Use the provided numeric values; do not invent or adjust profits/margins.`;
+- Use the provided numeric values; do not invent or adjust profits/margins.`
 
 export function buildConditionPrompt(description: string, photoCount: number): string {
   return `${CONDITION_ASSESSMENT_PROMPT}
 
 LISTING: ${description}
 
-Photos: ${photoCount}. Return ONLY the JSON object, no markdown.`;
+Photos: ${photoCount}. Return ONLY the JSON object, no markdown.`
 }
 
 export function buildBuyerLensPrompt(conditionJson: string): string {
-  return BUYER_LENS_PROMPT.replace("{{CONDITION_JSON}}", conditionJson) + "\n\nReturn ONLY JSON, no markdown.";
+  return (
+    BUYER_LENS_PROMPT.replace('{{CONDITION_JSON}}', conditionJson) +
+    '\n\nReturn ONLY JSON, no markdown.'
+  )
 }
 
 export function buildInvestorLensPrompt(
@@ -152,32 +155,33 @@ export function buildInvestorLensPrompt(
   repairPlanJson: string,
   acquisitionJson: string,
   metrics: {
-    maxBid: number;
-    totalInvestment: number;
+    maxBid: number
+    totalInvestment: number
     scenarios: {
-      quick_sale: { sale_price: number; gross_profit: number; margin: number };
-      expected: { sale_price: number; gross_profit: number; margin: number };
-      premium: { sale_price: number; gross_profit: number; margin: number };
-    };
+      quick_sale: { sale_price: number; gross_profit: number; margin: number }
+      expected: { sale_price: number; gross_profit: number; margin: number }
+      premium: { sale_price: number; gross_profit: number; margin: number }
+    }
   }
 ): string {
-  return INVESTOR_LENS_PROMPT
-    .replace("{{CONDITION_JSON}}", conditionJson)
-    .replace("{{PHOENIX_COMPS_JSON}}", phoenixCompsJson)
-    .replace("{{REPAIR_PLAN_JSON}}", repairPlanJson)
-    .replace("{{ACQUISITION_JSON}}", acquisitionJson)
-    .replace("{{MAX_BID}}", String(metrics.maxBid))
-    .replace("{{TOTAL_INVESTMENT}}", String(metrics.totalInvestment))
-    .replace("{{QS_PRICE}}", String(metrics.scenarios.quick_sale.sale_price))
-    .replace("{{QS_PROFIT}}", String(metrics.scenarios.quick_sale.gross_profit))
-    .replace("{{QS_MARGIN}}", String(metrics.scenarios.quick_sale.margin))
-    .replace("{{EXP_PRICE}}", String(metrics.scenarios.expected.sale_price))
-    .replace("{{EXP_PROFIT}}", String(metrics.scenarios.expected.gross_profit))
-    .replace("{{EXP_MARGIN}}", String(metrics.scenarios.expected.margin))
-    .replace("{{PREM_PRICE}}", String(metrics.scenarios.premium.sale_price))
-    .replace("{{PREM_PROFIT}}", String(metrics.scenarios.premium.gross_profit))
-    .replace("{{PREM_MARGIN}}", String(metrics.scenarios.premium.margin))
-    + "\n\nReturn ONLY JSON, no markdown.";
+  return (
+    INVESTOR_LENS_PROMPT.replace('{{CONDITION_JSON}}', conditionJson)
+      .replace('{{PHOENIX_COMPS_JSON}}', phoenixCompsJson)
+      .replace('{{REPAIR_PLAN_JSON}}', repairPlanJson)
+      .replace('{{ACQUISITION_JSON}}', acquisitionJson)
+      .replace('{{MAX_BID}}', String(metrics.maxBid))
+      .replace('{{TOTAL_INVESTMENT}}', String(metrics.totalInvestment))
+      .replace('{{QS_PRICE}}', String(metrics.scenarios.quick_sale.sale_price))
+      .replace('{{QS_PROFIT}}', String(metrics.scenarios.quick_sale.gross_profit))
+      .replace('{{QS_MARGIN}}', String(metrics.scenarios.quick_sale.margin))
+      .replace('{{EXP_PRICE}}', String(metrics.scenarios.expected.sale_price))
+      .replace('{{EXP_PROFIT}}', String(metrics.scenarios.expected.gross_profit))
+      .replace('{{EXP_MARGIN}}', String(metrics.scenarios.expected.margin))
+      .replace('{{PREM_PRICE}}', String(metrics.scenarios.premium.sale_price))
+      .replace('{{PREM_PROFIT}}', String(metrics.scenarios.premium.gross_profit))
+      .replace('{{PREM_MARGIN}}', String(metrics.scenarios.premium.margin)) +
+    '\n\nReturn ONLY JSON, no markdown.'
+  )
 }
 
 export function buildInvestorJustificationPrompt(
@@ -185,8 +189,8 @@ export function buildInvestorJustificationPrompt(
   condition: string,
   phoenixComps: string,
   repairPlan: string
-  ): string {
-    return `You are explaining the INVESTOR/OPERATOR logic behind a trailer flip deal to help the operator understand and learn the reasoning.
+): string {
+  return `You are explaining the INVESTOR/OPERATOR logic behind a trailer flip deal to help the operator understand and learn the reasoning.
 
   INVESTOR LENS OUTPUT:
   ${investorLens}
@@ -209,14 +213,11 @@ export function buildInvestorJustificationPrompt(
 
   Write in second person ("You're looking at..."). Be specific with numbers. Focus on teachable insights.
 
-  Return ONLY the justification text, no preamble.`;
+  Return ONLY the justification text, no preamble.`
 }
 
-export function buildBuyerJustificationPrompt(
-  buyerLens: string,
-  condition: string
-  ): string {
-    return `You are explaining RETAIL BUYER PSYCHOLOGY to help an investor understand how non-professional buyers think and price deals.
+export function buildBuyerJustificationPrompt(buyerLens: string, condition: string): string {
+  return `You are explaining RETAIL BUYER PSYCHOLOGY to help an investor understand how non-professional buyers think and price deals.
 
   BUYER LENS OUTPUT:
   ${buyerLens}
@@ -233,5 +234,5 @@ export function buildBuyerJustificationPrompt(
 
   Write in third person ("A typical buyer sees..."). Be specific about their mental math. Focus on the psychology.
 
-  Return ONLY the justification text, no preamble.`;
+  Return ONLY the justification text, no preamble.`
 }

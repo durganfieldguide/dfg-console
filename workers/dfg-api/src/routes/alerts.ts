@@ -5,10 +5,10 @@
  * Uses latest-per-key semantics for dismissal lookups.
  */
 
-import type { Env } from '../core/env';
-import type { OpportunityRow, Alert, WatchThreshold } from '../core/types';
-import { isFuture, hoursSince, parseJsonSafe, generateId, nowISO } from '../lib/utils';
-import { json, jsonError, ErrorCodes, parseJsonBody } from '../core/http';
+import type { Env } from '../core/env'
+import type { OpportunityRow, Alert, WatchThreshold } from '../core/types'
+import { isFuture, hoursSince, parseJsonSafe, generateId, nowISO } from '../lib/utils'
+import { json, jsonError, ErrorCodes, parseJsonBody } from '../core/http'
 
 // =============================================================================
 // COMPUTE ALERTS FOR OPPORTUNITY
@@ -20,18 +20,15 @@ import { json, jsonError, ErrorCodes, parseJsonBody } from '../core/http';
  *  1. The condition is met (e.g., watch fired, auction ending soon)
  *  2. It has not been dismissed for this specific state (using watch_cycle for watch alerts)
  */
-export async function computeAlertsForOpportunity(
-  env: Env,
-  opp: OpportunityRow
-): Promise<Alert[]> {
-  const alerts: Alert[] = [];
+export async function computeAlertsForOpportunity(env: Env, opp: OpportunityRow): Promise<Alert[]> {
+  const alerts: Alert[] = []
 
   // Get all dismissals for this opportunity from operator_actions
-  const dismissedKeys = await getDismissedAlertKeys(env, opp.id);
+  const dismissedKeys = await getDismissedAlertKeys(env, opp.id)
 
   // 1. Watch Fired Alert
   if (opp.status === 'watch' && opp.watch_fired_at) {
-    const alertKey = `watch_fired:${opp.watch_cycle}`;
+    const alertKey = `watch_fired:${opp.watch_cycle}`
     if (!dismissedKeys.has(alertKey)) {
       alerts.push({
         type: 'watch_fired',
@@ -41,19 +38,19 @@ export async function computeAlertsForOpportunity(
         severity: 'high',
         created_at: opp.watch_fired_at,
         opportunity_id: opp.id,
-      });
+      })
     }
   }
 
   // 2. Auction Ending Soon Alerts
   if (opp.auction_ends_at && isFuture(opp.auction_ends_at)) {
-    const hoursRemaining = getHoursUntil(opp.auction_ends_at);
-    const activeStatuses = ['inbox', 'qualifying', 'watch', 'inspect', 'bid'];
+    const hoursRemaining = getHoursUntil(opp.auction_ends_at)
+    const activeStatuses = ['inbox', 'qualifying', 'watch', 'inspect', 'bid']
 
     if (activeStatuses.includes(opp.status)) {
       // Critical: Ending in < 4 hours
       if (hoursRemaining < 4) {
-        const alertKey = `ending_critical:${opp.auction_ends_at}`;
+        const alertKey = `ending_critical:${opp.auction_ends_at}`
         if (!dismissedKeys.has(alertKey)) {
           alerts.push({
             type: 'ending_soon',
@@ -64,12 +61,12 @@ export async function computeAlertsForOpportunity(
             created_at: opp.auction_ends_at,
             opportunity_id: opp.id,
             metadata: { hours_remaining: hoursRemaining },
-          });
+          })
         }
       }
       // High: Ending in < 24 hours
       else if (hoursRemaining < 24) {
-        const alertKey = `ending_24h:${opp.auction_ends_at}`;
+        const alertKey = `ending_24h:${opp.auction_ends_at}`
         if (!dismissedKeys.has(alertKey)) {
           alerts.push({
             type: 'ending_soon',
@@ -80,12 +77,12 @@ export async function computeAlertsForOpportunity(
             created_at: opp.auction_ends_at,
             opportunity_id: opp.id,
             metadata: { hours_remaining: hoursRemaining },
-          });
+          })
         }
       }
       // Medium: Ending in < 48 hours
       else if (hoursRemaining < 48) {
-        const alertKey = `ending_48h:${opp.auction_ends_at}`;
+        const alertKey = `ending_48h:${opp.auction_ends_at}`
         if (!dismissedKeys.has(alertKey)) {
           alerts.push({
             type: 'ending_soon',
@@ -96,7 +93,7 @@ export async function computeAlertsForOpportunity(
             created_at: opp.auction_ends_at,
             opportunity_id: opp.id,
             metadata: { hours_remaining: hoursRemaining },
-          });
+          })
         }
       }
     }
@@ -104,10 +101,10 @@ export async function computeAlertsForOpportunity(
 
   // 3. Stale Qualifying Alert
   if (opp.status === 'qualifying' && opp.status_changed_at) {
-    const hoursInQualifying = hoursSince(opp.status_changed_at);
+    const hoursInQualifying = hoursSince(opp.status_changed_at)
 
     if (hoursInQualifying > 24) {
-      const alertKey = `stale_qualifying:${opp.status_changed_at}`;
+      const alertKey = `stale_qualifying:${opp.status_changed_at}`
       if (!dismissedKeys.has(alertKey)) {
         alerts.push({
           type: 'stale_qualifying',
@@ -118,16 +115,16 @@ export async function computeAlertsForOpportunity(
           created_at: opp.status_changed_at,
           opportunity_id: opp.id,
           metadata: { hours_in_qualifying: hoursInQualifying },
-        });
+        })
       }
     }
   }
 
   // 4. Price Alert (bid approaching threshold)
   if (opp.status === 'bid' && opp.max_bid_locked && opp.current_bid) {
-    const threshold = 0.9; // 90% of max bid
+    const threshold = 0.9 // 90% of max bid
     if (opp.current_bid >= opp.max_bid_locked * threshold) {
-      const alertKey = `bid_threshold:${opp.max_bid_locked}`;
+      const alertKey = `bid_threshold:${opp.max_bid_locked}`
       if (!dismissedKeys.has(alertKey)) {
         alerts.push({
           type: 'price_alert',
@@ -142,7 +139,7 @@ export async function computeAlertsForOpportunity(
             max_bid: opp.max_bid_locked,
             percentage: Math.round((opp.current_bid / opp.max_bid_locked) * 100),
           },
-        });
+        })
       }
     }
   }
@@ -153,10 +150,10 @@ export async function computeAlertsForOpportunity(
     high: 1,
     medium: 2,
     low: 3,
-  };
-  alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+  }
+  alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
 
-  return alerts;
+  return alerts
 }
 
 // =============================================================================
@@ -172,13 +169,17 @@ export async function dismissAlert(
   opportunityId: string,
   alertKey: string
 ): Promise<void> {
-  const id = generateId();
-  const now = nowISO();
+  const id = generateId()
+  const now = nowISO()
 
-  await env.DB.prepare(`
+  await env.DB.prepare(
+    `
     INSERT INTO operator_actions (id, opportunity_id, action_type, alert_key, created_at)
     VALUES (?, ?, 'alert_dismiss', ?, ?)
-  `).bind(id, opportunityId, alertKey, now).run();
+  `
+  )
+    .bind(id, opportunityId, alertKey, now)
+    .run()
 }
 
 // =============================================================================
@@ -190,20 +191,24 @@ export async function dismissAlert(
  * Uses latest-per-key semantics from operator_actions.
  */
 async function getDismissedAlertKeys(env: Env, opportunityId: string): Promise<Set<string>> {
-  const result = await env.DB.prepare(`
+  const result = await env.DB.prepare(
+    `
     SELECT DISTINCT alert_key
     FROM operator_actions
     WHERE opportunity_id = ?
     AND action_type = 'alert_dismiss'
     AND alert_key IS NOT NULL
-  `).bind(opportunityId).all();
+  `
+  )
+    .bind(opportunityId)
+    .all()
 
-  const keys = new Set<string>();
+  const keys = new Set<string>()
   for (const row of result.results || []) {
-    const key = (row as Record<string, unknown>).alert_key as string;
-    if (key) keys.add(key);
+    const key = (row as Record<string, unknown>).alert_key as string
+    if (key) keys.add(key)
   }
-  return keys;
+  return keys
 }
 
 // =============================================================================
@@ -211,37 +216,37 @@ async function getDismissedAlertKeys(env: Env, opportunityId: string): Promise<S
 // =============================================================================
 
 function getWatchFiredMessage(opp: OpportunityRow): string {
-  const trigger = opp.watch_trigger;
-  const threshold = parseJsonSafe(opp.watch_threshold) as WatchThreshold | null;
+  const trigger = opp.watch_trigger
+  const threshold = parseJsonSafe(opp.watch_threshold) as WatchThreshold | null
 
   switch (trigger) {
     case 'ending_soon':
-      return `Auction ending in ${threshold?.hours_before || 4} hours`;
+      return `Auction ending in ${threshold?.hours_before || 4} hours`
     case 'time_window':
     case 'manual':
-      return 'Your watch reminder has triggered';
+      return 'Your watch reminder has triggered'
     default:
-      return 'Watch condition met';
+      return 'Watch condition met'
   }
 }
 
 function getHoursUntil(isoDate: string): number {
-  const target = new Date(isoDate).getTime();
-  const now = Date.now();
-  return Math.max(0, (target - now) / (1000 * 60 * 60));
+  const target = new Date(isoDate).getTime()
+  const now = Date.now()
+  return Math.max(0, (target - now) / (1000 * 60 * 60))
 }
 
 function formatTimeRemaining(hours: number): string {
   if (hours < 1) {
-    const minutes = Math.round(hours * 60);
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    const minutes = Math.round(hours * 60)
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`
   }
   if (hours < 24) {
-    const h = Math.round(hours);
-    return `${h} hour${h !== 1 ? 's' : ''}`;
+    const h = Math.round(hours)
+    return `${h} hour${h !== 1 ? 's' : ''}`
   }
-  const days = Math.round(hours / 24);
-  return `${days} day${days !== 1 ? 's' : ''}`;
+  const days = Math.round(hours / 24)
+  return `${days} day${days !== 1 ? 's' : ''}`
 }
 
 // =============================================================================
@@ -257,70 +262,79 @@ export async function handleDismissAlert(
   env: Env,
   opportunityId: string
 ): Promise<Response> {
-  const body = await parseJsonBody<{ alert_key: string }>(request);
+  const body = await parseJsonBody<{ alert_key: string }>(request)
   if (!body || !body.alert_key) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'alert_key required', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'alert_key required', 400)
   }
 
   // Verify opportunity exists
-  const opp = await env.DB.prepare(`
+  const opp = await env.DB.prepare(
+    `
     SELECT id FROM opportunities WHERE id = ?
-  `).bind(opportunityId).first();
+  `
+  )
+    .bind(opportunityId)
+    .first()
 
   if (!opp) {
-    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
+    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404)
   }
 
-  await dismissAlert(env, opportunityId, body.alert_key);
+  await dismissAlert(env, opportunityId, body.alert_key)
 
-  return json({ data: { success: true, dismissed: body.alert_key } });
+  return json({ data: { success: true, dismissed: body.alert_key } })
 }
 
 /**
  * POST /api/alerts/dismiss
  * Spec-compliant endpoint for dismissing alerts.
  */
-export async function handleAlertsDismiss(
-  request: Request,
-  env: Env
-): Promise<Response> {
-  const body = await parseJsonBody<{ opportunity_id: string; alert_key: string }>(request);
+export async function handleAlertsDismiss(request: Request, env: Env): Promise<Response> {
+  const body = await parseJsonBody<{ opportunity_id: string; alert_key: string }>(request)
   if (!body || !body.opportunity_id || !body.alert_key) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'opportunity_id and alert_key required', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'opportunity_id and alert_key required', 400)
   }
 
   // Verify opportunity exists
-  const opp = await env.DB.prepare(`
+  const opp = await env.DB.prepare(
+    `
     SELECT id FROM opportunities WHERE id = ?
-  `).bind(body.opportunity_id).first();
+  `
+  )
+    .bind(body.opportunity_id)
+    .first()
 
   if (!opp) {
-    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404);
+    return jsonError(ErrorCodes.NOT_FOUND, 'Opportunity not found', 404)
   }
 
-  await dismissAlert(env, body.opportunity_id, body.alert_key);
+  await dismissAlert(env, body.opportunity_id, body.alert_key)
 
-  return json({ data: { success: true, dismissed: body.alert_key } });
+  return json({ data: { success: true, dismissed: body.alert_key } })
 }
 
 /**
  * POST /api/alerts/dismiss/batch
  * Spec-compliant endpoint for batch dismissing alerts.
  */
-export async function handleAlertsDismissBatch(
-  request: Request,
-  env: Env
-): Promise<Response> {
-  const body = await parseJsonBody<{ dismissals: Array<{ opportunity_id: string; alert_key: string }> }>(request);
+export async function handleAlertsDismissBatch(request: Request, env: Env): Promise<Response> {
+  const body = await parseJsonBody<{
+    dismissals: Array<{ opportunity_id: string; alert_key: string }>
+  }>(request)
   if (!body || !body.dismissals || !Array.isArray(body.dismissals)) {
-    return jsonError(ErrorCodes.INVALID_VALUE, 'dismissals array required', 400);
+    return jsonError(ErrorCodes.INVALID_VALUE, 'dismissals array required', 400)
   }
 
   if (body.dismissals.length > 50) {
-    return jsonError(ErrorCodes.BATCH_TOO_LARGE, 'Max 50 dismissals per batch', 400);
+    return jsonError(ErrorCodes.BATCH_TOO_LARGE, 'Max 50 dismissals per batch', 400)
   }
 
-  const results: Array<{ opportunity_id: string; alert_key: string; success: boolean; error?: string }> = [];
+  const results: Array<{
+    opportunity_id: string
+    alert_key: string
+    success: boolean
+    error?: string
+  }> = []
 
   for (const dismissal of body.dismissals) {
     if (!dismissal.opportunity_id || !dismissal.alert_key) {
@@ -329,24 +343,24 @@ export async function handleAlertsDismissBatch(
         alert_key: dismissal.alert_key || '',
         success: false,
         error: 'Missing opportunity_id or alert_key',
-      });
-      continue;
+      })
+      continue
     }
 
     try {
-      await dismissAlert(env, dismissal.opportunity_id, dismissal.alert_key);
+      await dismissAlert(env, dismissal.opportunity_id, dismissal.alert_key)
       results.push({
         opportunity_id: dismissal.opportunity_id,
         alert_key: dismissal.alert_key,
         success: true,
-      });
+      })
     } catch (error) {
       results.push({
         opportunity_id: dismissal.opportunity_id,
         alert_key: dismissal.alert_key,
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      })
     }
   }
 
@@ -356,7 +370,7 @@ export async function handleAlertsDismissBatch(
       failed: results.filter((r) => !r.success).length,
       results,
     },
-  });
+  })
 }
 
 /**
@@ -370,13 +384,13 @@ export async function handleAlerts(
 ): Promise<Response> {
   // POST /api/alerts/dismiss
   if (path === '/api/alerts/dismiss' && method === 'POST') {
-    return handleAlertsDismiss(request, env);
+    return handleAlertsDismiss(request, env)
   }
 
   // POST /api/alerts/dismiss/batch
   if (path === '/api/alerts/dismiss/batch' && method === 'POST') {
-    return handleAlertsDismissBatch(request, env);
+    return handleAlertsDismissBatch(request, env)
   }
 
-  return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404);
+  return jsonError(ErrorCodes.NOT_FOUND, `Route not found: ${method} ${path}`, 404)
 }

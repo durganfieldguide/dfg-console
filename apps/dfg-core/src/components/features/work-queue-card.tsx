@@ -1,20 +1,15 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import {
-  ExternalLink,
-  Copy,
-  CheckCircle,
-  AlertTriangle,
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
-import type { WorkQueueCard, PromptType, QueueType } from '@/types/github';
+import { useState } from 'react'
+import { ExternalLink, Copy, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/utils'
+import type { WorkQueueCard, PromptType, QueueType } from '@/types/github'
 
 interface WorkQueueCardProps {
-  card: WorkQueueCard;
-  queueType: QueueType;
-  onCopyPrompt: (card: WorkQueueCard, type: PromptType) => Promise<void>;
+  card: WorkQueueCard
+  queueType: QueueType
+  onCopyPrompt: (card: WorkQueueCard, type: PromptType) => Promise<void>
 }
 
 /**
@@ -24,40 +19,40 @@ interface WorkQueueCardProps {
 function getPrimaryAction(queueType: QueueType): { type: PromptType; label: string } | null {
   switch (queueType) {
     case 'needs-qa':
-      return { type: 'qa', label: 'Copy QA Prompt' };
+      return { type: 'qa', label: 'Copy QA Prompt' }
     case 'needs-pm':
-      return { type: 'pm', label: 'Copy PM Prompt' };
+      return { type: 'pm', label: 'Copy PM Prompt' }
     case 'dev-queue':
-      return { type: 'agent-brief', label: 'Copy Agent Brief' };
+      return { type: 'agent-brief', label: 'Copy Agent Brief' }
     case 'ready-to-merge':
-      return { type: 'merge', label: 'Copy Merge Prompt' };
+      return { type: 'merge', label: 'Copy Merge Prompt' }
     case 'in-flight':
-      return null; // Info only, no action
+      return null // Info only, no action
     default:
-      return null;
+      return null
   }
 }
 
 export function WorkQueueCard({ card, queueType, onCopyPrompt }: WorkQueueCardProps) {
-  const [copying, setCopying] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copying, setCopying] = useState(false)
+  const [copied, setCopied] = useState(false)
 
-  const primaryAction = getPrimaryAction(queueType);
+  const primaryAction = getPrimaryAction(queueType)
 
   const handleCopy = async () => {
-    if (!primaryAction) return;
-    
-    setCopying(true);
-    try {
-      await onCopyPrompt(card, primaryAction.type);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } finally {
-      setCopying(false);
-    }
-  };
+    if (!primaryAction) return
 
-  const relativeTime = getRelativeTime(card.updatedAt);
+    setCopying(true)
+    try {
+      await onCopyPrompt(card, primaryAction.type)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } finally {
+      setCopying(false)
+    }
+  }
+
+  const relativeTime = getRelativeTime(card.updatedAt)
 
   return (
     <div className="border-b border-gray-100 dark:border-gray-700 last:border-0 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
@@ -136,9 +131,7 @@ export function WorkQueueCard({ card, queueType, onCopyPrompt }: WorkQueueCardPr
       )}
 
       {/* Timestamp */}
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        Updated {relativeTime}
-      </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">Updated {relativeTime}</div>
 
       {/* Primary Action */}
       {primaryAction && (
@@ -147,10 +140,7 @@ export function WorkQueueCard({ card, queueType, onCopyPrompt }: WorkQueueCardPr
           size="sm"
           onClick={handleCopy}
           disabled={copying}
-          className={cn(
-            'transition-all',
-            copied && 'bg-green-600 hover:bg-green-600 text-white'
-          )}
+          className={cn('transition-all', copied && 'bg-green-600 hover:bg-green-600 text-white')}
         >
           {copying ? (
             <>
@@ -171,28 +161,28 @@ export function WorkQueueCard({ card, queueType, onCopyPrompt }: WorkQueueCardPr
         </Button>
       )}
     </div>
-  );
+  )
 }
 
 /**
  * Get relative time string from ISO date string.
  */
 function getRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
 
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return 'just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
 
   // For longer times, show the date
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-  });
+  })
 }

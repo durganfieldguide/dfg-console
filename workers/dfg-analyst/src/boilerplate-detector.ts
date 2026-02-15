@@ -7,19 +7,19 @@
  */
 
 export interface BoilerplateSection {
-  pattern: string;           // What pattern matched
-  text: string;              // The actual text removed
-  startIndex: number;        // Where it was in the original
-  endIndex: number;
-  category: 'tc_header' | 'disclaimer' | 'legal' | 'generic_warning' | 'html';
+  pattern: string // What pattern matched
+  text: string // The actual text removed
+  startIndex: number // Where it was in the original
+  endIndex: number
+  category: 'tc_header' | 'disclaimer' | 'legal' | 'generic_warning' | 'html'
 }
 
 export interface SanitizationResult {
-  sanitized: string;         // Cleaned description
-  original: string;          // Original for reference
-  sectionsRemoved: BoilerplateSection[];
-  hasBoilerplate: boolean;   // Quick check
-  salvageMentioned: boolean; // Did we remove salvage-related boilerplate?
+  sanitized: string // Cleaned description
+  original: string // Original for reference
+  sectionsRemoved: BoilerplateSection[]
+  hasBoilerplate: boolean // Quick check
+  salvageMentioned: boolean // Did we remove salvage-related boilerplate?
 }
 
 /**
@@ -32,59 +32,61 @@ const BOILERPLATE_PATTERNS = [
   // T&C SECTION HEADERS
   // ========================================
   {
-    pattern: /PRE-AUCTION REGISTRATION AND BIDDING[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
+    pattern:
+      /PRE-AUCTION REGISTRATION AND BIDDING[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Sierra pre-auction registration block'
+    description: 'Sierra pre-auction registration block',
   },
   {
     pattern: /BIDDER DECLARATION[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Sierra bidder declaration'
+    description: 'Sierra bidder declaration',
   },
   {
     pattern: /TERMS AND CONDITIONS[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Generic T&C section'
+    description: 'Generic T&C section',
   },
   {
     pattern: /TITLE INFORMATION[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Sierra title information boilerplate'
+    description: 'Sierra title information boilerplate',
   },
   {
     pattern: /GENERAL TERMS[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'General terms section'
+    description: 'General terms section',
   },
   {
     pattern: /PAYMENT METHODS[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Payment methods section'
+    description: 'Payment methods section',
   },
   {
     pattern: /AUCTION DAY INFORMATION[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Auction day info section'
+    description: 'Auction day info section',
   },
   {
-    pattern: /DEFINITION OF TYPES OF AUCTIONS[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
+    pattern:
+      /DEFINITION OF TYPES OF AUCTIONS[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Auction types definition'
+    description: 'Auction types definition',
   },
   {
     pattern: /AUCTION PREVIEW[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Auction preview section'
+    description: 'Auction preview section',
   },
   {
     pattern: /BUYER'S PREMIUM[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Buyers premium section'
+    description: 'Buyers premium section',
   },
   {
     pattern: /REMOVAL INFORMATION[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'tc_header' as const,
-    description: 'Item removal section'
+    description: 'Item removal section',
   },
 
   // ========================================
@@ -93,17 +95,17 @@ const BOILERPLATE_PATTERNS = [
   {
     pattern: /\*\*DISCLAIMER\*\*[\s\S]*?(?=(?:Features:|Description:|Lot Details|$))/gi,
     category: 'disclaimer' as const,
-    description: 'Disclaimer block'
+    description: 'Disclaimer block',
   },
   {
     pattern: /ALL ITEMS SOLD[\s\S]*?AS-IS[\s\S]*?WHERE-IS[\s\S]*?(?=\.|$)/gi,
     category: 'disclaimer' as const,
-    description: 'As-is where-is disclaimer'
+    description: 'As-is where-is disclaimer',
   },
   {
     pattern: /Buyer agrees to[\s\S]{0,200}?(?=\.|$)/gi,
     category: 'disclaimer' as const,
-    description: 'Buyer agreement clauses'
+    description: 'Buyer agreement clauses',
   },
 
   // ========================================
@@ -112,47 +114,47 @@ const BOILERPLATE_PATTERNS = [
   {
     pattern: /Restored Salvage\s*[-–—]\s*Vehicle was previously salvaged[\s\S]*?(?=\.|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Restored salvage definition (educational)'
+    description: 'Restored salvage definition (educational)',
   },
   {
     pattern: /Salvage\s*[-–—]\s*Vehicle has had one or more incidents[\s\S]*?(?=\.|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Salvage definition (educational)'
+    description: 'Salvage definition (educational)',
   },
   {
     pattern: /Items may have salvage titles[\s\S]*?(?=\.|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Generic "may have salvage" warning'
+    description: 'Generic "may have salvage" warning',
   },
   {
     pattern: /Some items may be sold with salvage[\s\S]*?(?=\.|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Generic salvage possibility'
+    description: 'Generic salvage possibility',
   },
   {
     pattern: /Title status varies by lot[\s\S]*?(?=\.|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Generic title status disclaimer'
+    description: 'Generic title status disclaimer',
   },
   {
     pattern: /Left blank\s*[-–—]\s*CLEAN TITLE[\s\S]*?(?=Restored Salvage|Salvage|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Sierra title brand legend'
+    description: 'Sierra title brand legend',
   },
   {
     pattern: /Brand:[\s\S]*?(?=Odometer:|Title|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Brand field explanation'
+    description: 'Brand field explanation',
   },
   {
     pattern: /All vehicles sold as-is[\s\S]*?(?=\.|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Generic as-is vehicle disclaimer'
+    description: 'Generic as-is vehicle disclaimer',
   },
   {
     pattern: /Titles may contain brands[\s\S]*?(?=\.|$)/gi,
     category: 'generic_warning' as const,
-    description: 'Generic title brand warning'
+    description: 'Generic title brand warning',
   },
 
   // ========================================
@@ -161,17 +163,17 @@ const BOILERPLATE_PATTERNS = [
   {
     pattern: /By bidding you agree[\s\S]*?(?=\.|$)/gi,
     category: 'legal' as const,
-    description: 'Bidding agreement clause'
+    description: 'Bidding agreement clause',
   },
   {
     pattern: /All sales are final[\s\S]*?(?=\.|$)/gi,
     category: 'legal' as const,
-    description: 'Final sale clause'
+    description: 'Final sale clause',
   },
   {
     pattern: /No warranties expressed or implied[\s\S]*?(?=\.|$)/gi,
     category: 'legal' as const,
-    description: 'Warranty disclaimer'
+    description: 'Warranty disclaimer',
   },
 
   // ========================================
@@ -180,19 +182,19 @@ const BOILERPLATE_PATTERNS = [
   {
     pattern: /<style[\s\S]*?<\/style>/gi,
     category: 'html' as const,
-    description: 'HTML style tags'
+    description: 'HTML style tags',
   },
   {
     pattern: /<script[\s\S]*?<\/script>/gi,
     category: 'html' as const,
-    description: 'HTML script tags'
+    description: 'HTML script tags',
   },
   {
     pattern: /<iframe[\s\S]*?<\/iframe>/gi,
     category: 'html' as const,
-    description: 'HTML iframe tags'
-  }
-];
+    description: 'HTML iframe tags',
+  },
+]
 
 /**
  * Detects if a text contains listing-specific title status claims.
@@ -208,16 +210,16 @@ const LISTING_SPECIFIC_TITLE_PATTERNS = [
   /Title Status:\s*(Salvage|Rebuilt|Clean|On File|Missing)/i,
   /THIS\s+(vehicle|item|unit|trailer)\s+has\s+a\s+(salvage|rebuilt|clean)\s+title/i,
   /Certificate of Destruction/i,
-  /(Salvage|Rebuilt)\s+title\s*[-–—]\s*[^.]{10,50}/i,  // "Salvage title - frame damage" (with context)
+  /(Salvage|Rebuilt)\s+title\s*[-–—]\s*[^.]{10,50}/i, // "Salvage title - frame damage" (with context)
   /Title\s+is\s+(salvage|rebuilt|clean|missing)/i,
   /Sold\s+with\s+(salvage|rebuilt|clean)\s+title/i,
-];
+]
 
 /**
  * Check if text contains listing-specific (non-boilerplate) title claims.
  */
 function hasListingSpecificTitleClaim(text: string): boolean {
-  return LISTING_SPECIFIC_TITLE_PATTERNS.some(pattern => pattern.test(text));
+  return LISTING_SPECIFIC_TITLE_PATTERNS.some((pattern) => pattern.test(text))
 }
 
 /**
@@ -231,31 +233,31 @@ export function detectAndRemoveBoilerplate(description: string | undefined): San
       original: '',
       sectionsRemoved: [],
       hasBoilerplate: false,
-      salvageMentioned: false
-    };
+      salvageMentioned: false,
+    }
   }
 
-  const original = description;
-  let sanitized = description;
-  const sectionsRemoved: BoilerplateSection[] = [];
-  let salvageMentioned = false;
+  const original = description
+  let sanitized = description
+  const sectionsRemoved: BoilerplateSection[] = []
+  let salvageMentioned = false
 
   // Apply each boilerplate pattern
   for (const { pattern, category, description: desc } of BOILERPLATE_PATTERNS) {
     // Reset lastIndex for global regex
-    pattern.lastIndex = 0;
+    pattern.lastIndex = 0
 
-    let match: RegExpExecArray | null;
+    let match: RegExpExecArray | null
     while ((match = pattern.exec(sanitized)) !== null) {
-      const matchedText = match[0];
-      const startIndex = match.index;
-      const endIndex = startIndex + matchedText.length;
+      const matchedText = match[0]
+      const startIndex = match.index
+      const endIndex = startIndex + matchedText.length
 
       // Check if this section mentions salvage
       if (/salvage|rebuilt|title/i.test(matchedText)) {
         // Only flag if it's NOT a listing-specific claim
         if (!hasListingSpecificTitleClaim(matchedText)) {
-          salvageMentioned = true;
+          salvageMentioned = true
         }
       }
 
@@ -264,15 +266,15 @@ export function detectAndRemoveBoilerplate(description: string | undefined): San
         text: matchedText,
         startIndex,
         endIndex,
-        category
-      });
+        category,
+      })
 
       // Remove the matched section
-      sanitized = sanitized.substring(0, startIndex) + ' ' + sanitized.substring(endIndex);
+      sanitized = sanitized.substring(0, startIndex) + ' ' + sanitized.substring(endIndex)
 
       // Reset lastIndex after modification
-      pattern.lastIndex = 0;
-      break; // Process one match at a time to avoid index issues
+      pattern.lastIndex = 0
+      break // Process one match at a time to avoid index issues
     }
   }
 
@@ -280,22 +282,22 @@ export function detectAndRemoveBoilerplate(description: string | undefined): San
   sanitized = sanitized
     .replace(/\s+/g, ' ')
     .replace(/\s*\.\s*\.\s*/g, '. ')
-    .trim();
+    .trim()
 
   return {
     sanitized,
     original,
     sectionsRemoved,
     hasBoilerplate: sectionsRemoved.length > 0,
-    salvageMentioned
-  };
+    salvageMentioned,
+  }
 }
 
 /**
  * Quick check: does description have T&C boilerplate?
  */
 export function hasBoilerplate(description: string | undefined): boolean {
-  if (!description) return false;
+  if (!description) return false
 
   // Check for common T&C section headers
   const quickPatterns = [
@@ -304,28 +306,30 @@ export function hasBoilerplate(description: string | undefined): boolean {
     /BIDDER DECLARATION/i,
     /AUCTION DAY INFORMATION/i,
     /Items may have salvage/i,
-    /All items sold as-is/i
-  ];
+    /All items sold as-is/i,
+  ]
 
-  return quickPatterns.some(pattern => pattern.test(description));
+  return quickPatterns.some((pattern) => pattern.test(description))
 }
 
 /**
  * Extract title status claims from text (for audit trail).
  * Returns the specific phrases that mention title status.
  */
-export function extractTitleClaims(text: string): Array<{ text: string; isListingSpecific: boolean }> {
-  const claims: Array<{ text: string; isListingSpecific: boolean }> = [];
+export function extractTitleClaims(
+  text: string
+): Array<{ text: string; isListingSpecific: boolean }> {
+  const claims: Array<{ text: string; isListingSpecific: boolean }> = []
 
   // Look for any mention of salvage/rebuilt/title
-  const titleMentions = text.match(/[^.]*?(salvage|rebuilt|title|clean title)[^.]*\./gi) || [];
+  const titleMentions = text.match(/[^.]*?(salvage|rebuilt|title|clean title)[^.]*\./gi) || []
 
   for (const mention of titleMentions) {
     claims.push({
       text: mention.trim(),
-      isListingSpecific: hasListingSpecificTitleClaim(mention)
-    });
+      isListingSpecific: hasListingSpecificTitleClaim(mention),
+    })
   }
 
-  return claims;
+  return claims
 }

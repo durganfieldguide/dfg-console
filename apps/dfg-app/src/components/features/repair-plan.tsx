@@ -1,35 +1,31 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { cn, formatCurrency } from '@/lib/utils';
-import {
-  Wrench,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Info,
-  Sparkles,
-} from 'lucide-react';
+import * as React from 'react'
+import { cn, formatCurrency } from '@/lib/utils'
+import { Wrench, AlertTriangle, CheckCircle, Clock, Info, Sparkles } from 'lucide-react'
 
-type RepairPriority = 'critical' | 'important' | 'cosmetic' | 'optional';
-type RepairDifficulty = 'diy' | 'shop' | 'specialist';
+type RepairPriority = 'critical' | 'important' | 'cosmetic' | 'optional'
+type RepairDifficulty = 'diy' | 'shop' | 'specialist'
 
 interface RepairItem {
-  name: string;
-  estimatedCost: number;
-  priority: RepairPriority;
-  difficulty?: RepairDifficulty;
-  description?: string;
-  timeEstimate?: string; // e.g., "2-4 hours"
+  name: string
+  estimatedCost: number
+  priority: RepairPriority
+  difficulty?: RepairDifficulty
+  description?: string
+  timeEstimate?: string // e.g., "2-4 hours"
 }
 
 interface RepairPlanProps {
-  items: RepairItem[];
-  totalEstimate?: number;
-  className?: string;
+  items: RepairItem[]
+  totalEstimate?: number
+  className?: string
 }
 
-const priorityConfig: Record<RepairPriority, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+const priorityConfig: Record<
+  RepairPriority,
+  { label: string; color: string; bgColor: string; icon: React.ReactNode }
+> = {
   critical: {
     label: 'Critical',
     color: 'text-red-600 dark:text-red-400',
@@ -54,55 +50,89 @@ const priorityConfig: Record<RepairPriority, { label: string; color: string; bgC
     bgColor: 'rgba(107, 114, 128, 0.1)',
     icon: <CheckCircle className="h-4 w-4" />,
   },
-};
+}
 
 const difficultyConfig: Record<RepairDifficulty, { label: string; description: string }> = {
   diy: { label: 'DIY', description: 'Can be done at home with basic tools' },
   shop: { label: 'Shop', description: 'Requires professional equipment' },
   specialist: { label: 'Specialist', description: 'Needs specialized expertise' },
-};
+}
 
 // Parse raw repair plan text into structured items
 export function parseRepairPlan(raw: string): RepairItem[] {
   if (!raw || raw.toLowerCase().includes('no repairs') || raw.trim() === '') {
-    return [];
+    return []
   }
 
-  const items: RepairItem[] = [];
-  const lines = raw.split(/[,;\n]/).map(l => l.trim()).filter(l => l.length > 0);
+  const items: RepairItem[] = []
+  const lines = raw
+    .split(/[,;\n]/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
 
   for (const line of lines) {
     // Try to extract cost: "brakes $200" or "brakes ($200)"
-    const costMatch = line.match(/\$?([\d,]+)/);
-    const cost = costMatch ? parseInt(costMatch[1].replace(/,/g, '')) : 0;
+    const costMatch = line.match(/\$?([\d,]+)/)
+    const cost = costMatch ? parseInt(costMatch[1].replace(/,/g, '')) : 0
 
     // Remove cost from name
-    const name = line.replace(/\$?[\d,]+/g, '').replace(/[()]/g, '').trim();
+    const name = line
+      .replace(/\$?[\d,]+/g, '')
+      .replace(/[()]/g, '')
+      .trim()
 
-    if (name.length === 0) continue;
+    if (name.length === 0) continue
 
     // Determine priority based on keywords
-    let priority: RepairPriority = 'important';
-    const lowerName = name.toLowerCase();
+    let priority: RepairPriority = 'important'
+    const lowerName = name.toLowerCase()
 
-    if (lowerName.includes('safety') || lowerName.includes('brake') || lowerName.includes('tire') ||
-        lowerName.includes('steering') || lowerName.includes('suspension') || lowerName.includes('critical')) {
-      priority = 'critical';
-    } else if (lowerName.includes('paint') || lowerName.includes('dent') || lowerName.includes('scratch') ||
-               lowerName.includes('polish') || lowerName.includes('detail') || lowerName.includes('cosmetic')) {
-      priority = 'cosmetic';
-    } else if (lowerName.includes('optional') || lowerName.includes('upgrade') || lowerName.includes('nice to have')) {
-      priority = 'optional';
+    if (
+      lowerName.includes('safety') ||
+      lowerName.includes('brake') ||
+      lowerName.includes('tire') ||
+      lowerName.includes('steering') ||
+      lowerName.includes('suspension') ||
+      lowerName.includes('critical')
+    ) {
+      priority = 'critical'
+    } else if (
+      lowerName.includes('paint') ||
+      lowerName.includes('dent') ||
+      lowerName.includes('scratch') ||
+      lowerName.includes('polish') ||
+      lowerName.includes('detail') ||
+      lowerName.includes('cosmetic')
+    ) {
+      priority = 'cosmetic'
+    } else if (
+      lowerName.includes('optional') ||
+      lowerName.includes('upgrade') ||
+      lowerName.includes('nice to have')
+    ) {
+      priority = 'optional'
     }
 
     // Determine difficulty based on keywords
-    let difficulty: RepairDifficulty = 'shop';
-    if (lowerName.includes('diy') || lowerName.includes('fluid') || lowerName.includes('filter') ||
-        lowerName.includes('wiper') || lowerName.includes('bulb') || lowerName.includes('battery')) {
-      difficulty = 'diy';
-    } else if (lowerName.includes('engine') || lowerName.includes('transmission') || lowerName.includes('electrical') ||
-               lowerName.includes('hybrid') || lowerName.includes('computer') || lowerName.includes('specialist')) {
-      difficulty = 'specialist';
+    let difficulty: RepairDifficulty = 'shop'
+    if (
+      lowerName.includes('diy') ||
+      lowerName.includes('fluid') ||
+      lowerName.includes('filter') ||
+      lowerName.includes('wiper') ||
+      lowerName.includes('bulb') ||
+      lowerName.includes('battery')
+    ) {
+      difficulty = 'diy'
+    } else if (
+      lowerName.includes('engine') ||
+      lowerName.includes('transmission') ||
+      lowerName.includes('electrical') ||
+      lowerName.includes('hybrid') ||
+      lowerName.includes('computer') ||
+      lowerName.includes('specialist')
+    ) {
+      difficulty = 'specialist'
     }
 
     items.push({
@@ -110,29 +140,32 @@ export function parseRepairPlan(raw: string): RepairItem[] {
       estimatedCost: cost,
       priority,
       difficulty,
-    });
+    })
   }
 
   // Sort by priority: critical first, then important, cosmetic, optional
-  const priorityOrder: RepairPriority[] = ['critical', 'important', 'cosmetic', 'optional'];
-  items.sort((a, b) => priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority));
+  const priorityOrder: RepairPriority[] = ['critical', 'important', 'cosmetic', 'optional']
+  items.sort((a, b) => priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority))
 
-  return items;
+  return items
 }
 
 export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps) {
   // Calculate total if not provided
-  const calculatedTotal = items.reduce((sum, item) => sum + item.estimatedCost, 0);
-  const total = totalEstimate ?? calculatedTotal;
+  const calculatedTotal = items.reduce((sum, item) => sum + item.estimatedCost, 0)
+  const total = totalEstimate ?? calculatedTotal
 
   // Group items by priority
-  const groupedItems = items.reduce((acc, item) => {
-    if (!acc[item.priority]) acc[item.priority] = [];
-    acc[item.priority].push(item);
-    return acc;
-  }, {} as Record<RepairPriority, RepairItem[]>);
+  const groupedItems = items.reduce(
+    (acc, item) => {
+      if (!acc[item.priority]) acc[item.priority] = []
+      acc[item.priority].push(item)
+      return acc
+    },
+    {} as Record<RepairPriority, RepairItem[]>
+  )
 
-  const priorityOrder: RepairPriority[] = ['critical', 'important', 'cosmetic', 'optional'];
+  const priorityOrder: RepairPriority[] = ['critical', 'important', 'cosmetic', 'optional']
 
   if (items.length === 0) {
     return (
@@ -150,7 +183,7 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -160,9 +193,10 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
         className="p-4 rounded-lg border-2"
         style={{
           borderColor: total > 500 ? 'rgba(245, 158, 11, 0.5)' : 'var(--border)',
-          background: total > 500
-            ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.1) 100%)'
-            : 'var(--background)',
+          background:
+            total > 500
+              ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.1) 100%)'
+              : 'var(--background)',
         }}
       >
         <div className="flex items-center justify-between">
@@ -170,9 +204,7 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
             <p className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
               Estimated Repair Cost
             </p>
-            <p className="text-3xl font-bold font-mono">
-              {formatCurrency(total)}
-            </p>
+            <p className="text-3xl font-bold font-mono">{formatCurrency(total)}</p>
           </div>
           <div
             className="h-12 w-12 rounded-full flex items-center justify-center"
@@ -181,8 +213,13 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
             <Wrench className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
           </div>
         </div>
-        <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: 'var(--muted-foreground)' }}>
-          <span>{items.length} repair{items.length !== 1 ? 's' : ''} identified</span>
+        <div
+          className="flex items-center gap-4 mt-3 text-xs"
+          style={{ color: 'var(--muted-foreground)' }}
+        >
+          <span>
+            {items.length} repair{items.length !== 1 ? 's' : ''} identified
+          </span>
           {groupedItems.critical?.length > 0 && (
             <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
               <AlertTriangle className="h-3 w-3" />
@@ -194,19 +231,17 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
 
       {/* Grouped Repair Items */}
       {priorityOrder.map((priority) => {
-        const priorityItems = groupedItems[priority];
-        if (!priorityItems?.length) return null;
+        const priorityItems = groupedItems[priority]
+        if (!priorityItems?.length) return null
 
-        const config = priorityConfig[priority];
+        const config = priorityConfig[priority]
 
         return (
           <div key={priority} className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">
               <span className={config.color}>{config.icon}</span>
               <span>{config.label}</span>
-              <span style={{ color: 'var(--muted-foreground)' }}>
-                ({priorityItems.length})
-              </span>
+              <span style={{ color: 'var(--muted-foreground)' }}>({priorityItems.length})</span>
             </div>
             <div className="space-y-2 ml-6">
               {priorityItems.map((item, index) => (
@@ -221,7 +256,10 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
                       {item.difficulty && (
                         <span
                           className="text-xs px-1.5 py-0.5 rounded"
-                          style={{ backgroundColor: 'var(--background)', color: 'var(--muted-foreground)' }}
+                          style={{
+                            backgroundColor: 'var(--background)',
+                            color: 'var(--muted-foreground)',
+                          }}
                           title={difficultyConfig[item.difficulty].description}
                         >
                           {difficultyConfig[item.difficulty].label}
@@ -241,7 +279,7 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
               ))}
             </div>
           </div>
-        );
+        )
       })}
 
       {/* Guide */}
@@ -249,17 +287,35 @@ export function RepairPlan({ items, totalEstimate, className }: RepairPlanProps)
         className="flex items-start gap-3 p-3 rounded-lg"
         style={{ backgroundColor: 'var(--muted)' }}
       >
-        <Info className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--muted-foreground)' }} />
+        <Info
+          className="h-5 w-5 flex-shrink-0 mt-0.5"
+          style={{ color: 'var(--muted-foreground)' }}
+        />
         <div>
           <p className="text-sm font-medium">Repair Priority Guide</p>
-          <div className="grid grid-cols-2 gap-2 mt-2 text-xs" style={{ color: 'var(--muted-foreground)' }}>
-            <span><span className="text-red-600 dark:text-red-400 font-medium">Critical:</span> Safety/legal issues</span>
-            <span><span className="text-yellow-600 dark:text-yellow-400 font-medium">Important:</span> Affects reliability</span>
-            <span><span className="text-blue-600 dark:text-blue-400 font-medium">Cosmetic:</span> Appearance only</span>
-            <span><span className="text-gray-600 dark:text-gray-400 font-medium">Optional:</span> Nice to have</span>
+          <div
+            className="grid grid-cols-2 gap-2 mt-2 text-xs"
+            style={{ color: 'var(--muted-foreground)' }}
+          >
+            <span>
+              <span className="text-red-600 dark:text-red-400 font-medium">Critical:</span>{' '}
+              Safety/legal issues
+            </span>
+            <span>
+              <span className="text-yellow-600 dark:text-yellow-400 font-medium">Important:</span>{' '}
+              Affects reliability
+            </span>
+            <span>
+              <span className="text-blue-600 dark:text-blue-400 font-medium">Cosmetic:</span>{' '}
+              Appearance only
+            </span>
+            <span>
+              <span className="text-gray-600 dark:text-gray-400 font-medium">Optional:</span> Nice
+              to have
+            </span>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

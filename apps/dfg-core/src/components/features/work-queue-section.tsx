@@ -1,21 +1,21 @@
-'use client';
+'use client'
 
-import { RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { WorkQueueCard } from './work-queue-card';
-import { cn } from '@/lib/utils';
-import type { WorkQueueCard as CardType, PromptType, QueueType } from '@/types/github';
+import { RefreshCw } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { WorkQueueCard } from './work-queue-card'
+import { cn } from '@/lib/utils'
+import type { WorkQueueCard as CardType, PromptType, QueueType } from '@/types/github'
 
 interface WorkQueueSectionProps {
-  title: string;
-  queueType: QueueType;
-  icon: React.ComponentType<{ className?: string }>;
-  cards: CardType[];
-  loading: boolean;
-  error?: string;
-  onRefresh: () => void;
-  onCopyPrompt: (card: CardType, type: PromptType) => Promise<void>;
+  title: string
+  queueType: QueueType
+  icon: React.ComponentType<{ className?: string }>
+  cards: CardType[]
+  loading: boolean
+  error?: string
+  onRefresh: () => void
+  onCopyPrompt: (card: CardType, type: PromptType) => Promise<void>
 }
 
 export function WorkQueueSection({
@@ -54,9 +54,7 @@ export function WorkQueueSection({
           disabled={loading}
           className="shrink-0"
         >
-          <RefreshCw
-            className={cn('h-4 w-4', loading && 'animate-spin')}
-          />
+          <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
         </Button>
       </CardHeader>
 
@@ -68,9 +66,7 @@ export function WorkQueueSection({
           </div>
         ) : error ? (
           <div className="p-8 text-center">
-            <p className="text-sm text-red-600 dark:text-red-400 mb-3">
-              {error}
-            </p>
+            <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>
             <Button variant="secondary" size="sm" onClick={onRefresh}>
               Retry
             </Button>
@@ -93,5 +89,5 @@ export function WorkQueueSection({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

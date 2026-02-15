@@ -52,7 +52,7 @@ BUYER IMPACT:
   "red_flags": [{"category": "mechanical|electrical|battery|counterfeit", "severity": "minor|moderate|major|dealbreaker", "description": "brief", "requires_testing": boolean, "riskCategory": "core_risk|optional", "buyerImpact": "1-2 sentence buyer perspective"}],
   "inspection_required": ["brief items"],
   "extraction_notes": ["brief notes"]
-}`;
+}`
 
 export const BUYER_LENS_PROMPT_POWER_TOOLS = `Analyze this power tool from a CONSERVATIVE BUYER's perspective.
 
@@ -73,7 +73,7 @@ export const BUYER_LENS_PROMPT_POWER_TOOLS = `Analyze this power tool from a CON
 }
 
 Use retail pricing: batteries $40-80 each, chargers $30-50. Buyers fear battery replacement costs.
-Keep all string values SHORT. Max 3-5 items per array.`;
+Keep all string values SHORT. Max 3-5 items per array.`
 
 export const INVESTOR_LENS_PROMPT_POWER_TOOLS = `You are a Phoenix-based tool flipper evaluating an acquisition.
 
@@ -125,18 +125,21 @@ Acquisition: {{ACQUISITION_JSON}}
 - Reference the threshold that was met or missed
 - Battery condition is PRIMARY risk factor
 - Brand matters: DeWalt/Milwaukee = lower risk, off-brand = higher risk
-- Combo kits require ALL pieces present for premium pricing`;
+- Combo kits require ALL pieces present for premium pricing`
 
 export function buildConditionPromptPowerTools(description: string, photoCount: number): string {
   return `${CONDITION_ASSESSMENT_PROMPT_POWER_TOOLS}
 
 LISTING: ${description}
 
-Photos: ${photoCount}. Return ONLY the JSON object, no markdown.`;
+Photos: ${photoCount}. Return ONLY the JSON object, no markdown.`
 }
 
 export function buildBuyerLensPromptPowerTools(conditionJson: string): string {
-  return BUYER_LENS_PROMPT_POWER_TOOLS.replace("{{CONDITION_JSON}}", conditionJson) + "\n\nReturn ONLY JSON, no markdown.";
+  return (
+    BUYER_LENS_PROMPT_POWER_TOOLS.replace('{{CONDITION_JSON}}', conditionJson) +
+    '\n\nReturn ONLY JSON, no markdown.'
+  )
 }
 
 export function buildInvestorLensPromptPowerTools(
@@ -145,30 +148,31 @@ export function buildInvestorLensPromptPowerTools(
   repairPlanJson: string,
   acquisitionJson: string,
   metrics: {
-    maxBid: number;
-    totalInvestment: number;
+    maxBid: number
+    totalInvestment: number
     scenarios: {
-      quick_sale: { sale_price: number; gross_profit: number; margin: number };
-      expected: { sale_price: number; gross_profit: number; margin: number };
-      premium: { sale_price: number; gross_profit: number; margin: number };
-    };
+      quick_sale: { sale_price: number; gross_profit: number; margin: number }
+      expected: { sale_price: number; gross_profit: number; margin: number }
+      premium: { sale_price: number; gross_profit: number; margin: number }
+    }
   }
 ): string {
-  return INVESTOR_LENS_PROMPT_POWER_TOOLS
-    .replace("{{CONDITION_JSON}}", conditionJson)
-    .replace("{{MARKET_COMPS_JSON}}", marketCompsJson)
-    .replace("{{REPAIR_PLAN_JSON}}", repairPlanJson)
-    .replace("{{ACQUISITION_JSON}}", acquisitionJson)
-    .replace("{{MAX_BID}}", String(metrics.maxBid))
-    .replace("{{TOTAL_INVESTMENT}}", String(metrics.totalInvestment))
-    .replace("{{QS_PRICE}}", String(metrics.scenarios.quick_sale.sale_price))
-    .replace("{{QS_PROFIT}}", String(metrics.scenarios.quick_sale.gross_profit))
-    .replace("{{QS_MARGIN}}", String(metrics.scenarios.quick_sale.margin))
-    .replace("{{EXP_PRICE}}", String(metrics.scenarios.expected.sale_price))
-    .replace("{{EXP_PROFIT}}", String(metrics.scenarios.expected.gross_profit))
-    .replace("{{EXP_MARGIN}}", String(metrics.scenarios.expected.margin))
-    .replace("{{PREM_PRICE}}", String(metrics.scenarios.premium.sale_price))
-    .replace("{{PREM_PROFIT}}", String(metrics.scenarios.premium.gross_profit))
-    .replace("{{PREM_MARGIN}}", String(metrics.scenarios.premium.margin))
-    + "\n\nReturn ONLY JSON, no markdown.";
+  return (
+    INVESTOR_LENS_PROMPT_POWER_TOOLS.replace('{{CONDITION_JSON}}', conditionJson)
+      .replace('{{MARKET_COMPS_JSON}}', marketCompsJson)
+      .replace('{{REPAIR_PLAN_JSON}}', repairPlanJson)
+      .replace('{{ACQUISITION_JSON}}', acquisitionJson)
+      .replace('{{MAX_BID}}', String(metrics.maxBid))
+      .replace('{{TOTAL_INVESTMENT}}', String(metrics.totalInvestment))
+      .replace('{{QS_PRICE}}', String(metrics.scenarios.quick_sale.sale_price))
+      .replace('{{QS_PROFIT}}', String(metrics.scenarios.quick_sale.gross_profit))
+      .replace('{{QS_MARGIN}}', String(metrics.scenarios.quick_sale.margin))
+      .replace('{{EXP_PRICE}}', String(metrics.scenarios.expected.sale_price))
+      .replace('{{EXP_PROFIT}}', String(metrics.scenarios.expected.gross_profit))
+      .replace('{{EXP_MARGIN}}', String(metrics.scenarios.expected.margin))
+      .replace('{{PREM_PRICE}}', String(metrics.scenarios.premium.sale_price))
+      .replace('{{PREM_PROFIT}}', String(metrics.scenarios.premium.gross_profit))
+      .replace('{{PREM_MARGIN}}', String(metrics.scenarios.premium.margin)) +
+    '\n\nReturn ONLY JSON, no markdown.'
+  )
 }
