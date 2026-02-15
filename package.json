@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "verify": "npm run format:check && npm run lint",
-    "prepare": "node -e \"if(process.env.CI)process.exit(0)\" && husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
