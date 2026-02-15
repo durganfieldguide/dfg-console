@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback, useRef } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   AlertTriangle,
   Clock,
@@ -15,10 +15,10 @@ import {
   Eye,
   Loader2,
   TrendingUp,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { cn, formatRelativeTime, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils';
+} from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { cn, formatRelativeTime, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import {
   getAttentionRequired,
   touchOpportunity,
@@ -26,13 +26,16 @@ import {
   triggerAnalysis,
   type AttentionItem,
   type ReasonChip,
-} from '@/lib/api';
-import type { OpportunityStatus } from '@dfg/types';
+} from '@/lib/api'
+import type { OpportunityStatus } from '@dfg/types'
 
 /**
  * Reason chip configuration for display.
  */
-const CHIP_CONFIG: Record<ReasonChip, { label: string; icon: typeof AlertTriangle; color: string; filterUrl: string }> = {
+const CHIP_CONFIG: Record<
+  ReasonChip,
+  { label: string; icon: typeof AlertTriangle; color: string; filterUrl: string }
+> = {
   DECISION_STALE: {
     label: 'Decision Needed',
     icon: AlertTriangle,
@@ -57,17 +60,17 @@ const CHIP_CONFIG: Record<ReasonChip, { label: string; icon: typeof AlertTriangl
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
     filterUrl: '/opportunities?analysis_stale=true',
   },
-};
+}
 
 interface ReasonChipProps {
-  chip: ReasonChip;
-  size?: 'sm' | 'md';
-  onClick?: (e: React.MouseEvent) => void;
+  chip: ReasonChip
+  size?: 'sm' | 'md'
+  onClick?: (e: React.MouseEvent) => void
 }
 
 function ReasonChipBadge({ chip, size = 'sm', onClick }: ReasonChipProps) {
-  const config = CHIP_CONFIG[chip];
-  const Icon = config.icon;
+  const config = CHIP_CONFIG[chip]
+  const Icon = config.icon
 
   return (
     <button
@@ -82,58 +85,65 @@ function ReasonChipBadge({ chip, size = 'sm', onClick }: ReasonChipProps) {
       <Icon className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} />
       {config.label}
     </button>
-  );
+  )
 }
 
 /**
  * CTA action types for inline quick actions
  */
-type CTAAction = 'reanalyze' | 'touch' | 'pass' | 'watch';
+type CTAAction = 'reanalyze' | 'touch' | 'pass' | 'watch'
 
 interface AttentionItemRowProps {
-  item: AttentionItem;
-  rank: number; // 1-indexed position in the list
-  onTouch: (id: string) => void;
-  onChipClick: (chip: ReasonChip) => void;
-  onAction: (id: string, action: CTAAction) => Promise<boolean>;
-  pendingAction: CTAAction | null;
-  error: string | null;
+  item: AttentionItem
+  rank: number // 1-indexed position in the list
+  onTouch: (id: string) => void
+  onChipClick: (chip: ReasonChip) => void
+  onAction: (id: string, action: CTAAction) => Promise<boolean>
+  pendingAction: CTAAction | null
+  error: string | null
 }
 
-function AttentionItemRow({ item, rank, onTouch, onChipClick, onAction, pendingAction, error }: AttentionItemRowProps) {
+function AttentionItemRow({
+  item,
+  rank,
+  onTouch,
+  onChipClick,
+  onAction,
+  pendingAction,
+  error,
+}: AttentionItemRowProps) {
   const handleClick = () => {
     // Fire touch on click (fire-and-forget)
-    onTouch(item.id);
-  };
+    onTouch(item.id)
+  }
 
   const handleChipClick = (e: React.MouseEvent, chip: ReasonChip) => {
     // Prevent the row click from firing
-    e.preventDefault();
-    e.stopPropagation();
-    onChipClick(chip);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    onChipClick(chip)
+  }
 
   const handleCTAClick = async (e: React.MouseEvent, action: CTAAction) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await onAction(item.id, action);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    await onAction(item.id, action)
+  }
 
   // Format time remaining
-  const timeRemaining = item.auction_ends_at
-    ? formatRelativeTime(item.auction_ends_at)
-    : null;
+  const timeRemaining = item.auction_ends_at ? formatRelativeTime(item.auction_ends_at) : null
 
   // Determine which CTAs to show
-  const showReanalyze = item.is_analysis_stale;
-  const showTouch = item.is_decision_stale;
+  const showReanalyze = item.is_analysis_stale
+  const showTouch = item.is_decision_stale
 
   // Compute rank badge styling - top 3 get special treatment
-  const rankBadgeStyles = rank <= 3
-    ? 'bg-red-500 text-white font-bold'
-    : rank <= 5
-      ? 'bg-amber-500 text-white font-semibold'
-      : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium';
+  const rankBadgeStyles =
+    rank <= 3
+      ? 'bg-red-500 text-white font-bold'
+      : rank <= 5
+        ? 'bg-amber-500 text-white font-semibold'
+        : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium'
 
   return (
     <div className="group relative overflow-hidden">
@@ -170,9 +180,7 @@ function AttentionItemRow({ item, rank, onTouch, onChipClick, onAction, pendingA
               >
                 {STATUS_LABELS[item.status as OpportunityStatus]}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {item.source}
-              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{item.source}</span>
               {/* Current bid (#69) */}
               {item.current_bid != null && item.current_bid > 0 && (
                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -180,27 +188,19 @@ function AttentionItemRow({ item, rank, onTouch, onChipClick, onAction, pendingA
                 </span>
               )}
               {timeRemaining && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {timeRemaining}
-                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{timeRemaining}</span>
               )}
             </div>
 
             {/* Reason Chips - clickable to filter */}
             <div className="flex flex-wrap gap-1 mt-2">
               {item.reason_tags.map((chip) => (
-                <ReasonChipBadge
-                  key={chip}
-                  chip={chip}
-                  onClick={(e) => handleChipClick(e, chip)}
-                />
+                <ReasonChipBadge key={chip} chip={chip} onClick={(e) => handleChipClick(e, chip)} />
               ))}
             </div>
 
             {/* Error message */}
-            {error && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>
-            )}
+            {error && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>}
           </div>
 
           {/* Max Bid if set */}
@@ -299,169 +299,186 @@ function AttentionItemRow({ item, rank, onTouch, onChipClick, onAction, pendingA
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 interface AttentionRequiredListProps {
-  limit?: number;
-  showHeader?: boolean;
-  className?: string;
+  limit?: number
+  showHeader?: boolean
+  className?: string
 }
 
 // Rate limiting: track last reanalyze time per opportunity
-const REANALYZE_COOLDOWN_MS = 30000; // 30 seconds
+const REANALYZE_COOLDOWN_MS = 30000 // 30 seconds
 
 export function AttentionRequiredList({
   limit = 5,
   showHeader = true,
   className,
 }: AttentionRequiredListProps) {
-  const router = useRouter();
-  const [items, setItems] = useState<AttentionItem[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [items, setItems] = useState<AttentionItem[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Per-item action state
-  const [pendingActions, setPendingActions] = useState<Record<string, CTAAction | null>>({});
-  const [actionErrors, setActionErrors] = useState<Record<string, string | null>>({});
+  const [pendingActions, setPendingActions] = useState<Record<string, CTAAction | null>>({})
+  const [actionErrors, setActionErrors] = useState<Record<string, string | null>>({})
 
   // Rate limiting for reanalyze
-  const reanalyzeTimestamps = useRef<Record<string, number>>({});
+  const reanalyzeTimestamps = useRef<Record<string, number>>({})
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const data = await getAttentionRequired(limit);
-      setItems(data.items);
-      setTotalCount(data.total_count);
+      const data = await getAttentionRequired(limit)
+      setItems(data.items)
+      setTotalCount(data.total_count)
     } catch (err) {
-      console.error('Failed to fetch attention required items:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load');
+      console.error('Failed to fetch attention required items:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [limit]);
+  }, [limit])
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData()
+  }, [fetchData])
 
   const handleTouch = useCallback((id: string) => {
     // Fire and forget - don't await, just trigger the touch
     touchOpportunity(id).catch((err) => {
-      console.warn('Touch failed:', err);
-    });
-  }, []);
+      console.warn('Touch failed:', err)
+    })
+  }, [])
 
-  const handleChipClick = useCallback((chip: ReasonChip) => {
-    // Navigate to the filtered opportunities page
-    const config = CHIP_CONFIG[chip];
-    router.push(config.filterUrl);
-  }, [router]);
+  const handleChipClick = useCallback(
+    (chip: ReasonChip) => {
+      // Navigate to the filtered opportunities page
+      const config = CHIP_CONFIG[chip]
+      router.push(config.filterUrl)
+    },
+    [router]
+  )
 
   /**
    * Handle CTA actions with optimistic UI updates
    */
-  const handleAction = useCallback(async (id: string, action: CTAAction): Promise<boolean> => {
-    // Clear previous error for this item
-    setActionErrors((prev) => ({ ...prev, [id]: null }));
+  const handleAction = useCallback(
+    async (id: string, action: CTAAction): Promise<boolean> => {
+      // Clear previous error for this item
+      setActionErrors((prev) => ({ ...prev, [id]: null }))
 
-    // Rate limit reanalyze
-    if (action === 'reanalyze') {
-      const lastReanalyze = reanalyzeTimestamps.current[id] || 0;
-      const now = Date.now();
-      if (now - lastReanalyze < REANALYZE_COOLDOWN_MS) {
-        const remainingSec = Math.ceil((REANALYZE_COOLDOWN_MS - (now - lastReanalyze)) / 1000);
-        setActionErrors((prev) => ({ ...prev, [id]: `Please wait ${remainingSec}s before re-analyzing` }));
-        return false;
-      }
-      reanalyzeTimestamps.current[id] = now;
-    }
-
-    // Set pending state
-    setPendingActions((prev) => ({ ...prev, [id]: action }));
-
-    try {
-      switch (action) {
-        case 'reanalyze':
-          await triggerAnalysis(id);
-          // After successful reanalyze, remove the ANALYSIS_STALE tag optimistically
-          setItems((prev) =>
-            prev.map((item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    is_analysis_stale: false,
-                    reason_tags: item.reason_tags.filter((t) => t !== 'ANALYSIS_STALE'),
-                  }
-                : item
-            ).filter((item) => item.reason_tags.length > 0) // Remove if no more reasons
-          );
-          break;
-
-        case 'touch':
-          await touchOpportunity(id);
-          // After successful touch, remove DECISION_STALE and STALE tags optimistically
-          setItems((prev) =>
-            prev.map((item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    is_decision_stale: false,
-                    is_stale: false,
-                    reason_tags: item.reason_tags.filter((t) => t !== 'DECISION_STALE' && t !== 'STALE'),
-                  }
-                : item
-            ).filter((item) => item.reason_tags.length > 0)
-          );
-          break;
-
-        case 'pass':
-          // Pass requires a rejection reason - use 'other' with a default note
-          await updateOpportunity(id, {
-            status: 'rejected',
-            rejection_reason: 'other',
-            rejection_note: 'Passed from dashboard',
-          });
-          // Remove item from list optimistically
-          setItems((prev) => prev.filter((item) => item.id !== id));
-          setTotalCount((prev) => Math.max(0, prev - 1));
-          break;
-
-        case 'watch':
-          // Watch requires watch_trigger and watch_threshold
-          // Use 'manual' trigger with remind_at set to 24 hours from now
-          // (ending_soon requires auction_ends_at which not all items have)
-          const remindAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-          await updateOpportunity(id, {
-            status: 'watch',
-            watch_trigger: 'manual',
-            watch_threshold: { remind_at: remindAt },
-          });
-          // Remove item from attention list since status changed
-          // (item no longer needs immediate attention after explicit watch action)
-          setItems((prev) => prev.filter((item) => item.id !== id));
-          setTotalCount((prev) => Math.max(0, prev - 1));
-          break;
+      // Rate limit reanalyze
+      if (action === 'reanalyze') {
+        const lastReanalyze = reanalyzeTimestamps.current[id] || 0
+        const now = Date.now()
+        if (now - lastReanalyze < REANALYZE_COOLDOWN_MS) {
+          const remainingSec = Math.ceil((REANALYZE_COOLDOWN_MS - (now - lastReanalyze)) / 1000)
+          setActionErrors((prev) => ({
+            ...prev,
+            [id]: `Please wait ${remainingSec}s before re-analyzing`,
+          }))
+          return false
+        }
+        reanalyzeTimestamps.current[id] = now
       }
 
-      return true;
-    } catch (err) {
-      console.error(`Action ${action} failed for ${id}:`, err);
-      setActionErrors((prev) => ({
-        ...prev,
-        [id]: err instanceof Error ? err.message : 'Action failed',
-      }));
+      // Set pending state
+      setPendingActions((prev) => ({ ...prev, [id]: action }))
 
-      // Revert optimistic update on error - refetch data
-      fetchData();
-      return false;
-    } finally {
-      setPendingActions((prev) => ({ ...prev, [id]: null }));
-    }
-  }, [fetchData]);
+      try {
+        switch (action) {
+          case 'reanalyze':
+            await triggerAnalysis(id)
+            // After successful reanalyze, remove the ANALYSIS_STALE tag optimistically
+            setItems(
+              (prev) =>
+                prev
+                  .map((item) =>
+                    item.id === id
+                      ? {
+                          ...item,
+                          is_analysis_stale: false,
+                          reason_tags: item.reason_tags.filter((t) => t !== 'ANALYSIS_STALE'),
+                        }
+                      : item
+                  )
+                  .filter((item) => item.reason_tags.length > 0) // Remove if no more reasons
+            )
+            break
+
+          case 'touch':
+            await touchOpportunity(id)
+            // After successful touch, remove DECISION_STALE and STALE tags optimistically
+            setItems((prev) =>
+              prev
+                .map((item) =>
+                  item.id === id
+                    ? {
+                        ...item,
+                        is_decision_stale: false,
+                        is_stale: false,
+                        reason_tags: item.reason_tags.filter(
+                          (t) => t !== 'DECISION_STALE' && t !== 'STALE'
+                        ),
+                      }
+                    : item
+                )
+                .filter((item) => item.reason_tags.length > 0)
+            )
+            break
+
+          case 'pass':
+            // Pass requires a rejection reason - use 'other' with a default note
+            await updateOpportunity(id, {
+              status: 'rejected',
+              rejection_reason: 'other',
+              rejection_note: 'Passed from dashboard',
+            })
+            // Remove item from list optimistically
+            setItems((prev) => prev.filter((item) => item.id !== id))
+            setTotalCount((prev) => Math.max(0, prev - 1))
+            break
+
+          case 'watch': {
+            // Watch requires watch_trigger and watch_threshold
+            // Use 'manual' trigger with remind_at set to 24 hours from now
+            // (ending_soon requires auction_ends_at which not all items have)
+            const remindAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+            await updateOpportunity(id, {
+              status: 'watch',
+              watch_trigger: 'manual',
+              watch_threshold: { remind_at: remindAt },
+            })
+            // Remove item from attention list since status changed
+            // (item no longer needs immediate attention after explicit watch action)
+            setItems((prev) => prev.filter((item) => item.id !== id))
+            setTotalCount((prev) => Math.max(0, prev - 1))
+            break
+          }
+        }
+
+        return true
+      } catch (err) {
+        console.error(`Action ${action} failed for ${id}:`, err)
+        setActionErrors((prev) => ({
+          ...prev,
+          [id]: err instanceof Error ? err.message : 'Action failed',
+        }))
+
+        // Revert optimistic update on error - refetch data
+        fetchData()
+        return false
+      } finally {
+        setPendingActions((prev) => ({ ...prev, [id]: null }))
+      }
+    },
+    [fetchData]
+  )
 
   if (loading) {
     return (
@@ -480,7 +497,7 @@ export function AttentionRequiredList({
           <RefreshCw className="h-5 w-5 animate-spin text-gray-400" />
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (error) {
@@ -503,7 +520,7 @@ export function AttentionRequiredList({
           </Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (items.length === 0) {
@@ -525,7 +542,7 @@ export function AttentionRequiredList({
           </p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -577,7 +594,7 @@ export function AttentionRequiredList({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
-export default AttentionRequiredList;
+export default AttentionRequiredList

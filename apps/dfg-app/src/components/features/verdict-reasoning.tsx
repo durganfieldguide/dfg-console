@@ -1,37 +1,30 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { cn, formatCurrency } from '@/lib/utils';
-import { formatPercent } from '@/lib/utils/format';
-import {
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Info,
-  TrendingUp,
-  ShieldAlert,
-} from 'lucide-react';
+import * as React from 'react'
+import { cn, formatCurrency } from '@/lib/utils'
+import { formatPercent } from '@/lib/utils/format'
+import { CheckCircle, AlertTriangle, XCircle, Info, TrendingUp, ShieldAlert } from 'lucide-react'
 
 interface EconomicScenario {
-  label: string;
-  salePrice: number;
-  profit: number;
-  margin: number;
+  label: string
+  salePrice: number
+  profit: number
+  margin: number
 }
 
 interface ParsedVerdictReasoning {
-  maxBid: number;
-  allInCost: number;
-  scenarios: EconomicScenario[];
-  economicTier: string;
-  finalVerdict: string;
-  gates: string[];
-  wasDowngraded: boolean;
+  maxBid: number
+  allInCost: number
+  scenarios: EconomicScenario[]
+  economicTier: string
+  finalVerdict: string
+  gates: string[]
+  wasDowngraded: boolean
 }
 
 // Parse the raw verdict reasoning string into structured data
 function parseVerdictReasoning(raw: string): ParsedVerdictReasoning | null {
-  if (!raw) return null;
+  if (!raw) return null
 
   try {
     const result: ParsedVerdictReasoning = {
@@ -42,78 +35,87 @@ function parseVerdictReasoning(raw: string): ParsedVerdictReasoning | null {
       finalVerdict: '',
       gates: [],
       wasDowngraded: false,
-    };
+    }
 
     // Parse "Economics @ max bid $450 (all-in $596):"
-    const bidMatch = raw.match(/max bid \$?([\d,]+)\s*\(all-in \$?([\d,]+)\)/i);
+    const bidMatch = raw.match(/max bid \$?([\d,]+)\s*\(all-in \$?([\d,]+)\)/i)
     if (bidMatch) {
-      result.maxBid = parseInt(bidMatch[1].replace(/,/g, ''));
-      result.allInCost = parseInt(bidMatch[2].replace(/,/g, ''));
+      result.maxBid = parseInt(bidMatch[1].replace(/,/g, ''))
+      result.allInCost = parseInt(bidMatch[2].replace(/,/g, ''))
     }
 
     // Parse scenarios: "quick-sale $800 -> $204 (25.5%)"
     const scenarioPatterns = [
-      { pattern: /quick-sale \$?([\d,]+)\s*->\s*\$?([\d,]+)\s*\(([\d.]+)%\)/i, label: 'Quick Sale' },
+      {
+        pattern: /quick-sale \$?([\d,]+)\s*->\s*\$?([\d,]+)\s*\(([\d.]+)%\)/i,
+        label: 'Quick Sale',
+      },
       { pattern: /expected \$?([\d,]+)\s*->\s*\$?([\d,]+)\s*\(([\d.]+)%\)/i, label: 'Expected' },
       { pattern: /premium \$?([\d,]+)\s*->\s*\$?([\d,]+)\s*\(([\d.]+)%\)/i, label: 'Premium' },
-    ];
+    ]
 
     for (const { pattern, label } of scenarioPatterns) {
-      const match = raw.match(pattern);
+      const match = raw.match(pattern)
       if (match) {
         result.scenarios.push({
           label,
           salePrice: parseInt(match[1].replace(/,/g, '')),
           profit: parseInt(match[2].replace(/,/g, '')),
           margin: parseFloat(match[3]) / 100,
-        });
+        })
       }
     }
 
     // Parse "Economic tier: BUY" (support both old MARGINAL and new WATCH)
-    const tierMatch = raw.match(/Economic tier:\s*(BUY|WATCH|MARGINAL|PASS)/i);
+    const tierMatch = raw.match(/Economic tier:\s*(BUY|WATCH|MARGINAL|PASS)/i)
     if (tierMatch) {
-      const tier = tierMatch[1].toUpperCase();
-      result.economicTier = tier === 'MARGINAL' ? 'WATCH' : tier;
+      const tier = tierMatch[1].toUpperCase()
+      result.economicTier = tier === 'MARGINAL' ? 'WATCH' : tier
     }
 
     // Parse "Final verdict: PASS" (support both old MARGINAL and new WATCH)
-    const verdictMatch = raw.match(/Final verdict:\s*(BUY|WATCH|MARGINAL|PASS)/i);
+    const verdictMatch = raw.match(/Final verdict:\s*(BUY|WATCH|MARGINAL|PASS)/i)
     if (verdictMatch) {
-      const verdict = verdictMatch[1].toUpperCase();
-      result.finalVerdict = verdict === 'MARGINAL' ? 'WATCH' : verdict;
+      const verdict = verdictMatch[1].toUpperCase()
+      result.finalVerdict = verdict === 'MARGINAL' ? 'WATCH' : verdict
     }
 
     // Check if downgraded
-    result.wasDowngraded = result.economicTier !== result.finalVerdict &&
-                           result.economicTier !== '' &&
-                           result.finalVerdict !== '';
+    result.wasDowngraded =
+      result.economicTier !== result.finalVerdict &&
+      result.economicTier !== '' &&
+      result.finalVerdict !== ''
 
     // Parse gates: "Capped/downgraded by gates: limited photos (<4), title status: unknown"
-    const gatesMatch = raw.match(/(?:Capped|downgraded) by gates?:\s*(.+?)(?:\.|$)/i);
+    const gatesMatch = raw.match(/(?:Capped|downgraded) by gates?:\s*(.+?)(?:\.|$)/i)
     if (gatesMatch) {
       result.gates = gatesMatch[1]
         .split(/,\s*/)
-        .map(g => g.trim())
-        .filter(g => g.length > 0);
+        .map((g) => g.trim())
+        .filter((g) => g.length > 0)
     }
 
-    return result;
+    return result
   } catch {
-    return null;
+    return null
   }
 }
 
 // Human-readable explanations for common gates
-const gateExplanations: Record<string, { title: string; description: string; severity: 'warning' | 'danger' }> = {
+const gateExplanations: Record<
+  string,
+  { title: string; description: string; severity: 'warning' | 'danger' }
+> = {
   'limited photos': {
     title: 'Limited Photos',
-    description: 'Fewer than 4 photos available. Hard to assess true condition without more visual evidence.',
+    description:
+      'Fewer than 4 photos available. Hard to assess true condition without more visual evidence.',
     severity: 'warning',
   },
   'title status: unknown': {
     title: 'Unknown Title Status',
-    description: 'Cannot verify if the title is clean. Could have liens, salvage history, or other issues.',
+    description:
+      'Cannot verify if the title is clean. Could have liens, salvage history, or other issues.',
     severity: 'danger',
   },
   'title status: salvage': {
@@ -123,7 +125,8 @@ const gateExplanations: Record<string, { title: string; description: string; sev
   },
   'high mileage': {
     title: 'High Mileage',
-    description: 'Mileage is above average for the year, which may affect resale value and reliability.',
+    description:
+      'Mileage is above average for the year, which may affect resale value and reliability.',
     severity: 'warning',
   },
   'structural damage': {
@@ -136,15 +139,19 @@ const gateExplanations: Record<string, { title: string; description: string; sev
     description: 'Listing lacks description. Cannot assess condition or identify potential issues.',
     severity: 'warning',
   },
-};
+}
 
-function getGateInfo(gate: string): { title: string; description: string; severity: 'warning' | 'danger' } {
-  const lowerGate = gate.toLowerCase();
+function getGateInfo(gate: string): {
+  title: string
+  description: string
+  severity: 'warning' | 'danger'
+} {
+  const lowerGate = gate.toLowerCase()
 
   // Check for exact or partial matches
   for (const [key, info] of Object.entries(gateExplanations)) {
     if (lowerGate.includes(key)) {
-      return info;
+      return info
     }
   }
 
@@ -153,37 +160,42 @@ function getGateInfo(gate: string): { title: string; description: string; severi
     title: gate.charAt(0).toUpperCase() + gate.slice(1),
     description: 'This factor reduced confidence in the deal.',
     severity: 'warning',
-  };
+  }
 }
 
 interface PriceRange {
-  quick_sale: number;
-  market_rate: number;
-  premium: number;
+  quick_sale: number
+  market_rate: number
+  premium: number
 }
 
 interface ProfitScenario {
-  sale_price: number;
-  gross_profit: number;
-  margin: number;
+  sale_price: number
+  gross_profit: number
+  margin: number
 }
 
 interface Scenarios {
-  quick_sale?: ProfitScenario;
-  expected?: ProfitScenario;
-  premium?: ProfitScenario;
+  quick_sale?: ProfitScenario
+  expected?: ProfitScenario
+  premium?: ProfitScenario
 }
 
 interface VerdictReasoningProps {
-  reasoning: string;
-  priceRange?: PriceRange;
-  scenarios?: Scenarios;
-  className?: string;
+  reasoning: string
+  priceRange?: PriceRange
+  scenarios?: Scenarios
+  className?: string
 }
 
-export function VerdictReasoning({ reasoning, priceRange, scenarios, className }: VerdictReasoningProps) {
+export function VerdictReasoning({
+  reasoning,
+  priceRange,
+  scenarios,
+  className,
+}: VerdictReasoningProps) {
   // Use structured data if available, otherwise fall back to parsing text
-  let parsed = parseVerdictReasoning(reasoning);
+  const parsed = parseVerdictReasoning(reasoning)
 
   // If we have structured pricing data, override parsed scenarios with real data
   if (priceRange && scenarios && parsed) {
@@ -206,7 +218,7 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
         profit: scenarios.premium.gross_profit,
         margin: scenarios.premium.margin,
       },
-    ].filter(Boolean) as EconomicScenario[];
+    ].filter(Boolean) as EconomicScenario[]
   }
 
   if (!parsed) {
@@ -215,17 +227,18 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
       <div className={cn('text-sm', className)} style={{ color: 'var(--muted-foreground)' }}>
         {reasoning}
       </div>
-    );
+    )
   }
 
   const verdictColors: Record<string, string> = {
     BUY: 'text-green-600 dark:text-green-400',
     WATCH: 'text-yellow-600 dark:text-yellow-400',
     PASS: 'text-red-600 dark:text-red-400',
-  };
+  }
 
   // Safe getter for verdict colors with fallback
-  const getVerdictColor = (verdict: string) => verdictColors[verdict] || 'text-gray-600 dark:text-gray-400';
+  const getVerdictColor = (verdict: string) =>
+    verdictColors[verdict] || 'text-gray-600 dark:text-gray-400'
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -237,12 +250,17 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
         >
           <ShieldAlert className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-yellow-700 dark:text-yellow-300">
-              Verdict Downgraded
-            </p>
+            <p className="font-medium text-yellow-700 dark:text-yellow-300">Verdict Downgraded</p>
             <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-              The economics support a <span className={cn('font-semibold', getVerdictColor(parsed.economicTier))}>{parsed.economicTier}</span> rating,
-              but risk factors reduced it to <span className={cn('font-semibold', getVerdictColor(parsed.finalVerdict))}>{parsed.finalVerdict}</span>.
+              The economics support a{' '}
+              <span className={cn('font-semibold', getVerdictColor(parsed.economicTier))}>
+                {parsed.economicTier}
+              </span>{' '}
+              rating, but risk factors reduced it to{' '}
+              <span className={cn('font-semibold', getVerdictColor(parsed.finalVerdict))}>
+                {parsed.finalVerdict}
+              </span>
+              .
             </p>
           </div>
         </div>
@@ -255,9 +273,14 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
           <h4 className="font-semibold">Profit Scenarios</h4>
         </div>
         <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>
-          Based on max bid of <span className="font-mono font-medium">{formatCurrency(parsed.maxBid)}</span>
+          Based on max bid of{' '}
+          <span className="font-mono font-medium">{formatCurrency(parsed.maxBid)}</span>
           {parsed.allInCost > parsed.maxBid && (
-            <> (total cost with fees: <span className="font-mono font-medium">{formatCurrency(parsed.allInCost)}</span>)</>
+            <>
+              {' '}
+              (total cost with fees:{' '}
+              <span className="font-mono font-medium">{formatCurrency(parsed.allInCost)}</span>)
+            </>
           )}
         </p>
 
@@ -269,7 +292,10 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
                 className="p-4 rounded-lg border"
                 style={{ borderColor: 'var(--border)', backgroundColor: 'var(--background)' }}
               >
-                <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>
+                <p
+                  className="text-xs font-medium uppercase tracking-wide"
+                  style={{ color: 'var(--muted-foreground)' }}
+                >
                   {scenario.label}
                 </p>
                 <p className="text-lg font-bold font-mono mt-1">
@@ -279,12 +305,16 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
                   <span style={{ color: 'var(--muted-foreground)' }}>
                     Sell @ {formatCurrency(scenario.salePrice)}
                   </span>
-                  <span className={cn(
-                    'font-medium',
-                    scenario.margin >= 0.25 ? 'text-green-600 dark:text-green-400' :
-                    scenario.margin >= 0.15 ? 'text-yellow-600 dark:text-yellow-400' :
-                    'text-red-600 dark:text-red-400'
-                  )}>
+                  <span
+                    className={cn(
+                      'font-medium',
+                      scenario.margin >= 0.25
+                        ? 'text-green-600 dark:text-green-400'
+                        : scenario.margin >= 0.15
+                          ? 'text-yellow-600 dark:text-yellow-400'
+                          : 'text-red-600 dark:text-red-400'
+                    )}
+                  >
                     {formatPercent(scenario.margin)}
                   </span>
                 </div>
@@ -294,7 +324,10 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
         )}
 
         {/* Margin Guide */}
-        <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+        <div
+          className="flex items-center gap-4 mt-3 text-xs"
+          style={{ color: 'var(--muted-foreground)' }}
+        >
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
             25%+ Great
@@ -322,7 +355,7 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
           </p>
           <div className="space-y-3">
             {parsed.gates.map((gate, i) => {
-              const info = getGateInfo(gate);
+              const info = getGateInfo(gate)
               return (
                 <div
                   key={i}
@@ -331,9 +364,10 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
                     info.severity === 'danger' ? 'border-red-500' : 'border-yellow-500'
                   )}
                   style={{
-                    backgroundColor: info.severity === 'danger'
-                      ? 'rgba(239, 68, 68, 0.1)'
-                      : 'rgba(245, 158, 11, 0.1)',
+                    backgroundColor:
+                      info.severity === 'danger'
+                        ? 'rgba(239, 68, 68, 0.1)'
+                        : 'rgba(245, 158, 11, 0.1)',
                   }}
                 >
                   {info.severity === 'danger' ? (
@@ -342,12 +376,14 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
                     <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                   )}
                   <div>
-                    <p className={cn(
-                      'font-medium',
-                      info.severity === 'danger'
-                        ? 'text-red-700 dark:text-red-300'
-                        : 'text-yellow-700 dark:text-yellow-300'
-                    )}>
+                    <p
+                      className={cn(
+                        'font-medium',
+                        info.severity === 'danger'
+                          ? 'text-red-700 dark:text-red-300'
+                          : 'text-yellow-700 dark:text-yellow-300'
+                      )}
+                    >
                       {info.title}
                     </p>
                     <p className="text-sm mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
@@ -355,38 +391,50 @@ export function VerdictReasoning({ reasoning, priceRange, scenarios, className }
                     </p>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
       )}
 
       {/* What This Means */}
-      <div
-        className="p-4 rounded-lg"
-        style={{ backgroundColor: 'var(--muted)' }}
-      >
+      <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--muted)' }}>
         <div className="flex items-start gap-3">
-          <Info className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--muted-foreground)' }} />
+          <Info
+            className="h-5 w-5 flex-shrink-0 mt-0.5"
+            style={{ color: 'var(--muted-foreground)' }}
+          />
           <div>
             <p className="font-medium">What This Means</p>
             <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
               {parsed.finalVerdict === 'BUY' && (
-                <>The numbers work and risk factors are manageable. At your max bid, you should have healthy margins across all sale scenarios.</>
+                <>
+                  The numbers work and risk factors are manageable. At your max bid, you should have
+                  healthy margins across all sale scenarios.
+                </>
               )}
               {parsed.finalVerdict === 'WATCH' && (
-                <>The deal could work, but margins are thin or there are risk factors to consider. Proceed only if you can verify the unknowns or negotiate a lower price.</>
+                <>
+                  The deal could work, but margins are thin or there are risk factors to consider.
+                  Proceed only if you can verify the unknowns or negotiate a lower price.
+                </>
               )}
               {parsed.finalVerdict === 'PASS' && parsed.wasDowngraded && (
-                <>While the economics look good on paper, significant risk factors make this deal too uncertain. The unknowns could easily wipe out your profit margin.</>
+                <>
+                  While the economics look good on paper, significant risk factors make this deal
+                  too uncertain. The unknowns could easily wipe out your profit margin.
+                </>
               )}
               {parsed.finalVerdict === 'PASS' && !parsed.wasDowngraded && (
-                <>The numbers don&apos;t support a profitable flip at current prices. Wait for the price to drop or look for a better opportunity.</>
+                <>
+                  The numbers don&apos;t support a profitable flip at current prices. Wait for the
+                  price to drop or look for a better opportunity.
+                </>
               )}
             </p>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
