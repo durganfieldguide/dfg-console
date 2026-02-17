@@ -39,6 +39,14 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/.wrangler/**', '**/.next/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/.wrangler/**',
+      '**/.next/**',
+      '**/public/sw.js',
+      '**/public/sw.js.map',
+      '**/public/swe-worker-*.js',
+    ],
   }
 )
