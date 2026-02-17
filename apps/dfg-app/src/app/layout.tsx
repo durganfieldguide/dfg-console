@@ -8,7 +8,12 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'DFG Operator Console',
   description: 'Durgan Field Guide - Auction opportunity management',
-  manifest: '/manifest.json',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'DFG',
+  },
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
