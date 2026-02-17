@@ -1,5 +1,6 @@
 workers/dfg-scout/*.html
 
 # Serwist service worker (generated at build time)
-public/sw.js
-public/sw.js.map
+**/public/sw.js
+**/public/sw.js.map
+**/public/swe-worker-*.js
