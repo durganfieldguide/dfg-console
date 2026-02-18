@@ -7,6 +7,11 @@ node_modules/
 dist/
 .wrangler/
 
+# Serwist service worker (generated at build time)
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+
 # Environment files
 .env
 .env.local
