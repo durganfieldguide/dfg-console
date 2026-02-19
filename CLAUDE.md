@@ -14,8 +14,7 @@ dfg/
 ├── workers/
 │   ├── dfg-api/           # Cloudflare Worker - REST API for opportunities
 │   ├── dfg-scout/         # Cloudflare Worker - auction scraping/pipeline
-│   ├── dfg-analyst/       # Cloudflare Worker - AI analysis engine
-│   └── dfg-relay/         # Cloudflare Worker - GitHub issue integration
+│   └── dfg-analyst/       # Cloudflare Worker - AI analysis engine
 ├── packages/dfg-types/    # Shared TypeScript types
 └── docs/                  # Documentation and specs
 ```
@@ -34,7 +33,7 @@ npm run type-check       # TypeScript check
 npm run lint             # ESLint
 
 # Workers (each worker directory)
-cd workers/dfg-api       # or dfg-scout, dfg-analyst, dfg-relay
+cd workers/dfg-api       # or dfg-scout, dfg-analyst
 npx wrangler dev         # Local dev server
 npx wrangler deploy      # Deploy to Cloudflare
 npx tsc --noEmit         # TypeScript check
@@ -143,36 +142,34 @@ Run locally before pushing: `npm run lint && npm run type-check`
 - Server-only secrets never reach Next.js client bundles
 - R2 snapshots must be immutable (new key per snapshot)
 
-## Slash Commands
+## Session Start
 
-This repo has Claude Code slash commands for workflow automation. Run these from the CLI.
+Every session must begin with:
 
-| Command                     | When to Use             | What It Does                                         |
-| --------------------------- | ----------------------- | ---------------------------------------------------- |
-| `/sod`                      | Start of session        | Reads handoff, shows ready work, orients you         |
-| `/handoff <issue#>`         | PR ready for QA         | Posts handoff comment, updates labels to `status:qa` |
-| `/question <issue#> <text>` | Blocked on requirements | Posts question, adds `needs:pm` label                |
-| `/merge <issue#>`           | After `status:verified` | Merges PR, closes issue, updates to `status:done`    |
-| `/eod`                      | End of session          | Prompts for summary, updates handoff file            |
+1. Call the `crane_preflight` MCP tool (no arguments)
+2. Call the `crane_sod` MCP tool with `venture: "dfg"`
 
-### Workflow Triggers
+This creates a session, loads documentation, and establishes handoff context. Additional workflow commands are available in `.claude/commands/`.
 
-```
-Start session     → /sod
-Hit a blocker     → /question 123 What should X do when Y?
-PR ready          → /handoff 123
-QA passed         → /merge 123  (only after status:verified)
-End session       → /eod
-```
+## Enterprise Rules
 
-### QA Grade Labels
+- **All changes through PRs.** Never push directly to main. Branch, PR, CI, QA, merge.
+- **Never echo secret values.** Transcripts persist in ~/.claude/ and are sent to API providers. Pipe from Infisical, never inline.
+- **Verify secret VALUES, not just key existence.** Agents have stored descriptions as values before.
+- **Never auto-save to VCMS** without explicit Captain approval.
+- **Scope discipline.** Discover additional work mid-task - finish current scope, file a new issue.
+- **Escalation triggers.** Credential not found in 2 min, same error 3 times, blocked >30 min - stop and escalate.
 
-When PM creates an issue, they assign a QA grade. This determines verification requirements:
+## Instruction Modules
 
-| Label        | Meaning    | Verification                       |
-| ------------ | ---------- | ---------------------------------- |
-| `qa-grade:0` | CI-only    | Automated - no human review needed |
-| `qa-grade:1` | API/data   | Scriptable checks                  |
-| `qa-grade:2` | Functional | Requires app interaction           |
-| `qa-grade:3` | Visual/UX  | Requires human judgment            |
-| `qa-grade:4` | Security   | Requires specialist review         |
+Detailed domain instructions stored as on-demand documents.
+Fetch the relevant module when working in that domain.
+
+| Module              | Key Rule (always applies)                                                | Fetch for details                             |
+| ------------------- | ------------------------------------------------------------------------ | --------------------------------------------- |
+| `secrets.md`        | Verify secret VALUES, not just key existence                             | Infisical, vault, API keys, GitHub App        |
+| `content-policy.md` | Never auto-save to VCMS; agents ARE the voice                            | VCMS tags, storage rules, editorial, style    |
+| `team-workflow.md`  | All changes through PRs; never push to main                              | Full workflow, QA grades, escalation triggers |
+| `fleet-ops.md`      | Bootstrap phases IN ORDER: Tailscale > CLI > bootstrap > optimize > mesh | SSH, machines, Tailscale, macOS               |
+
+Fetch with: `crane_doc('global', '<module>')`

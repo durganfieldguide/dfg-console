@@ -11,8 +11,7 @@ dfg/
 ├── workers/
 │   ├── dfg-api/          # Cloudflare Worker - REST API for opportunities
 │   ├── dfg-scout/        # Cloudflare Worker - auction scraping/pipeline
-│   ├── dfg-analyst/      # Cloudflare Worker - AI analysis engine
-│   └── dfg-relay/        # Cloudflare Worker - GitHub issue integration
+│   └── dfg-analyst/      # Cloudflare Worker - AI analysis engine
 ├── packages/             # Shared packages (currently minimal)
 ├── docs/                 # Documentation and specs
 └── AGENTS.md            # This file - Codex review guidelines
@@ -38,7 +37,7 @@ npm run type-check   # TypeScript check
 npm run lint         # ESLint
 
 # Workers (each worker directory)
-cd workers/dfg-api   # or dfg-scout, dfg-analyst, dfg-relay
+cd workers/dfg-api   # or dfg-scout, dfg-analyst
 npx tsc --noEmit     # TypeScript check
 npx wrangler dev     # Local dev server
 npx wrangler deploy  # Deploy to Cloudflare
@@ -157,7 +156,7 @@ npm run lint 2>&1 | head -50
 npm run build 2>&1 | tail -20
 
 # Workers (run for each)
-for worker in dfg-api dfg-scout dfg-analyst dfg-relay; do
+for worker in dfg-api dfg-scout dfg-analyst; do
   echo "=== $worker ==="
   cd workers/$worker
   npx tsc --noEmit 2>&1 | head -20
