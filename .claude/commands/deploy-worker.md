@@ -4,7 +4,7 @@ description: Deploy a specific worker to Cloudflare
 
 Deploy a DFG worker to Cloudflare:
 
-1. Ask which worker to deploy (dfg-api, dfg-scout, dfg-analyst, or dfg-relay)
+1. Ask which worker to deploy (dfg-api, dfg-scout, or dfg-analyst)
 2. Run type check: `npx tsc --noEmit` in the worker directory
 3. If type check passes, run tests if available: `npm run test`
 4. If tests pass, deploy: `npx wrangler deploy`
